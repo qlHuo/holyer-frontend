@@ -4,8 +4,14 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "冬青の前端工作台",
   description: "holyer-frontend workspaces",
+  base: '/holyer-frontend/',
+  head: [
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/static/logo.svg' }]
+  ],
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
+    logo: { src: '/static/logo.svg', width: 24, height: 24 },
+
     nav: [
       { text: '首页', link: '/' },
       { text: '基础篇', link: '/pages/base/html', activeMatch: '/pages/base/' },
@@ -21,6 +27,7 @@ export default defineConfig({
           { text: 'CSS基础', link: 'css' },
           { text: 'JavaScript基础', link: 'javascript' },
           { text: '浏览器', link: 'browser' },
+          { text: 'Git', link: 'git' },
         ]
       },
 
@@ -50,7 +57,8 @@ export default defineConfig({
     },
 
     outline: {
-      label: '目录'
+      label: '目录',
+      level: [1, 6],
     },
 
     lastUpdated: {
@@ -73,5 +81,5 @@ export default defineConfig({
     darkModeSwitchTitle: '切换到深色模式',
     skipToContentLabel: '跳转到内容'
   },
-  base: '/holyer-frontend/'
+  
 })
