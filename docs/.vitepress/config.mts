@@ -6,7 +6,7 @@ export default defineConfig({
   description: "holyer-frontend workspaces",
   base: '/holyer-frontend/',
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/static/logo.svg' }]
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/holyer-frontend/static/logo.svg' }]
   ],
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
@@ -81,5 +81,4 @@ export default defineConfig({
     darkModeSwitchTitle: '切换到深色模式',
     skipToContentLabel: '跳转到内容'
   },
-  
 })

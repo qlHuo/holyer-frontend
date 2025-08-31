@@ -1,0 +1,5 @@
+# 强制所有文件使用 Unix 风格的 LF
+* text eol=CRLF
+
+# 或针对特定扩展名（例如 VitePress 配置文件）单独设置
+*.mts text eol=CRLF
