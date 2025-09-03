@@ -1,183 +1,515 @@
 # CSS基础
 
-## 1.实现不使用 border 画出 1px 高的线，在不同浏览器的标准模式与怪异模式下都能保持一致的效果。
 
-答案：
+## 1. 介绍一下标准的 CSS 的盒子模型
+
+CSS 盒子模型是 CSS 布局和设计的基础概念，用于描述 HTML 元素如何被表示为一个矩形盒子，以及这些盒子如何相互影响和布局。
+
+### 1. 基本组成部分
+
+- **内容区域（Content）**：这是盒子的核心部分，包含元素的文本、图像等实际内容。在 CSS 中，通过 `width` 和 `height` 属性来设置内容区域的宽度和高度（标准盒模型下）。例如：
+
+```css
+div {
+  width: 200px;
+  height: 100px;
+}
+```
+
+这里设置的 `width` 和 `height` 仅针对内容区域。
+
+- **内边距（Padding）**：位于内容区域和边框之间，用于控制内容与边框的距离。内边距使内容在盒子内部有一定的空白空间。可以通过 `padding - top`、`padding - right`、`padding - bottom`、`padding - left` 分别设置四个方向的内边距，也可以使用 `padding` 简写属性统一设置。例如：
+
+```css
+div {
+  padding: 10px; /* 四个方向内边距均为10px */
+  /* 或者 */
+  padding - top: 5px;
+  padding - right: 10px;
+  padding - bottom: 5px;
+  padding - left: 10px;
+}
+```
+
+- **边框（Border）**：围绕在内边距之外，定义了盒子的边界。可以设置边框的宽度（`border - width`）、样式（`border - style`，如实线 `solid`、虚线 `dashed` 等）和颜色（`border - color`）。同样有针对四个方向的单独设置属性和简写属性。例如：
+
+```css
+div {
+  border: 1px solid black; /* 1px宽黑色实线边框 */
+  /* 或者 */
+  border - top: 2px dashed red;
+}
+```
+
+- **外边距（Margin）**：在边框之外，用于控制盒子与其他盒子之间的距离。和内边距、边框类似，有四个方向的单独设置属性（`margin - top`、`margin - right`、`margin - bottom`、`margin - left`）以及简写属性 `margin`。例如：
+
+```css
+div {
+  margin: 20px; /* 四个方向外边距均为20px */
+  /* 或者 */
+  margin - bottom: 30px;
+}
+```
+
+### 2. 盒模型类型
+
+- **标准盒模型**：现代浏览器默认遵循标准盒模型，**<u>在标准盒模型中，`width` 和 `height` 只应用于内容区域。元素实际占据的空间宽度是 `width + 2 * padding + 2 * border + 2 * margin`，高度同理。</u>**例如：
+
+```css
+div {
+  width: 100px;
+  padding: 10px;
+  border: 1px solid black;
+  margin: 5px;
+}
+```
+
+该 `div` 元素实际占据的水平空间为 `100 + 2 * 10 + 2 * 1 + 2 * 5 = 132px`。
+
+- **怪异盒模型（IE 盒模型）**：早期 IE 浏览器采用的盒模型。**<u>在怪异盒模型中，`width` 和 `height` 包含了内容区域、内边距和边框。</u>**即元素实际占据的空间宽度是 `width + 2 * margin`，高度同理。例如，同样的 CSS 代码，在怪异盒模型下，设置的 `width = 100px` 已经包含了内边距和边框，实际内容区域宽度小于 `100px`。可以通过 `box - sizing` 属性来切换盒模型类型，`box - sizing: content - box` 表示标准盒模型（默认值），`box - sizing: border - box` 表示怪异盒模型。例如：
+
+```css
+div {
+  box - sizing: border - box;
+  width: 100px;
+  padding: 10px;
+  border: 1px solid black;
+  margin: 5px;
+}
+```
+
+此时，内容区域、内边距和边框都包含在设置的 `100px` 宽度内。
+
+
+
+
+## 2. CSS 隐藏元素的几种方法
+
+在 CSS 中，隐藏元素有多种方法，每种方法各有特点，适用于不同场景
+
+### 1. `display: none`
+
+- **原理**：将元素从文档流中完全移除，元素及其子元素都不再占据空间，就好像该元素不存在于文档中一样。
+- **应用场景**：当元素在特定条件下完全不需要显示，且不希望其占用页面空间时使用。例如，在网页加载时，某些初始不需要展示的弹窗、提示框等元素，可使用 `display: none` 隐藏，待用户触发特定操作（如点击按钮）时，通过 JavaScript 动态将其 `display` 属性改为其他值（如 `block`、`flex` 等）来显示。
+- **示例**：
+
+```css
+.hidden {
+  display: none;
+}
+```
 
 ```html
-<div style="height:1px;overflow:hidden;background:red"></div>
+<div class="hidden">这是一个隐藏的 div</div>
 ```
 
+### 2. `visibility: hidden`
 
+- **原理**：元素虽然不可见，但仍然占据文档空间，其原本的位置会被保留。该元素的子元素若不单独设置，也会跟随隐藏。
+- **应用场景**：适用于需要暂时隐藏元素，但希望保留其在文档流中占位的情况。比如，在制作动画效果时，希望某个元素暂时消失但不影响其他元素布局，后续再让其重新显示。
+- **示例**：
 
-
-## 2.介绍一下标准的 CSS 的盒子模型？低版本 IE 的盒子模型有什么不同的？
-
-答案：
-
-（1）有两种， IE 盒子模型、W3C 盒子模型；
-
-（2）盒模型： 内容(content)、填充(padding)、边界(margin)、 边框(border)；
-
-（3）区 别： IE 的 content 部分把 border 和 padding 计算了进去;
-
-
-
-
-## 3.CSS 隐藏元素的几种方法（至少说出三种）
-
-答案：
-
-Opacity:元素本身依然占据它自己的位置并对网页的布局起作用。它也将响应用户交互;
-
-Visibility:与 opacity 唯一不同的是它不会响应任何用户交互。此外，元素在读屏软件中也会被隐藏;
-
-Display:display 设为 none 任何对该元素直接打用户交互操作都不可能生效。此外，读屏软件也不会读到元素的内容。这种方式产生的效果就像元素完全不存在;
-
-Position:不会影响布局，能让元素保持可以操作;
-
-Clip-path:clip-path 属性还没有在 IE 或者 Edge 下被完全支持。如果要在你的 clip-path 中使用外部的 SVG 文件，浏览器支持度还要低;
-
-
-
-
-## 4.CSS 清除浮动的几种方法（至少两种）
-
-答案：
-
-```
-清除浮动： 核心：clear:both;
-
-1.使用额外标签法（不推荐使用）
-
-在浮动的盒子下面再放一个标签，使用 clear:both;来清除浮动
-
-a 内部标签：会将父盒子的高度重新撑开
-
-b 外部标签：只能将浮动盒子的影响清除，但是不会撑开盒子
-
-2.使用 overflow 清除浮动（不推荐使用）
-
-先找到浮动盒子的父元素，给父元素添加一个属性：overflow:hidden;就会清除子元素对页面的影响
-
-3.使用伪元素清除浮动(用的最多)
-
-伪元素：在页面上不存在的元素，但是可以通过 css 添加上去
-
-种类：
-      :after(在。。。之后)
-      :before(在。。。之前)
-
-注意：每个元素都有自己的伪元素
-
-.clearfix:after {
-    content:"";
-    height:0;
-    line-height:0;
-    display:block;
-    clear:both;
-    visibility:hidden;  /_将元素隐藏起来_/ 
-      在页面的 clearfix 元素后面添加了一个空的块级元素
-     （这个元素的高为 0 行高也为 0   并且这个元素清除了浮动）
-}
-.clearfix {
-  zoom:1;/_为了兼容 IE6_/
+```css
+.invisible {
+  visibility: hidden;
 }
 ```
-## 5.页面导入样式时，使用 link 和@import 有什么区别？
 
-答案：
-
-1. Link 属于 html 标签，而@import 是 CSS 中提供的
-
-2. 在页面加载的时候，link 会同时被加载，而@import 引用的 CSS 会在页面加载完成后才会加载引用的 CSS
-
-3. @import 只有在 ie5 以上才可以被识别，而 link 是 html 标签，不存在浏览器兼容性问题
-
-4. Link 引入样式的权重大于@import 的引用（@import 是将引用的样式导入到当前的页面中）
-
-
-
-
-## 6.伪元素和伪类的区别？
-
-答案：
-
-1、伪元素使用 2 个冒号，常见的有：::before，::after，::first-line，::first-letter，::selection、::placeholder 等；
-
-      伪类使用1个冒号，常见的有：:hover，:link，:active，:target，:not()，:focus等。
-
-2、伪元素添加了一个页面中没有的元素（只是从视觉效果上添加了，不是在文档树中添加）；
-
-      伪类是给页面中已经存在的元素添加一个类。
-
-解析：
-
-CSS 伪元素是添加到选择器的关键字，去选择元素的特定部分。它们可以用于装饰（`:first-line`，`:first-letter`）或将元素添加到标记中（与 content:...组合），而不必修改标记（`:before`，`:after`）。
-
-- `:first-line`和`:first-letter`可以用来修饰文字。
-- 上面提到的`.clearfix`方法中，使用`clear: both`来添加不占空间的元素。
-- 使用`:before`和`after`展示提示中的三角箭头。鼓励关注点分离，因为三角被视为样式的一部分，而不是真正的 DOM。如果不使用额外的 HTML 元素，只用 CSS 样式绘制三角形是不太可能的。
-
-[参考](https://css-tricks.com/almanac/selectors/a/after-and-before/)
-
-
-
-
-## 7. CSS 选择符有哪些？哪些属性可以继承？优先级算法如何计算？ CSS3 新增伪类有那些？
-
-答案：
-
+```html
+<div class="invisible">这是一个不可见但仍占位的 div</div>
 ```
-        1.id选择器（ # myid）
 
-        2.类选择器（.myclassname）
+### 3. `opacity: 0`
 
-        3.标签选择器（div, h1, p）
+- **原理**：通过将元素的透明度设置为 0，使元素变得完全透明，从而实现隐藏效果。元素依然占据文档空间，并且可以响应事件（如点击等）。
+- **应用场景**：常用于实现淡入淡出的动画效果。当需要隐藏元素，但又希望其在隐藏状态下仍能响应交互操作时，也可使用此方法。例如，制作一个点击隐藏但仍可点击触发其他操作的按钮。
+- **示例**：
 
-        4.相邻选择器（h1 + p）
-
-        5.子选择器（ul < li）
-
-        6.后代选择器（li a）
-
-        7.通配符选择器（ * ）
-
-        8.属性选择器（a[rel = "external"]）
-
-        9.伪类选择器（a: hover, li: nth - child）
-
-    *   可继承： font-size font-family color, UL LI DL DD DT;
-
-    *   不可继承 ：border padding margin width height ;
-
-    *   优先级就近原则，样式定义最近者为准;
-
-    *   载入样式以最后载入的定位为准;
-
-优先级为:
-
-       !important >  id > class > tag  
-
-       important 比 内联优先级高
-
-CSS3新增伪类举例：
-
-    p:first-of-type 选择属于其父元素的首个 <p> 元素的每个 <p> 元素。
-
-    p:last-of-type  选择属于其父元素的最后 <p> 元素的每个 <p> 元素。
-
-    p:only-of-type  选择属于其父元素唯一的 <p> 元素的每个 <p> 元素。
-
-    p:only-child    选择属于其父元素的唯一子元素的每个 <p> 元素。
-
-    p:nth-child(2)  选择属于其父元素的第二个子元素的每个 <p> 元素。
-
-    :enabled、:disabled 控制表单控件的禁用状态。
-
-    :checked，单选框或复选框被选中。
-
+```css
+.transparent {
+  opacity: 0;
+}
 ```
+
+```html
+<button class="transparent">隐藏但可点击</button>
+```
+
+### 4. `position: absolute` 并移出可视区域
+
+- **原理**：将元素设置为绝对定位，然后通过 `top`、`left` 等属性将其移动到页面的可视区域之外，从而达到隐藏效果。元素虽然在视觉上不可见，但仍在文档流中，只是位置发生了改变。
+- **应用场景**：适用于一些需要隐藏，但又不想影响文档布局，同时希望保留元素的一些特性（如保持动画状态等）的场景。例如，将一些临时不需要显示但后续可能复用的元素移出可视区域隐藏。
+- **示例**：
+
+```css
+.hidden - offscreen {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+}
+```
+
+```html
+<div class="hidden - offscreen">隐藏在可视区域外的 div</div>
+```
+
+### 5. `clip - path`
+
+- **原理**：使用 `clip - path` 属性定义一个剪裁区域，元素只有在这个区域内的部分才会显示，区域外的部分将被隐藏。通过设置合适的剪裁路径，可以完全隐藏元素。
+- **应用场景**：在需要对元素进行复杂剪裁和隐藏效果时使用，例如制作一些不规则形状的隐藏效果。
+- **示例**：
+
+```css
+.clip - hidden {
+  clip - path: polygon(0 0, 0 0, 0 0, 0 0);
+}
+```
+
+```html
+<div class="clip - hidden">通过剪裁隐藏的 div</div>
+```
+
+### 6. `height: 0` 和 `overflow: hidden`
+
+- **原理**：将元素的高度设置为 0，同时设置 `overflow: hidden` 防止内容溢出。这样元素及其内部内容都无法显示，并且不占据文档空间（除了 border 和 margin）。
+- **应用场景**：对于一些可以动态展开和收起的元素（如折叠面板），在收起状态下可使用此方法隐藏内容，并且不会影响页面布局。
+- **示例**：
+
+```css
+.collapsed {
+  height: 0;
+  overflow: hidden;
+  border: none;
+  margin: 0;
+}
+```
+
+```html
+<div class="collapsed">隐藏的内容区域</div>
+```
+
+不同的隐藏方法在可访问性、对文档布局的影响以及元素交互性方面存在差异，在实际开发中需根据具体需求选择合适的方法。
+
+
+
+
+## 3. CSS 清除浮动的几种方法（至少两种）
+
+在 CSS 布局中，浮动元素会脱离文档流，可能导致父元素高度塌陷等布局问题，以下是几种常见的清除浮动方法：
+
+### 1. 使用 clear 属性
+
+- **原理**：`clear` 属性指定一个元素是否及如何避免其旁边出现浮动元素。取值有 `left`（清除左浮动）、`right`（清除右浮动）、`both`（清除左右浮动）。当一个元素设置了 `clear` 属性，它会下移到浮动元素下方，从而避免与浮动元素相邻。
+- **示例**：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    .float-left {
+      float: left;
+      width: 100px;
+      height: 100px;
+      background - color: lightblue;
+    }
+
+    .clear-both {
+      clear: both;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="float-left"></div>
+  <div class="clear-both"></div>
+  <p>这是一段文本，不会受上方浮动元素影响。</p>
+</body>
+
+</html>
+```
+
+- **缺点**：需要额外添加一个空的 HTML 元素来清除浮动，增加了无意义的标签，使 HTML 结构变得复杂，不利于代码维护。
+
+### 2. 父元素设置 overflow 属性
+
+- **原理**：给包含浮动元素的父元素设置 `overflow` 属性，取值可以是 `hidden`、`auto` 或 `scroll`。当设置为 `hidden` 时，父元素会将溢出的浮动元素包含在内，从而触发 BFC（块级格式化上下文），使父元素能够自适应浮动元素的高度。
+- **示例**：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    .parent {
+      overflow: hidden;
+    }
+
+    .float-left {
+      float: left;
+      width: 100px;
+      height: 100px;
+      background - color: lightblue;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="parent">
+    <div class="float-left"></div>
+  </div>
+  <p>这是一段文本，不会受上方浮动元素影响。</p>
+</body>
+
+</html>
+```
+
+- **缺点**：如果子元素有超出父元素的部分（例如图片过大），设置 `overflow: hidden` 会裁剪掉超出部分；设置 `overflow: auto` 或 `scroll` 可能会出现不必要的滚动条。
+
+### 3. 使用 :after 伪元素
+
+- **原理**：利用 `:after` 伪元素在父元素内容之后创建一个虚拟元素，然后对这个虚拟元素应用 `clear: both` 属性来清除浮动。同时设置 `content: ""` 使其成为一个空元素，并设置 `display: block` 让它以块级元素形式呈现。
+- **示例**：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    .parent::after {
+      content: "";
+      display: block;
+      clear: both;
+    }
+
+    .float-left {
+      float: left;
+      width: 100px;
+      height: 100px;
+      background - color: lightblue;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="parent">
+    <div class="float-left"></div>
+  </div>
+  <p>这是一段文本，不会受上方浮动元素影响。</p>
+</body>
+
+</html>
+```
+
+- **优点**：不需要在 HTML 中添加额外的标签，保持了 HTML 结构的简洁性，同时能有效清除浮动，是一种较为推荐的方法。
+
+### 4. 使用 clearfix 类
+
+- **原理**：这是一种结合 `:before` 和 `:after` 伪元素以及 `zoom` 属性（针对 IE 浏览器）的综合方法，本质上还是通过 `:after` 伪元素清除浮动。
+- **示例**：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    .clearfix::before,
+    .clearfix::after {
+      content: "";
+      display: table;
+    }
+
+    .clearfix::after {
+      clear: both;
+    }
+
+    .clearfix {
+      *zoom: 1;
+    }
+
+    .float-left {
+      float: left;
+      width: 100px;
+      height: 100px;
+      background-color: lightblue;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="clearfix">
+    <div class="float-left"></div>
+  </div>
+  <p>这是一段文本，不会受上方浮动元素影响。</p>
+</body>
+
+</html>
+```
+
+- **优点**：不仅保持了 HTML 结构简洁，而且兼容包括 IE 在内的多种浏览器，是一种广泛应用的清除浮动解决方案。其中 `*zoom: 1` 是针对 IE 浏览器触发 hasLayout 机制，使 IE 能正确处理浮动。
+
+
+
+
+
+## 4. 页面导入样式时，使用 link 和@import 有什么区别？
+
+> 1. Link 属于 html 标签，而@import 是 CSS 中提供的
+> 2. 在页面加载的时候，link 会同时被加载，而@import 引用的 CSS 会在页面加载完成后才会加载引用的 CSS
+> 3. @import 只有在 ie5 以上才可以被识别，而 link 是 html 标签，不存在浏览器兼容性问题
+> 4. Link 引入样式的权重大于@import 的引用（@import 是将引用的样式导入到当前的页面中）
+
+
+
+### 1. 加载顺序与时机
+
+- **`link`**：是 HTML 标签，在页面加载时，浏览器会同时并行加载 `link` 引入的 CSS 文件，与页面的其他资源（如图片、脚本等）一同加载。这意味着样式可以尽早加载并应用到页面，不会阻塞页面的渲染。例如：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="styles.css">
+  <title>Document</title>
+</head>
+<body>
+  <!-- 页面内容 -->
+</body>
+</html>
+```
+
+- **`@import`**：是 CSS 规则，在 CSS 文件被解析时才会加载。这会导致它在页面渲染过程中才开始加载样式，可能会阻塞页面的渲染。如果 `@import` 位于页面底部的 CSS 文件中，在它之前的 HTML 元素可能会先以无样式的状态短暂呈现，直到样式加载完成。例如：
+
+```css
+/* styles.css */
+@import 'additional - styles.css';
+body {
+  font - family: Arial, sans - serif;
+}
+```
+
+### 2. 兼容性
+
+- **`link`**：是 HTML 标签，被所有主流浏览器广泛支持，兼容性好。
+- **`@import`**：在低版本的 Internet Explorer（IE5 及以下）中存在兼容性问题，这些浏览器不支持 `@import` 方式引入样式。
+
+### 3. 可操作性
+
+- **`link`**：可以通过 JavaScript 动态创建和修改。例如，通过 `document.createElement('link')` 创建 `link` 元素，然后设置其 `rel` 和 `href` 属性来动态引入不同的样式表，以实现换肤等功能。例如：
+
+```javascript
+var link = document.createElement('link');
+link.rel ='stylesheet';
+link.href = 'new - styles.css';
+document.head.appendChild(link);
+```
+
+- **`@import`**：不能通过 JavaScript 直接操作，灵活性较差。它只能在 CSS 文件内部使用，并且一旦导入，无法动态更改。
+
+### 4. 功能特性
+
+- **`link`**：除了引入样式表，还可以用于定义文档与外部资源的其他关系，如 `rel="icon"` 用于指定网站图标。
+- **`@import`**：主要用于在 CSS 文件中引入其他 CSS 文件，功能相对单一。
+
+综上所述，在现代前端开发中，由于 `link` 在加载性能、兼容性和可操作性上具有优势，通常优先使用 `link` 标签来引入样式表。只有在某些特定场景，如在 CSS 文件内部需要引入其他样式片段时，才会考虑使用 `@import`。
+
+
+
+
+## 5. 伪元素和伪类的区别？
+
+伪元素和伪类是 CSS 中用于选择和设置元素样式的两种重要方式，它们存在以下区别：
+
+### 1. 概念与作用
+
+- **伪类**：用于向某些选择器添加特殊的效果，基于元素的状态或与其他元素的关系来选择元素。它本质上是为了选择 DOM 树中已有的元素，但这些元素处于特定状态，比如链接的 `:hover`（鼠标悬停）、`:active`（被激活，如点击时）、`:visited`（已访问过）等状态，或者元素在文档结构中的位置，如 `:first-child`（第一个子元素）、`:nth-child(n)`（第 n 个子元素）等。伪类可以让开发者在不改变 HTML 结构的前提下，根据元素的不同状态或位置应用不同的样式。例如：
+
+```css
+a:hover {
+  color: red;
+}
+li:first-child {
+  font-weight: bold;
+}
+```
+
+- **伪元素**：用于创建一些不在文档树中的元素，并为其添加样式。这些元素实际上并不存在于 HTML 文档中，而是通过 CSS 生成的虚拟元素。常见的伪元素有 `::before` 和 `::after`，它们可以在元素内容的前面或后面插入新的内容。例如，在段落前面添加一个图标：
+
+```css
+p::before {
+  content: "📌";
+  color: blue;
+}
+```
+
+### 2. 语法
+
+- **伪类**：使用单个冒号 `:` 作为前缀，紧跟在选择器后面。例如 `a:hover`、`li:nth-child(2)`。
+- **伪元素**：在 CSS3 规范中，使用双冒号 `::` 作为前缀，紧跟在选择器后面，如 `p::before`、`div::first-line`。不过，为了兼容旧版本浏览器，对于 `::before` 和 `::after` 这两个最常用的伪元素，单冒号写法 `:before` 和 `:after` 也被大多数浏览器支持，但建议统一使用双冒号写法以符合 CSS3 规范。
+
+### 3. 可应用数量
+
+- **伪类**：一个选择器可以同时使用多个伪类，以满足更复杂的选择条件。例如，`a:hover:active` 表示链接在鼠标悬停且被激活时的状态。
+- **伪元素**：一个选择器通常只能使用一个伪元素。如果在一个选择器后使用多个伪元素，只有最后一个会生效。例如，`p::before::after` 这样的写法，`::after` 会覆盖 `::before` 的设置（虽然这种写法本身不符合规范且不推荐）。
+
+### 4. 对 DOM 的影响
+
+- **伪类**：不会改变 DOM 结构，只是根据元素已有的状态或关系来应用样式。无论元素处于何种伪类状态，它在 DOM 树中的结构和属性都不会发生变化。
+- **伪元素**：虽然没有直接改变原有的 DOM 树结构，但它创建了实际上不存在于文档中的虚拟元素，这些虚拟元素在渲染时会被插入到文档中相应的位置，影响页面的呈现。例如，通过 `::before` 和 `::after` 添加的内容会在页面上显示，就好像是文档中真实存在的元素一样。
+
+
+
+
+## 6. CSS 选择符有哪些？哪些属性可以继承？优先级算法如何计算？ CSS3 新增伪类有那些？
+
+### 1. CSS 选择符
+
+- **元素选择符**：根据元素名称选择元素，如 `p` 选择所有段落元素，`div` 选择所有 `div` 元素。
+- **类选择符**：以点号（`.`）开头，根据元素的 `class` 属性值选择元素，如 `.container` 选择所有 `class` 属性值包含 `container` 的元素。
+- **ID 选择符**：以井号（`#`）开头，根据元素的 `id` 属性值选择唯一的元素，如 `#main` 选择 `id` 为 `main` 的元素。由于其具有唯一性，在页面中 `id` 应避免重复使用。
+- **通配符选择符**：使用星号（`*`），表示选择文档中的所有元素，如 `* { margin: 0; padding: 0; }` 会将所有元素的外边距和内边距设置为 0 。
+- **属性选择符**：根据元素的属性及属性值选择元素。例如，`a[href]` 选择所有带有 `href` 属性的 `a` 元素；`input[type="text"]` 选择 `type` 属性值为 `text` 的 `input` 元素。
+- **后代选择符**：使用空格分隔两个选择器，选择作为第一个选择器后代的第二个选择器元素。如 `div p` 选择 `div` 元素内部的所有 `p` 元素，无论嵌套多深。
+- **子选择符**：使用大于号（`>`）分隔两个选择器，仅选择作为第一个选择器直接子元素的第二个选择器元素。例如，`ul > li` 只选择 `ul` 元素的直接子 `li` 元素，而不会选择孙子辈及以下的 `li` 元素。
+- **相邻兄弟选择符**：使用加号（`+`）分隔两个选择器，选择紧接在第一个选择器元素之后的第二个选择器元素，且它们具有相同的父元素。例如，`h1 + p` 选择紧跟在 `h1` 元素之后的 `p` 元素。
+- **通用兄弟选择符**：使用波浪号（`~`）分隔两个选择器，选择在第一个选择器元素之后且具有相同父元素的所有第二个选择器元素。例如，`h1 ~ p` 选择 `h1` 元素之后的所有 `p` 元素，只要它们有相同的父元素。
+
+### 2. 可继承属性
+
+- **文本相关属性**：如 `font-family`（字体系列）、`font-size`（字体大小）、`font-weight`（字体粗细）、`color`（文本颜色）等，会从父元素继承到子元素。例如，设置 `body { font-family: Arial, sans-serif; }`，那么 `body` 内部的所有元素都会继承这个字体系列。
+- **列表相关属性**：`list-style-type`（列表样式类型，如 `disc` 实心圆、`circle` 空心圆、`square` 方块等）、`list-style-image`（列表项标记图像）、`list-style-position`（列表项标记位置）等属性会继承。若在 `ul` 元素上设置 `list-style-type: square;`，其 `li` 子元素会自动采用方块作为列表标记。
+- **表格相关属性**：`border-collapse`（边框合并）、`caption-side`（表格标题位置）等部分表格属性可继承。
+
+### 3. 优先级算法
+
+- **计算规则：**优先级由四个部分组成，从高到低依次为：
+  - **内联样式**：直接写在元素的 `style` 属性中的样式，如 `<div style="color: red;">`，优先级最高，记为 `1,0,0,0`。
+  - **ID 选择符**：每个 ID 选择符记为 `0,1,0,0`。例如 `#main { color: blue; }`，这里的 `#main` 选择符优先级为 `0,1,0,0`。
+  - **类选择符、属性选择符、伪类**：每一个类选择符、属性选择符或伪类记为 `0,0,1,0`。比如 `.container { background-color: yellow; }`，`.container` 类选择符优先级为 `0,0,1,0`；`a:hover { text-decoration: underline; }` 中 `:hover` 伪类优先级也是 `0,0,1,0`。
+  - **元素选择符、伪元素**：每一个元素选择符或伪元素记为 `0,0,0,1`。例如 `p { font-size: 16px; }`，`p` 元素选择符优先级为 `0,0,0,1`；`p::before { content: "前缀"; }` 中 `::before` 伪元素优先级同样为 `0,0,0,1`。
+- **比较方法**：在比较优先级时，从左到右依次比较这四个部分的数值。如果某一部分数值不同，则数值大的优先级高；如果某一部分数值相同，则继续比较下一部分。例如，`0,1,0,0` 大于 `0,0,1,0`，所以 ID 选择符的优先级高于类选择符。当优先级相同时，后出现的样式会覆盖先出现的样式（在同一个样式表中，或在多个样式表按顺序加载的情况下）。
+
+### 4. CSS3 新增伪类
+
+- **结构性伪类**
+  - **`:nth-child(n)`**：选择父元素的第 `n` 个子元素，`n` 可以是数字、关键字（如 `even` 偶数、`odd` 奇数）或公式（如 `2n` 偶数、`2n + 1` 奇数）。例如，`li:nth-child(2)` 选择每个父元素下的第二个 `li` 子元素；`li:nth-child(even)` 选择每个父元素下的偶数位置的 `li` 子元素。
+  - **`:nth-of-type(n)`**：选择父元素中特定类型的第 `n` 个元素。与 `:nth-child(n)` 的区别在于，它只针对同类型元素计数。例如，在一个包含多种元素的父元素中，`p:nth-of-type(3)` 选择父元素内的第三个 `p` 元素，而不考虑其他类型的元素。
+  - **`:first-of-type`**：选择父元素中特定类型的第一个元素。例如，`div:first-of-type` 选择每个父元素下的第一个 `div` 元素。
+  - **`:last-of-type`**：选择父元素中特定类型的最后一个元素。例如，`span:last-of-type` 选择每个父元素下的最后一个 `span` 元素。
+  - **`:only-of-type`**：如果某个元素是其父元素中唯一的该类型元素，则匹配该元素。例如，在一个父元素中只有一个 `h1` 元素时，`h1:only-of-type` 会匹配这个 `h1` 元素。
+  - **`:only-child`**：如果某个元素是其父元素的唯一子元素，则匹配该元素。与 `:only-of-type` 的区别在于，`:only-child` 不考虑元素类型，只要是唯一子元素就匹配。
+- **目标伪类**
+  - **`:target`**：当页面的 `URL` 包含一个锚点（如 `#section1`），且锚点指向的元素就是该选择符所选择的元素时，匹配该元素。常用于实现页面内跳转时目标元素的样式改变。例如，当点击链接跳转到 `id` 为 `section1` 的元素时，`#section1:target { background-color: lightblue; }` 会使 `section1` 元素背景变为浅蓝色。
+- **UI 状态伪类**
+  - **`:enabled`**：选择所有启用状态的表单元素（如 `input`、`select`、`button` 等）。例如，`input:enabled { background-color: white; }` 会设置启用状态的 `input` 元素背景色为白色。
+  - **`:disabled`**：选择所有禁用状态的表单元素。例如，`input:disabled { opacity: 0.5; }` 会使禁用状态的 `input` 元素透明度变为 0.5 ，呈现出不可用的视觉效果。
+  - **`:checked`**：选择所有被选中的表单元素，如单选框（`input[type="radio"]`）和复选框（`input[type="checkbox"]`）。例如，`input[type="checkbox"]:checked { background-color: green; }` 会使被选中的复选框背景变为绿色。
+- **否定伪类**
+  - **`:not(selector)`**：选择不符合指定选择器的元素。例如，`li:not(.active)` 选择所有 `class` 不为 `active` 的 `li` 元素。可以用于排除某些特定元素，使样式应用更灵活。
 
 
 

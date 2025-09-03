@@ -1143,7 +1143,7 @@ HTML5使用的编码 `<meta charset="UTF-8">`
 
 
 
-## 36. 为什么最好把 CSS 的`<link>`标签放在`<head></head>`之间？为什么最好把 JS 的`<script>`标签恰好放在`</body>`之前，有例外情况吗？
+## 36. 为什么把 CSS 的`<link>`标签放在`<head>`？JS 的`<script>`标签放在`</body>`之前，有例外情况吗？
 
 答案：
 
