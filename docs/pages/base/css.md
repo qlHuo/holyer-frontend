@@ -153,20 +153,20 @@ div {
 <div class="hidden - offscreen">隐藏在可视区域外的 div</div>
 ```
 
-### 5. `clip - path`
+### 5. `clip-path`
 
-- **原理**：使用 `clip - path` 属性定义一个剪裁区域，元素只有在这个区域内的部分才会显示，区域外的部分将被隐藏。通过设置合适的剪裁路径，可以完全隐藏元素。
+- **原理**：使用 `clip-path` 属性定义一个剪裁区域，元素只有在这个区域内的部分才会显示，区域外的部分将被隐藏。通过设置合适的剪裁路径，可以完全隐藏元素。
 - **应用场景**：在需要对元素进行复杂剪裁和隐藏效果时使用，例如制作一些不规则形状的隐藏效果。
 - **示例**：
 
 ```css
-.clip - hidden {
-  clip - path: polygon(0 0, 0 0, 0 0, 0 0);
+.clip-hidden {
+  clip-path: polygon(0 0, 0 0, 0 0, 0 0);
 }
 ```
 
 ```html
-<div class="clip - hidden">通过剪裁隐藏的 div</div>
+<div class="clip-hidden">通过剪裁隐藏的 div</div>
 ```
 
 ### 6. `height: 0` 和 `overflow: hidden`
@@ -2945,76 +2945,188 @@ a:hover { color: red; } /* 鼠标悬停 */
 a:active { color: yellow; } /* 激活（点击时） */
 ```
 
-这样设置后，当链接被访问后，hover样式（红色）仍然会生效，因为它在:visited之后定义（在CSS中，后面定义的样式会覆盖前面相同优先级的样式）。
+这样设置后，当链接被访问后，hover 样式（红色）仍然会生效，因为它在:visited之后定义（在 CSS 中，后面定义的样式会覆盖前面相同优先级的样式）。
 
 注意：如果只设置部分状态，也要确保顺序正确。比如只设置:hover和:active，那么:hover应该在:active之前。
 
-另外，如果使用了!important，可能会打破这个顺序，所以尽量避免在链接样式中使用!important。
+另外，如果使用了 `!important`，可能会打破这个顺序，所以尽量避免在链接样式中使用 `!important`。
 
-如果问题仍然存在，可能是其他CSS规则覆盖了样式，需要检查选择器优先级。
-
-
+如果问题仍然存在，可能是其他 CSS 规则覆盖了样式，需要检查选择器优先级。
 
 
-## 28. 什么是 Css Hack？ie6,7,8 的 hack 分别是什么？
-
-答案：针对不同的浏览器写不同的 CSS code 的过程，就是 CSS hack。
-
-示例如下：
-
-```css
-
-#test{
-    width:300px;
-    height:300px;
-    background-color:blue;      /_firefox_/
-    background-color:red\9;      /_all ie_/
-    background-color:yellow;    /_ie8_/
-    +background-color:pink;        /_ie7_/
-    \_background-color:orange;       /_ie6_/   
-}
-
- :root #test { background-color:purple\9; }  /*ie9*/
-
-@media all and (min-width:0px)
-
-     { #test {background-color:black;} }  /*opera*/
-
-@media screen and (-webkit-min-device-pixel-ratio:0)
-
-{ #test {background-color:gray;} }       /*chrome and safari*/
 
 
+## 25. 什么是 Css Hack？ie6,7,8 的 hack 分别是什么？
+
+**CSS Hack** 是一种利用浏览器对 CSS 解析的差异或漏洞，为特定浏览器（尤其是旧版 IE）应用专属样式的技术。它通常用于解决浏览器兼容性问题，但**不推荐作为首选方案**（存在维护困难、破坏标准等问题）。现代开发中，应优先使用特性检测（如 `@supports`）或条件注释（针对 IE）。
+
+### 针对 IE6、IE7、IE8 的 CSS Hack
+
+以下是针对 IE6/7/8 的常见 Hack 方法（按优先级排序）：
+
+#### 1. **IE6 专属 Hack**
+
+- **下划线 Hack** 属性前加 `_`，仅 IE6 识别：
+
+```CSS
+ .element {
+     _color: red; /* 仅 IE6 生效 */
+ }
 ```
 
+- **星号 Hack** 属性前加 `*`，IE6/7 识别（需结合其他 Hack7 识别（需结合其他 Hack 单独过滤 IE6）：
+
+```CSS
+ .element {
+     *color: red; /* IE6/7 生效 */
+ }
+```
+
+- **HTML 选择器 Hack** 利用子选择器漏洞：
+
+```CSS
+ * html .element { 
+     color: red; /* 仅 IE6 生效 */
+ }
+```
+
+#### 2. **IE7 专属 Hack**
+
+- **星号 + 加号 Hack** 属性前加 `*+`，仅 IE7 识别：
+
+```CSS
+ .element {
+     *+color: red; /* 仅 IE7 生效 */
+ }
+```
+
+- **选择器后缀 Hack** 在 `:root` 伪类后添加空格（现代浏览器忽略）：
+
+```CSS
+ .element, x:-IE7 {
+     color: red; /* 仅 IE7 生效 */
+ }
+```
+
+#### 3. **IE8 专属 Hack**
+
+- **`\9` 转义 Hack** 属性值末尾加 `\9`，IE8 及以下生效，IE8 及以下生效：
+
+```CSS
+ .element {
+     color: red \9; /* IE8 及更低版本生效 */
+ }
+```
+
+- **`\0` 转义 Hack** 属性值末尾加 `\0`，IE8/9/10 生效（需结合其他方法过滤）：
+
+```CSS
+ .element {
+     color: red \0; /* IE8~10 生效 */
+ }
+```
+
+- **媒体查询 Hack** 利用 IE8 的媒体查询漏洞：
+
+```CSS
+ @media \0screen {
+     .element { color: red; } /* 仅 IE8 生效 */
+ }
+```
+
+### 替代方案（推荐）
+
+1. **条件注释 (IE9 以下专属)** 在 HTML 中为不同 IE 版本加载样式：
+
+```HTML
+   <!--[if   ```html
+   <!--[if IE 6]>
+     <link rel="stylesheet" href="ie6.css">
+   <![endif]-->
+   <!--[if IE 7]>
+     <link rel="stylesheet" href="ie7.css">
+   <![endif]-->
+```
+
+1. **特性检测 (Modernizr 或 `@supports`)** 使用 JavaScript 或 CSS 原生检测：
+
+```CSS
+   @supports (display: flex) {
+     /* 支持 Flexbox 的浏览器 */
+   }
+```
+
+### 注意事项
+
+- **慎用 Hack**：Hack 可能导致未来浏览器升级后页面崩溃。
+- **渐进增强**：优先保证现代浏览器的体验，再为旧浏览器提供降级样式。
+- **IE 淘汰计划**：微软已终止 IE 支持，建议逐步放弃对 IE6/7/8 的兼容。
+
+> 请仅在无法通过标准方法解决兼容性问题时使用 Hack，并明确注释代码！
 
 
 
-## 29. 重置（resetting）CSS 和 标准化（normalizing）CSS 的区别是什么？你会选择哪种方式，为什么？
 
-答案：
+## 26. 重置（resetting）CSS 和 标准化（normalizing）CSS 的区别是什么？你会选择哪种方式，为什么？
 
-- **重置（Resetting）**： 重置意味着除去所有的浏览器默认样式。对于页面所有的元素，像`margin`、`padding`、`font-size`这些样式全部置成一样。你将必须重新定义各种元素的样式。
-- **标准化（Normalizing）**： 标准化没有去掉所有的默认样式，而是保留了有用的一部分，同时还纠正了一些常见错误。
+### CSS 重置（Resetting）与标准化（Normalizing）的区别
 
-当需要实现非常个性化的网页设计时，我会选择重置的方式，因为我要写很多自定义的样式以满足设计需求，这时候就不再需要标准化的默认样式了。
+| **特性**           | **CSS 重置 (Resetting)**                                | **CSS 标准化 (Normalizing)**                           |
+| ------------------ | ------------------------------------------------------- | ------------------------------------------------------ |
+| **核心目标**       | 彻底**清除**所有浏览器默认样式                          | **统一**浏览器默认样式，保留有用部分                   |
+| **工作方式**       | 将所有元素的默认样式归零（如 `margin: 0; padding: 0;`） | 针对性修复浏览器差异，保留合理默认值（如标题字体大小） |
+| **典型代表**       | Eric Meyer 的 Reset CSS                                 | Nicolas Gallagher 的 Normalize.css                     |
+| **对默认样式态度** | **完全移除**（从零开始）                                | **保留并修复**（基于默认样式优化）                     |
+| **代码示例**       | `* { margin:0; padding:0; }`                            | `ul { padding-left: 40px; }`                           |
+| **优点**           | 彻底消除浏览器差异，完全自由定制                        | 保留语义化 HTML 的默认行为，减少冗余代码               |
+| **缺点**           | 破坏有用默认样式（如 `<em>` 斜体），需重写所有样式      | 无法完全清除所有差异，需额外覆盖部分样式               |
 
-解析：[参考](https://stackoverflow.com/questions/6887336/what-is-the-difference-between-normalize-css-and-reset-css)
+### **我会选择哪种方式，为什么？**
+
+**推荐选择：标准化（Normalizing）**，原因如下：
+
+1. **更智能的保留默认样式** Normalize.css 会保留合理的默认样式（如 `<sup>` 的上标效果、`<button>` 的悬停状态），而重置会无差别清除所有默认样式，导致需要重写更多代码。
+2. **针对性修复浏览器差异** Normalize.css 直接修复了 100+ 个浏览器渲染差异（如 HTML5 元素显示问题、字体抗锯齿、行高计算等），而重置只是简单归零，仍需手动处理这些差异。
+3. **更好的语义化支持** 保留 HTML 元素的语义化默认行为（如 `<h1>` 的字号层级、`<ul>` 的项目符号），符合渐进增强原则。
+4. **模块化与可维护性** Normalize.css 提供详细注释和模块化结构（[源码](https://github.com/necolas/normalize.css)），方便按需调整。
+
+### **何时使用重置（Resetting）？**
+
+- 需要完全从零设计的视觉密集型项目（如全屏互动网站）
+- 设计系统与浏览器默认样式完全冲突时
+- 可结合使用：`Normalize.css + 自定义重置`（例如保留 Normalize 并添加 `box-sizing: border-box;`）
+
+> **现代替代方案**：考虑使用更先进的 CSS 工具
+>
+> - **CSS Remedy**：Josh W. Comeau 的现代重置方案（保留有用默认值 + 修复问题）
+> - **Tailwind CSS**：实用优先的 CSS 框架（内置智能重置）
+> - **PostCSS 插件**：通过 `postcss-normalize` 按需引入标准化规则
+
+### **总结**
+
+| **场景**                  | **推荐方案**                    |
+| ------------------------- | ------------------------------- |
+| 大多数常规项目            | **Normalize.css**               |
+| 高度定制化视觉项目        | 重置 + 自定义扩展               |
+| 现代框架项目（React/Vue） | Normalize.css 或 CSS-in-JS 方案 |
+| 追求开发效率              | Tailwind CSS 等框架             |
+
+**核心原则**：优先保留有用的浏览器默认行为，减少不必要的代码覆盖，针对性修复差异而非全面清除。
 
 
 
 
-## 30.css sprite 是什么,有什么优缺点
+## 27. css sprite 是什么, 有什么优缺点
 
-答案：概念：将多个小图片拼接到一个图片中。通过 background-position 和元素尺寸调节需要显示的背景图案。
+概念：将多个小图片拼接到一个图片中。通过 background-position 和元素尺寸调节需要显示的背景图案。
 
-优点：
+**优点：**
 
 - 减少 HTTP 请求数，极大地提高页面加载速度。
 - 增加图片信息重复度，提高压缩比，减少图片大小。
 - 更换风格方便，只需在一张或几张图片上修改颜色或样式即可实现。
 
-缺点：
+**缺点：**
 
 - 图片合并麻烦。
 - 维护麻烦，修改一个图片可能需要从新布局整个图片，样式。
@@ -3022,28 +3134,175 @@ a:active { color: yellow; } /* 激活（点击时） */
 
 
 
-## 31.什么是 FOUC?如何避免
+## 28. 什么是 FOUC? 如何避免
 
-答案：
+### 什么是 FOUC？
 
-1. 什么是 Fouc(文档样式短暂失效)？
+**FOUC (Flash of Unstyled Content)** 是指网页在加载过程中，浏览器短暂显示未应用样式的原始 HTML 内容，然后突然跳转到应用完整 CSS 样式的视觉现象。这种"无样式内容闪烁"通常持续几百毫秒到几秒，会破坏用户体验，给人不专业的印象。
 
-在引用 css 的过程中，如果方法不当或者位置引用不对，会导致某些页面在 windows 下的 ie 出现一些奇怪的现象，以无样式显示页面内容的瞬间闪烁，这种现象称之为文档样式短暂失效，简称 FOCU。
+#### FOUC 的典型表现
 
-2. 原因大致为：
+1. 页面加载时先显示
+   - 无样式的纯文本链接（默认蓝色带下划线）
+   - 无序列表显示为纯文本（无项目符号）
+   - 表单元素使用浏览器默认样式
+2. 突然"闪现"为设计后的样式
 
-- 使用 import 方法导入样式表
-- 将样式表放在页面底部
-- 有几个样式表，放在 html 结构的不同位置。
+#### FOUC 的主要原因
 
-3. 其实原理很清楚：当样式表晚于结构性 html 加载，当加载到此样式表时，页面将停止之前的渲染。此样式表被下载和解析后，将重新渲染页面，也就出现了短暂的花屏现象。
+| 原因             | 说明                                       |
+| ---------------- | ------------------------------------------ |
+| CSS 加载位置不当 | CSS 文件放在 `<body>` 底部而非 `<head>` 中 |
+| @import 引入 CSS | 使用 `@import` 会导致渲染阻塞              |
+| JavaScript 阻塞  | JS 文件阻塞 CSS 解析和渲染                 |
+| 旧版 IE 特定行为 | IE 的样式处理机制不同                      |
 
-4. 解决方法：使用 link 标签将样式表放在文档 head 中。
+### 如何避免 FOUC？(7 种有效方案)
+
+#### ✅ 最佳实践：CSS 放置位置优化
+
+```HTML
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- 关键：所有 CSS 必须放在 head 中 -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- 内联关键 CSS 效果更佳 -->
+  <style>
+    /* 首屏必要样式 */
+    body { visibility: hidden; }
+    .header, .hero { ... }
+  </style>
+</head>
+```
+
+#### ✅ 避免使用 @import
+
+```HTML
+<!-- 错误方式 -->
+<style>
+  @import url("styles.css"); /* 导致渲染延迟 */
+</style>
+
+<!-- 正确方式 -->
+<link rel="stylesheet" href="styles.css">
+```
+
+#### ✅ 异步加载非关键 CSS
+
+```HTML
+<!-- 使用 media 属性避免阻塞 -->
+<link rel="stylesheet" href="non-critical.css" media="print" onload="this.media='all'">
+
+<!-- 使用 preload 优化 -->
+<link rel="preload" href="fonts.css" as="style" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="fonts.css"></noscript>
+```
+
+#### ✅ JavaScript 加载优化
+
+```HTML
+<!-- 将 JS 放在 body 末尾 -->
+<body>
+  <!-- 页面内容 -->
+  <script src="app.js"></script> <!-- 避免阻塞渲染 -->
+</body>
+
+<!-- 或使用 async/defer -->
+<script src="analytics.js" async></script>
+```
+
+#### ✅ 初始隐藏技巧 (应急方案)
+
+```CSS
+/* 在 head 的内联样式中设置 */
+body { 
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* 页面加载完成后显示 */
+document.addEventListener('DOMContentLoaded', function() {
+  document.body.style.opacity = 1;
+  document.body.style.visibility = 'visible';
+});
+```
+
+#### ✅ 现代框架解决方案
+
+**Next.js (React):**
+
+```Jsx
+// next.config.js
+module.exports = {
+  experimental: {
+    optimizeCss: true, // 自动优化CSS
+  },
+};
+
+// 使用内置 CSS 解决方案
+import styles from './Layout.module.css';
+```
+
+**Vue:**
+
+```HTML
+<template>
+  <!-- 使用 v-cloak 指令 -->
+  <div v-cloak>
+    {{ message }}
+  </div>
+</template>
+
+<style>
+[v-cloak] {
+  display: none;
+}
+</style>
+```
+
+#### ✅ 构建工具优化
+
+使用 **Critical CSS** 工具提取首屏样式：
+
+```Bash
+# 使用Webpack插件
+npm install critical-webpack-plugin --save-dev
+
+# 或使用PostCSS插件
+npm install postcss-critical-css --save-dev
+```
+
+### FOUC 检测工具
+
+1. **Chrome DevTools**
+   - 使用 [Performance 选项卡]录制加载过程
+   - 查看 [Rendering] → [Layout Shift Regions]
+2. **Lighthouse**：
+
+```Bash
+   npm install -g lighthouse
+   lighthouse https://your-site.com --view
+```
+
+1. **WebPageTest**： https://www.webpagetest.org/  的视频录制功能
+
+### 总结：FOUC 预防策略优先级
+
+1. **将 CSS 放在 `<head>` 中** - 最基础有效的方案
+2. **内联关键 CSS** - 首屏内容立即显示
+3. **异步加载非关键资源** - 使用 `preload` 和 `media` 属性
+4. **优化 JavaScript 加载** - 使用 `async/defer`
+5. **使用现代框架能力** - Next.js/Vue 的内置优化
+6. **构建时提取关键 CSS** - 适用于复杂项目
+
+> 📌 **核心原则**：确保浏览器在渲染 HTML 内容前已接收并处理必要的 CSS 规则。用户体验中，即使是 100ms 的样式闪烁也会被用户感知，因此消除 FOUC 是专业前端开发的基本要求。
 
 
 
 
-## 32.css3 有哪些新特性
+## 29.  css3 有哪些新特性
 
 答案：
 
@@ -3227,104 +3486,310 @@ div {
 
 [参考](https://www.w3school.com.cn/css3/index.asp)
 
+CSS3 的新特性全面提升了前端开发能力，主要分为以下六大类，结合核心功能与代码示例说明：
 
+### ⚙️ 一、选择器增强
 
+新增选择器大幅提升元素定位精度：
 
-## 33.display 有哪些值？说明他们的作用
+1. **属性选择器**
 
-答案：
-
-display： none | inline | block | list-item | inline-block | table | inline-table | table-caption | table-cell | table-row | table-row-group | table-column | table-column-group | table-footer-group | table-header-group | run-in | box | inline-box | flexbox | inline-flexbox | flex | inline-flex
-
-解析：
-
-默认值：inline
-
-```
-none： 隐藏对象。与visibility属性的hidden值不同，其不为被隐藏的对象保留其物理空间
-inline： 指定对象为内联元素。
-block： 指定对象为块元素。
-list-item： 指定对象为列表项目。
-inline-block： 指定对象为内联块元素。（CSS2）
-table： 指定对象作为块元素级的表格。类同于html标签<table>（CSS2）
-inline-table： 指定对象作为内联元素级的表格。类同于html标签<table>（CSS2）
-table-caption： 指定对象作为表格标题。类同于html标签<caption>（CSS2）
-table-cell： 指定对象作为表格单元格。类同于html标签<td>（CSS2）
-table-row： 指定对象作为表格行。类同于html标签<tr>（CSS2）
-table-row-group： 指定对象作为表格行组。类同于html标签<tbody>（CSS2）
-table-column： 指定对象作为表格列。类同于html标签<col>（CSS2）
-table-column-group： 指定对象作为表格列组显示。类同于html标签<colgroup>（CSS2）
-table-header-group： 指定对象作为表格标题组。类同于html标签<thead>（CSS2）
-table-footer-group： 指定对象作为表格脚注组。类同于html标签<tfoot>（CSS2）
-run-in： 根据上下文决定对象是内联对象还是块级对象。（CSS3）
-box： 将对象作为弹性伸缩盒显示。（伸缩盒最老版本）（CSS3）
-inline-box： 将对象作为内联块级弹性伸缩盒显示。（伸缩盒最老版本）（CSS3）
-flexbox： 将对象作为弹性伸缩盒显示。（伸缩盒过渡版本）（CSS3）
-inline-flexbox： 将对象作为内联块级弹性伸缩盒显示。（伸缩盒过渡版本）（CSS3）
-flex： 将对象作为弹性伸缩盒显示。（伸缩盒最新版本）（CSS3）
-inline-flex： 将对象作为内联块级弹性伸缩盒显示。（伸缩盒最新版本）（CSS3）
+```CSS
+a[href^="https"] { }  /* 链接以 https 开头 */
+img[src$=".png"] { }  /* 图片为 png 格式 */
 ```
 
-[参考](https://www.jianshu.com/p/77e1c36c0895)
+2. **结构伪类**
+
+```css
+li:nth-child(2n) { }  /* 偶数行列表项 */
+p:first-of-type { }   /* 父元素内首个 <p> */
+```
+
+3. **状态伪类**
+
+```CSS
+input:disabled { }    /* 禁用输入框 */
+input:checked + label { } /* 选中复选框时的标签 */
+```
+
+### 🧩 二、布局系统革新
+
+1. **Flexbox 弹性布局**
+
+```CSS
+.container {
+   display: flex;
+   justify-content: space-between; /* 水平均匀分布 */
+}
+```
+
+1. **Grid 网格布局**
+
+```CSS
+.grid {
+   display: grid;
+   grid-template-columns: 1fr 2fr; /* 两列，第二列宽度为第一列2倍 */
+}
+```
+
+1. **多列布局**
+
+```CSS
+article {
+  column-count: 3;  /* 内容分三列显示 */
+}
+```
+
+### 🎨 三、视觉效果
+
+1. **圆角与阴影**
+
+```CSS
+.card {
+  border-radius: 10px; 
+  box-shadow: 2px 2px 10px rgba(0,0,0,0.1); 
+}
+```
+
+2. **渐变背景**
+
+```CSS
+.banner {
+   background: linear-gradient(to right, #ff7e5f, #feb47b);
+}
+```
+
+3. **边框图片**
+
+```CSS
+.art-box {
+   border-image: url(border.png) 30 round;
+}
+```
+
+### 🚀 四、动画与变换
+
+1. **过渡（Transition）**
+
+```CSS
+button {
+   transition: background 0.3s ease; 
+}
+button:hover { background: #3498db; }
+```
+
+2. **变换（Transform）**
+
+```CSS
+.icon:hover {
+   transform: rotate(45deg) scale(1.2); /* 旋转并放大 */
+}
+```
+
+3. **关键帧动画（Animation）**
+
+```css
+@keyframes spin {
+   from { transform: rotate(0deg); }
+   to { transform: rotate(360deg); }
+}
+.loader { animation: spin 2s infinite linear; }
+```
+
+### ✏️ 五、文字与字体
+
+1. **文本特效**
+
+```CSS
+h1 {
+  text-shadow: 2px 2px 4px #000;
+  text-overflow: ellipsis; /* 溢出显示省略号 */
+}
+```
+
+2. **自定义字体**
+
+~~~css
+@font-face {
+ font-family: "MyFont";
+ src: url("myfont.woff2") format("woff2");
+}
+body { font-family: "MyFont"; }
+~~~
+
+### 🎯 六、其他关键特性
+
+1. **媒体查询（Media Queries）**
+
+```CSS
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+}
+```
+
+2. **RGBA/HSLA 透明度支持**
+
+```CSS
+.translucent {
+  background: rgba(255, 0, 0, 0.5); /* 半透明红色 */
+  color: hsla(120, 100%, 50%, 0.8); /* 半透明绿色 */
+}
+```
+
+### 💎 总结建议
+
+- **优先掌握**：Flex/Grid 布局、过渡动画、Grid 布局、过渡动画、媒体查询（响应式开发核心）
+- **工具推荐**：使用 Autoprefixer 自动处理浏览器兼容前缀
+- **设计原则**
+  - 渐进增强：基础功能兼容低版本，高级特性增强现代浏览器体验
+  - 性能优化：避免滥用阴影/渐变，硬件加速动画（使用 `transform` 和 `opacity`）
+
+> 完整特性列表可参考 [CSS3 选择器详解](https://zhuanlan.zhihu.com/p/617700202) 及 [W3C 标准文档](https://www.w3.org/Style/CSS/)。
 
 
 
 
-## 34.display:inline-block 什么时候不会显示间隙？(携程)
+## 30. display 有哪些值？说明他们的作用
 
-答案：inline-block 布局的元素在编辑器里写在同一行
+`display` 是 CSS 中最基础且强大的布局控制属性，它决定了元素在页面中的呈现方式。下面是常见取值及其作用：
+
+### **常见 display 值及作用**
+
+| 值                 | 描述                           | 典型用例                    |
+| ------------------ | ------------------------------ | --------------------------- |
+| **`block`**        | 块级元素，独占一行             | `<div>`, `<p>`, `<h1>`      |
+| **`inline`**       | 行内元素，不换行               | `<span>`, `<a>`, `<strong>` |
+| **`inline-block`** | 行内块级元素，可设宽高但不换行 | 导航项、按钮组              |
+| **`none`**         | 完全隐藏元素，不占空间         | 下拉菜单、模态框            |
+| **`flex`**         | 弹性布局容器                   | 一维布局、居中              |
+| **`grid`**         | 网格布局容器                   | 二维复杂布局                |
+| **`table`**        | 表格布局                       | 数据表格结构                |
+| **`list-item`**    | 列表项                         | `<li>`                      |
+
+### 详细解释与代码示例
+
+#### 1. 基础布局模式
+
+```CSS
+/* 块级元素 - 独占整行 */
+.block-element {
+  display: block;
+  width: 200px;
+  height: 50px;
+  background: #3498db;
+}
+
+/* 行内元素 - 不换行 */
+.inline-element {
+  display: inline;
+  background: #e74c3c;
+  /* width/height 无效 */
+}
+
+/* 行内块元素 - 兼具两者特性 */
+.inline-block-element {
+  display: inline-block;
+  width: 100px;
+  height: 40px;
+  background: #2ecc71;
+}
+```
+
+#### 2. 现代布局系统
+
+```CSS
+/* Flexbox 弹性布局 */
+.flex-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-item {
+  flex: 1;
+}
+
+/* Grid 网格布局 */
+.grid-container {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  grid-gap: 20px;
+}
+
+.grid-item {
+  grid-column: span 2;
+}
+```
+
+#### 3. 表格相关布局
+
+```CSS
+/* 表格布局 */
+.table-wrapper {
+  display: table;
+  width: 100%;
+}
+
+.table-row {
+  display: table-row;
+}
+
+.table-cell {
+  display: table-cell;
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+```
+
+#### 4. 特殊值
+
+```CSS
+/* 完全隐藏元素 */
+.hidden-element {
+  display: none;
+}
+
+/* 列表项 */
+.list-item {
+  display: list-item;
+  list-style-type: square;
+  margin-left: 20px;
+}
+
+/* 只渲染内容，不渲染容器 */
+.contents-element {
+  display: contents;
+}
+```
+
+### 显示特性总结
+
+| 特性         | block | inline   | inline-block | flex        | grid        |
+| ------------ | ----- | -------- | ------------ | ----------- | ----------- |
+| 换行         | ✓     | ✗        | ✗            | ✗           | ✗           |
+| 设置宽高     | ✓     | ✗        | ✓            | ✓           | ✓           |
+| 内外边距生效 | ✓     | ✓(水平)  | ✓            | ✓           | ✓           |
+| 包含块级元素 | ✓     | ✗        | ✓            | ✓           | ✓           |
+| 默认宽度     | 100%  | 内容宽度 | 内容宽度     | min-content | min-content |
+| 垂直对齐     | ✗     | baseline | ✓            | ✓           | ✓           |
+
+### 实际应用场景推荐
+
+1. **常规布局**：`block` 和 `inline-block`
+2. **导航菜单**：`inline-block` 或 `flex`
+3. **卡片网格布局**：`grid` 或 `flex`
+4. **复杂表单布局**：`grid`
+5. **居中元素**：`flex` (搭配 `justify-content` 和 `align-items`)
+6. **响应式布局**：`flex` 或 `grid` + 媒体查询
+7. **隐藏元素**：`none`（完全移除）或 `visibility: hidden`（保留空间）
+
+> **现代最佳实践**：优先使用 `flex` 和 `grid` 布局，它们提供了更强大的对齐、分布和响应式控制能力，简化了许多传统布局难题。
 
 
 
 
-## 35.PNG,GIF,JPG 的区别及如何选
-
-答案：
-
-GIF：
-
-- 1：256 色
-- 2： 无损，编辑 保存时候，不会损失。
-- 3：支持简单动画。
-- 4：支持 boolean 透明，也就是要么完全透明，要么不透明
-
-JPEG：
-
-- 1：millions of colors
-- 2： 有损压缩， 意味着每次编辑都会失去质量。
-- 3：不支持透明。
-- 4：适合照片，实际上很多相机使用的都是这个格式。
-
-PNG：
-
-- 1：无损，其实 PNG 有好几种格式的，一般分为两类：PNG8 和 truecolor PNGs；
-
-- 与 GIF 相比：
-
-  - 它通常会产生较小的文件大小。
-  - 它支持阿尔法（变量）透明度。
-  - 无动画支持
-
-- 与 JPEG 相比：
-
-  - 文件更大
-  - 无损
-  - 因此可以作为 JPEG 图片中间编辑的中转格式。
-
-- 结论：
-
-  - JPEG 适合照片
-  - GIF 适合动画
-  - PNG 适合其他任何种类——图表，buttons，背景，图表等等。
-
-[参考](https://www.cnblogs.com/yadiblogs/p/9546935.html)
-
-
-
-
-## 36.行内元素 float:left 后是否变为块级元素？
-
-答案：
+## 31. 行内元素 float: left 后是否变为块级元素？
 
 - 行内元素设置成浮动之后变得更加像是 inline-block
 - 行内块级元素，设置成这个属性的元素会同时拥有行内和块级的特性，最明显的不同是它的默认宽度不是 100%，行内元素默认 100%宽度占据一行
@@ -3333,7 +3798,7 @@ PNG：
 
 
 
-## 37.在网页中的应该使用奇数还是偶数的字体？为什么呢？
+## 32. 在网页中的应该使用奇数还是偶数的字体？为什么呢？
 
 答案：应该使用偶数字体
 
