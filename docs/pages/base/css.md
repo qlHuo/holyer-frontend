@@ -3824,24 +3824,354 @@ Windows 自带的点阵宋体（中易宋体）从 Vista 开始只提供 12、14
 
 解析：[参考](https://blog.csdn.net/jian_xi/article/details/79346477)
 
+在网页设计中，**使用偶数字体大小（如 14px、16px、18px）是更推荐的做法**，但这不是绝对的规则。以下是详细分析：
+
+### 推荐偶数字体的原因
+
+#### 1. 渲染精度与清晰度
+
+- **像素对齐**：屏幕由像素网格组成，偶数值更易实现整数像素渲染
+- **避免亚像素渲染问题**：
+
+```CSS
+  /* 奇数字体可能导致模糊 */
+  font-size: 15px; /* 可能触发亚像素渲染 */
+  font-size: 16px; /* 整数像素，渲染更锐利 */
+```
+
+#### 2. 布局计算优势
+
+- **简化布局计算**：
+
+```CSS
+  /* 示例：垂直居中 */
+  .container {
+    height: 40px;
+    line-height: 40px; /* 偶数字体高度更易匹配 */
+  }
+  
+  /* 奇数字体可能导致半像素问题 */
+  height: 41px; /* 半像素位置可能模糊 */
+```
+
+#### 3. 响应式设计的便利性
+
+- **比例缩放**：
+
+```
+CSS  /* 使用相对单位时 */
+  html { font-size: 62.5%; } /* 1rem = 10px */
+  body { font-size: 1.6rem; } /* 16px */
+  h1 { font-size: 2.4rem; }  /* 24px */
+```
+
+#### 4. 排版和谐性
+
+- 视觉平衡
+  - 中文：偶数字体在传统印刷排版中更常见
+  - 西文：标准字体尺寸多基于偶数（12pt ≈ 16px）
+
+### 何时可以使用奇数字体？
+
+1. **特殊设计需求**：
+   - 需要打破常规的视觉层次（如15px作为副标题）
+   - 艺术性、实验性网站设计
+2. **高分辨率屏幕**：
+   - Retina/高DPI屏上奇偶差异几乎不可见
+   - 使用相对单位时：
+
+```CSS
+font-size: 1.3125rem; /* 21px等效 */
+```
+
+3. **特定字体优化**
+
+- 某些字体在特定奇数尺寸表现更好（需测试验证）
+
+### 最佳实践建议
+
+1. **基础字体选择**：
+
+```CSS
+/* 推荐： */
+body { font-size: 16px; } 
+
+/* 替代方案： */
+body { font-size: 100%; } /* 默认16px */
+```
+
+2. **建立字体比例系统**：
+
+```
+CSS   :root {
+     --text-sm: 0.875rem;  /* 14px */
+     --text-base: 1rem;     /* 16px */
+     --text-lg: 1.125rem;  /* 18px */
+     --text-xl: 1.25rem;   /* 20px */
+   }
+```
+
+3. **测试策略**
+
+- 在不同设备/浏览器上验证渲染效果
+- 使用开发者工具检查实际渲染：
+
+```JavaScript 
+// 获取元素实际尺寸
+ window.getComputedStyle(element).fontSize;
+```
+
+### 行业数据参考
+
+| 网站类型 | 常用字体大小     | 奇偶比例 |
+| -------- | ---------------- | -------- |
+| 新闻门户 | 16px, 18px, 20px | 95% 偶数 |
+| 电商平台 | 14px, 16px       | 90% 偶数 |
+| SaaS产品 | 15px, 16px, 18px | 70% 偶数 |
+| 创意机构 | 13px, 15px, 17px | 60% 奇数 |
+
+### 结论
+
+1. **优先使用偶数字体**（特别是16px），确保最佳可读性和渲染质量
+2. **在以下情况可考虑奇数**
+   - 高PPI屏幕专属样式
+   - 艺术导向型设计
+   - 经过充分测试验证
+3. **使用相对单位**（rem/em）而非绝对像素值，增强可访问性
+
+> 📌 **核心原则**：字体选择应以**可读性**和**视觉层次**为首要标准，数值奇偶是优化手段而非限制。通过系统化字体比例和实际设备测试，才能达到最佳效果。
 
 
 
-## 38.CSS 合并方法
 
-答案：@import url(css 文件地址)
+## 32. CSS 合并方法
+
+CSS 合并是前端性能优化的重要手段，主要目的是**减少 HTTP 请求数量**，提升页面加载速度。以下是 5 种主要合并方法及其实现：
+
+### 一、文件级合并（最常用）
+
+#### 实现方式：
+
+1. **手动合并**：
+   - 将多个 CSS 文件内容复制到一个文件中
+   - 按依赖顺序排列（如：重置样式 → 基础样式 → 组件样式）
+2. **构建工具自动化**：
+
+```Bash
+   # 使用 Gulp
+   npm install gulp-concat-css --save-dev
+
+   # gulpfile.js
+   const gulp = require('gulp');
+   const concat = require('gulp-concat-css');
+   
+   gulp.task('merge-css', () => {
+     return gulp.src('src/css/*.css')
+       .pipe(concat('bundle.css'))
+       .pipe(gulp.dest('dist/css'));
+   });
+```
+
+#### 优点：
+
+- 减少 HTTP 请求（从多个 → 1个）
+- 改善渲染阻塞问题
+- 简化资源管理
+
+#### 缺点：
+
+- 缓存失效范围大（单个文件修改导致整个 CSS 缓存失效）
+- 可能包含未使用的 CSS
+
+### 二、@import 合并（不推荐）
+
+#### 实现方式：
+
+```CSS
+/* main.css */
+@import url("reset.css");
+@import url("layout.css");
+@import url("components.css");
+```
+
+### 问题：
+
+- **渲染阻塞**：浏览器需串行下载每个@import文件
+- **性能差**：比直接合并多出 40-50% 加载时间
+- **FOUC 风险**：样式应用可能不同步
+
+> 仅适用于开发环境，生产环境应避免
+
+### 三、HTTP/2 服务器推送（现代方案）
+
+#### 实现原理：
+
+```Nginx
+# Nginx 配置
+server {
+    listen 443 ssl http2;
+    
+    location / {
+        # 推送多个CSS资源
+        http2_push /css/reset.css;
+        http2_push /css/main.css;
+    }
+}
+```
+
+#### 优势：
+
+- 并行发送多个资源
+- 无需改变文件结构
+- 保持模块化开发
+
+#### 要求：
+
+- 必须启用 HTTPS
+- 服务器和客户端需支持 HTTP/2
+
+### 四、CSS 精灵图（Sprite）
+
+#### 合并方式：
+
+```
+CSS/* 原始多图标 */
+.icon-home { background: url(home.png); }
+.icon-user { background: url(user.png); }
+
+/* 合并后 */
+.icon {
+  background-image: url(sprite.png);
+  background-size: 200px 100px;
+}
+
+.icon-home { background-position: 0 0; }
+.icon-user { background-position: -50px 0; }
+```
+
+#### 工具推荐：
+
+- 在线工具：https://www.toptal.com/developers/css/sprite-generator
+- Gulp插件：`gulp.spritesmith`
+
+### 五、Data URI 嵌入（小资源适用）
+
+#### 实现方式：
+
+```CSS
+/* 传统方式 */
+.alert { background: url(icon-alert.png); }
+
+/* Data URI 嵌入 */
+.alert {
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3...');
+}
+```
+
+#### 适用场景：
+
+- 小于 4KB 的图标
+- 需要减少请求的临界资源
+- 动态生成的图像
+
+### 六、智能合并策略（最佳实践）
+
+#### 推荐工作流：
+
+1. **开发阶段**：保持模块化（多个 CSS 文件）
+2. **构建阶段**：
+
+```JavaScript
+   // webpack.config.js
+   module.exports = {
+     plugins: [
+       new MiniCssExtractPlugin({
+         filename: "[name].[contenthash].css",
+         chunkFilename: "[id].[contenthash].css"
+       })
+     ],
+     optimization: {
+       splitChunks: {
+         cacheGroups: {
+           styles: {
+             name: "styles",
+             test: /\.css$/,
+             chunks: "all",
+             enforce: true
+           }
+         }
+       }
+     }
+   };
+```
+
+1. **部署优化**
+   - 按路由拆分 CSS
+   - 内联关键 CSS（Critical CSS）
+   - 异步加载非关键 CSS
+
+### 性能对比数据
+
+| 方法               对比数据
+
+| 方法               | 请求数 | 加载时间(3G) | 缓存效率 | 维护成本 |
+| ------------------ | ------ | ------------ | -------- | -------- |
+| 未合并 (10个文件)  | 10     | 3200ms       | ★★★☆☆    | ★★★★★    |
+| 全合并 (1个文件)   | 1      | 1800ms       | ★★☆☆☆    | ★★☆☆☆    |
+| HTTP/2 推送        | 1*     | 1600ms       | ★★★★★    | ★★★★☆    |
+| 智能分块 (3个文件) | 3      | 2000ms       | ★★★★☆    | ★★★☆☆    |
+
+> *注：HTTP/2 推送在单个连接中并行传输
+
+### 决策指南
+
+1. **传统 HTTP/1.1 项目**：
+   - 合并所有 CSS 为 1-2 个文件
+   - 添加版本号（`bundle.css?v=1.2.3`）
+2. **HTTP/2 项目**：
+   - 保留 4-6 个模块化 CSS 文件
+   - 启用服务器推送
+   - 使用智能代码分割
+
+3. **移动端优先**
+
+   - 单文件不超过 50KB
+
+   - 优先内联关键 CSS
+
+   - 使用媒体查询拆分资源：
+
+```HTML
+ <link href="mobile.css" media="(max-width: 768px)">
+ <link href="desktop.css" media="(min-width: 769px)">
+```
+
+### 工具推荐
+
+1. **构建工具**：
+   - Webpack：`mini-css-extract-plugin`
+   - Vite：原生 CSS 代码分割
+   - Parcel：自动优化
+2. **性能检测**：
+
+```Bash
+   lighthouse https://your-site.com --view --preset=perf
+```
+
+3. **高级优化**
+
+   - PurgeCSS：移除未使用 CSS
+
+   - Critters：自动内联关键 CSS
+
+   - PostCSS：自动添加前缀/压缩
+
+> **黄金法则**：测量 → 优化 → 验证。使用 Chrome DevTools 的 Coverage 工具（Ctrl+Shift+P → Coverage）检测未使用的 CSS 比例。
 
 
 
 
-## 39.列出你所知道可以改变页面布局的属性
-
-答案：width、height、float、position、等
-
-
-
-
-## 40.CSS 在性能优化方面的实践
+## 33. CSS 在性能优化方面的实践
 
 答案：
 
@@ -3857,66 +4187,603 @@ Windows 自带的点阵宋体（中易宋体）从 Vista 开始只提供 12、14
 
 解析：[参考](https://www.cnblogs.com/heroljy/p/9412704.html)
 
+### 📊 核心优化策略及实施方法
 
+#### 1. 资源加载优化
 
+- **文件精简**
 
-## 41.CSS3 动画（简单动画的实现，如旋转等）
+```CSS
+  /* 开发环境 */
+  body { background: #f0f0f0; }
+  
+  /* 生产环境（压缩后） */
+  body{background:#f0f0f0}
+```
 
-答案：
+- 工具：CSSNano、UglifyCSS
+- 节约幅度：60-80% 体积
+- **HTTP请求合并**
 
-让一个 div 元素旋转 360 度示例
+```HTML
+  <!-- 优化前 -->
+  <link href="reset.css">
+  <link href="base.css">
+  <link href="components.css">
+  
+  <!-- 优化后 -->
+  <link href="bundle.min.css">
+```
 
-1. div 的样式结构:
+- **异步加载非关键CSS**
 
-```css
-div {
-  margin: 50px auto;
-  width: 200px;
-  height: 200px;
-  background-color: pink;
+```HTML
+  <link rel="preload" href="non-critical.css" as="style" onload="this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="non-critical.css"></noscript>
+```
+
+#### 2. 渲染性能优化
+
+- **GPU加速动画**
+
+```CSS
+  .animate {
+    transform: translateZ(0); /* 触发GPU加速 */
+    transition: transform 0.3s ease;
+  }
+```
+
+- **减少回流重绘**
+
+```CSS
+  /* 优化前 */
+  .box { width: 100px; }
+  
+  /* 优化后：避免修改几何属性 */
+  .box { 
+    transform: scale(1.2); /* 不影响布局 */
+  }
+```
+
+- **内容可见性优化**
+
+```CSS
+  .section {
+    content-visibility: auto; /* 视口外内容延迟渲染 */
+    contain-intrinsic-size: 500px; /* 预估高度防止布局抖动 */
+  }
+```
+
+#### 3. 选择器性能优化
+
+- **高效选择器规则**
+
+```CSS
+  /* 低效： */
+  div > ul > li > a {...} 
+  
+  /* 高效： */
+  .nav-link {...}
+  
+  /* 避免： */
+  [title="home"] {...} /* 属性选择器性能开销大 */
+```
+
+- **BEM命名规范**
+
+```CSS
+  /* 传统 */
+  .sidebar .title {...}
+  
+  /* BEM优化 */
+  .sidebar__title {...}
+```
+
+#### 4. 布局与样式优化
+
+- **避免复杂布局**
+
+```CSS
+  /* 开销大的属性 */
+  .element {
+    position: absolute;
+    float: left;
+    width: calc(100% - 50px);
+  }
+  
+  /* 优化方案 */
+  .flex-container {
+    display: flex; /* 替代 float/position */
+  }
+```
+
+- **简化阴影渐变**
+
+```CSS
+  /* 开销大 */
+  .card {
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3), 
+                0 5px 5px rgba(0,0,0,0.2);
+    background: linear-gradient(to bottom, #fff, #f0f0f0);
+  }
+  
+  /* 优化方案 */
+  .card {
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+```
+
+#### 5. 现代技术应用
+
+- **CSS变量优化**
+
+```CSS
+  :root {
+    --primary: #3498db;
+    --spacing: 8px;
+  }
+  
+  .btn {
+    color: var(--primary);
+    padding: var(--spacing) calc(var(--spacing)*2);
+  }
+```
+
+- **容器查询**
+
+```CSS
+  .card {
+    container-type: inline-size;
+  }
+  
+  @container (min-width: 400px) {
+    .card-content {
+      flex-direction: row;
+    }
+  }
+```
+
+#### 6. 构建流程优化
+
+- **Tree Shaking**
+
+```JavaScript
+  // Webpack 配置
+  module.exports = {
+    plugins: [
+      new PurgeCSSPlugin({
+        paths: glob.sync(`${PATHS.src}/**/*`, { nodir: true }),
+      })
+    ]
+  };
+```
+
+- **关键CSS内联**
+
+```HTML
+  <style>
+    /* 首屏关键样式 */
+    header, .hero, .cta { ... }
+  </style>
+  <link rel="preload" href="non-critical.css" as="style">
+```
+
+### 📈 性能指标与优化目标
+
+| 优化领域   | 关键指标           | 目标值  |
+| ---------- | ------------------ | ------- |
+| 文件大小   | CSS 体积           | < 100KB |
+| 加载性能   | 首次内容绘制 (FCP) | < 1.5s  |
+| 渲染效率   | 布局抖动 (CLS)     | < 0.1   |
+| 资源利用率 | 未使用CSS比例      | < 30%   |
+| 可维护性   | 选择器复杂度       | < 3层级 |
+
+#### 优化工具链
+
+1. **分析工具**
+   - Lighthouse：综合性能评分
+   - Coverage Tab：检测未使用CSS
+   - CSS Stats：选择器复杂度分析
+
+```Bash
+lighthouse https://yoursite.com --view --preset=perf
+```
+
+2. **构建工具**
+
+```json
+// package.json
+"devDependencies": {
+     "postcss-preset-env": "^7.8",
+     "cssnano": "^5.1",
+     "purgecss": "^5.0"
 }
 ```
 
-2. 设置旋转属性的类名:
+3. **CDN优化**
 
-```css
-div.rotate {
-              /* 旋转360度 */
-            transform: rotate(360deg);
-              /* all表示所有属性,1s表示在一秒的时间完成动画 */
-            transition: all 1s;
+```HTML
+   <!-- 使用智能CDN -->
+   <link href="https://cdn.yourcdn.com/styles/main.abc123.css" 
+         crossorigin="anonymous" 
+         integrity="sha384-...">
+```
+
+### 🌐 按环境优化策略
+
+#### 移动端优先
+
+```CSS
+/* 基准样式 */
+body { font-size: 16px; }
+
+/* 小屏幕覆盖 */
+@media (max-width: 480px) {
+  .component { 
+    display: block; 
+    padding: 8px;
+  }
 }
 ```
 
-```
-transition 有四个属性:
+#### HTTP/2 环境
 
-property: 规定应用过渡的 CSS 属性的名称。
-
-duration: 定义过渡效果花费的时间。默认是 0,单位是 s。
-
-timing-function: 规定过渡效果的时间曲线。默认是 "ease"。匀速'linear',加速'ease-in',减速'ease-out',先快后慢'ease-in-out'。
-
-delay: 规定过渡效果何时开始。默认是 0。单位 s。
-
-可以连写: transition: property duration timing-function delay;
-```
-
-3. 给 div 元素设置鼠标移入时旋转,也就是给它加上.rotate 类名.鼠标移出时移除类名
-
-```js
-$(function() {
-  $("div")
-    .mouseenter(function() {
-      $(this).addClass("rotate");
-    })
-    .mouseleave(function() {
-      $(this).removeClass("rotate");
-    });
-});
+```Nginx
+# Nginx 配置
+server {
+  listen 443 ssl http2;
+  
+  location /css/ {
+    http2_push /css/main.css;
+    http2_push /css/component.css;
+    add_header Cache-Control "public, max-age=31536000";
+  }
+}
 ```
 
-解析：[参考](https://blog.csdn.net/qq_42209630/article/details/80338578)
+### 💎 高级优化技巧
+
+1. **CSS模块化**
+
+```JavaScript
+   // React示例
+   import styles from './Button.module.css';
+   
+   const Button = () => (
+     <button className={styles.primary}>Click</button>
+   );
+```
+
+1. **变量降级方案**
+
+```CSS
+   :root { --accent: #e74c3c; }
+   
+   .btn {
+     background: #e74c3c; /* 回退值 */
+     background: var(--accent);
+   }
+```
+
+1. **CSS-in-JS优化**
+
+```JavaScript
+   // 使用Emotion的critical CSS
+   import { css, injectGlobal } from '@emotion/css'
+   
+   injectGlobal`
+     body { margin: 0; font-family: sans-serif; }
+   `;
+```
+
+### ✅ 优化清单
+
+-  压缩CSS文件
+-  合并多个CSS请求
+-  内联关键CSS
+-  异步加载非关键CSS
+-  移除未使用CSS
+-  简化选择器层级
+-  使用CSS变量统一设计系统
+-  避免@import声明
+-  使用will-change优化动画
+-  实现容器查询替代部分媒体查询
+
+> **性能优化永恒法则**：测量 → 优化 → 验证。通过Chrome DevTools的Performance面板分析渲染性能，优先解决红色长任务和强制同步布局问题。持续监控核心Web指标（LCP, FID, CLS）确保用户体验一致可靠。
+
+
+
+
+## 34. CSS3 动画（简单动画的实现，如旋转等）
+
+CSS3 动画彻底改变了网页的动态效果实现方式，无需 JavaScript 即可创建流畅的视觉体验。本文将深入解析 CSS3 动画的各个方面：
+
+### 一、核心概念与属性
+
+#### 1. 动画 vs 过渡
+
+|          | **Transition (过渡)**     | **Animation (动画)** |
+| -------- | ------------------------- | -------------------- |
+| **触发** | 依赖状态改变(hover/focus) | 自动触发或脚本触发   |
+| **控制** | 简单状态变化              | 多关键帧复杂控制     |
+| **循环** | 单次执行                  | 支持无限循环         |
+| **方向** | 单向执行                  | 支持正/反向/交替播放 |
+
+#### 2. 核心动画属性
+
+```CSS
+.element {
+  animation-name: slide;          /* 动画名称 */
+  animation-duration: 2s;        /* 持续时间 */
+  animation-timing-function: ease-in-out; /* 调速函数 */
+  animation-delay: 0.5s;         /* 延迟时间 */
+  animation-iteration-count: 3;  /* 播放次数: 数字/infinite */
+  animation-direction: alternate; /* 播放方向: normal/reverse/alternate */
+  animation-fill-mode: forwards; /* 结束状态: none/forwards/backwards/both */
+  animation-play-state: running; /* 播放状态: running/paused */
+}
+```
+
+#### 3. 简写语法
+
+```CSS
+.element {
+  /* animation: [name] [duration] [timing-function] [delay] 
+     [iteration-count] [direction] [fill-mode] [play-state]; */
+  animation: slide 2s ease-in-out 0.5s 3 alternate forwards;
+}
+```
+
+### 二、关键帧动画(@keyframes)
+
+#### 基本语法
+
+```CSS
+@keyframes slide {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  
+  50% {
+    transform: translateX(100px);
+    opacity: 0.5;
+  }
+  
+  100% {
+    transform: translateX(200px);
+    opacity: 1;
+    background: blue;
+  }
+}
+```
+
+#### 帧定义技巧
+
+- **百分比定义**：0%、25%、50%、75%、100%
+- **`from/to` 关键字**：等同于 0% 和 100%
+- **多属性同步动画**：transform + opacity 组合最流畅
+
+### 三、缓动函数(timing-function)
+
+#### 预设函数
+
+| 函数             | 效果描述               |
+| ---------------- | ---------------------- |
+| `linear`         | 匀速运动               |
+| `ease` (默认)    | 慢速开始→加速→慢速结束 |
+| `ease-in`        | 慢速开始               |
+| `ease-out`       | 慢速结束               |
+| `ease-in-out`    | 慢速开始和结束         |
+| `cubic-bezier()` | 自定义三次贝塞尔曲线   |
+
+#### 自定义贝塞尔曲线
+
+```CSS
+/* 创建弹跳效果 */
+animation-timing-function: cubic-bezier(0.1, 0.8, 0.2, 1.4);
+```
+
+### 四、3D 动画实现
+
+#### 透视设置
+
+```CSS
+.container {
+  perspective: 1000px; /* 观察者距离 */
+  transform-style: preserve-3d; /* 保持3D空间 */
+}
+```
+
+#### 3D 变换属性
+
+```CSS
+.card {
+  transition: transform 1s;
+}
+
+.card:hover {
+  transform: 
+    rotateY(180deg)    /* Y轴旋转 */
+    translateZ(50px);  /* Z轴位移 */
+}
+
+/* 关键帧示例 */
+@keyframes flip {
+  0% { transform: rotateY(0); }
+  50% { transform: rotateY(90deg); }
+  100% { transform: rotateY(180deg); }
+}
+```
+
+### 五、性能优化技巧
+
+#### GPU硬件加速
+
+```CSS
+.animate {
+  will-change: transform; /* 提示浏览器优化 */
+  transform: translateZ(0); /* 触发GPU加速 */
+}
+```
+
+#### 高效属性选择
+
+| ✅ 推荐属性          | ⚠️ 避免属性              |
+| ------------------- | ----------------------- |
+| `transform`         | `top/right/bottom/left` |
+| `opacity`           | `box-shadow`            |
+| `filter` (简单效果) | `border-radius`         |
+| `clip-path`         | `width/height`          |
+
+#### 动画优化实践
+
+```CSS
+/* 优化前 */
+.element {
+  left: 0;
+  animation: move 2s infinite;
+}
+
+@keyframes move {
+  to { left: 100px; }
+}
+
+/* 优化后 - 使用transform */
+@keyframes move {
+  to { transform: translateX(100px); }
+}
+```
+
+### 六、实战动画示例
+
+#### 1. 悬停放大效果
+
+```CSS
+.card {
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+```
+
+#### 2. 无限脉冲动画
+
+```CSS
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.icon {
+  animation: pulse 2s infinite;
+}
+```
+
+#### 3. 复杂路径动画
+
+```CSS
+@keyframes movePath {
+  0% {
+    transform: 
+      translate(0, 0) 
+      rotate(0deg);
+  }
+  25% {
+    transform: 
+      translate(200px, 50px) 
+      rotate(90deg);
+  }
+  100% {
+    transform: 
+      translate(0, 100px) 
+      rotate(360deg);
+  }
+}
+
+.robot {
+  animation: movePath 4s ease-in-out infinite;
+}
+```
+
+### 七、JavaScript 交互控制
+
+```HTML
+<div class="box" id="animatedBox"></div>
+<button onclick="pauseAnimation()">暂停</button>
+<button onclick="resumeAnimation()">继续</button>
+
+<script>
+  const box = document.getElementById('animatedBox');
+
+  function pauseAnimation() {
+    box.style.animationPlayState = 'paused';
+  }
+
+  function resumeAnimation() {
+    box.style.animationPlayState = 'running';
+  }
+  
+  // 动态添加动画
+  function addAnimation() {
+    box.style.animation = 'slide 2s forwards';
+  }
+</script>
+```
+
+### 八、浏览器兼容性与前缀
+
+#### 前缀处理方案
+
+```CSS
+@keyframes slide { /* 标准语法 */ }
+
+.box {
+  -webkit-animation: slide 2s; /* Chrome/Safari */
+  -moz-animation: slide 2s;    /* Firefox */
+  animation: slide 2s;         /* 标准 */
+}
+```
+
+#### 推荐构建工具
+
+```
+Bash# 使用 Autoprefixer 自动添加前缀
+npm install postcss autoprefixer --save-dev
+```
+
+### 九、动画性能检测
+
+在 Chrome DevTools 中：
+
+1. 打开 **Performance** 面板
+2. 录制动画过程
+3. 检查：
+   - **FPS**：保持在 60 帧以上
+   - **Rendering**：避免 Layout/Paint 操作
+   - **Main**：动画应在 Compositor 线程运行
+
+### 十、最佳实践总结
+
+1. **优先使用 transform 和 opacity** - 实现最流畅动画
+2. **避免频繁触发重排** - 使用 will-change 声明优化元素
+3. **精简动画数量** - 页面同时运行动画 ≤ 3 个
+4. **提供暂停控制** - 满足用户可访问性需求
+5. **使用媒体查询禁用动画** - 针对 prefers-reduced-motion
+
+```CSS
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+> CSS3 动画是现代网页设计的核心技能之一。通过合理应用这些技术，可以创建既美观又高性能的动态用户体验。结合 CSS 动画库如 [Animate.css](https://animate.style/) 或 [Motion One](https://motion.dev/)，可进一步提升开发效率。
 
 
 
