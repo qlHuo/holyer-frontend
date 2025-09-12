@@ -4788,11 +4788,11 @@ npm install postcss autoprefixer --save-dev
 
 
 
-## 42.base64 的原理及优缺点
+## 35. base64 的原理及优缺点
 
 答案：
 
-1.什么是 Base64
+1. 什么是 Base64
 
 Base64 是一种基于 64 个可打印字符来表示二进制数据的编码方式，是从二进制数据到字符的过程。
 原则上，计算机中所有内容都是二进制形式存储的，所以所有内容（包括文本、影音、图片等）都可以用 base64 来表示。
@@ -4825,7 +4825,6 @@ Base64 编码本质上是一种将二进制数据转成文本数据的方案。�
 
 以 Hello!! 为例，其转换过程为：
 
-
 Hello!! Base64 编码的结果为 SGVsbG8hIQAA。可见，不能被 3 整除时会采用来来补 0 的方式来完成编码。
 需要注意的是：标准 Base64 编码通常用 = 字符来替换最后的 A，即编码结果为 SGVsbG8hIQ==。因为 = 字符并不在 Base64 编码索引表中，其意义在于结束符号，在 Base64 解码时遇到 = 时即可知道一个 Base64 编码字符串结束。
 
@@ -4836,213 +4835,1027 @@ Hello!! Base64 编码的结果为 SGVsbG8hIQAA。可见，不能被 3 整除时�
 
 解析：[参考 1](https://segmentfault.com/a/1190000012654771)、[参考 2](https://blog.csdn.net/fightingitpanda/article/details/83305100)
 
+### 一、Base64 基本原理
 
+Base64 是一种将二进制数据编码为 ASCII 字符串的编码方式，通过对数据进行重新分组和映射实现编码转换。
 
+#### 1. 编码流程
 
-## 43.stylus/sass/less 区别
-
-答案：
-
-1. 后缀
-
-默认 Sass 使用 .sass 扩展名，而 Less 使用 .less 扩展名，Stylus 默认使用 .styl 的文件扩展名
-
-2. 语法
-
-3. 变量
-
-- sass 变量必须是以\$开头的，然后变量和值之间使用冒号（：）隔开，和 css 属性是一样的
-- Less css 中变量都是用@开头的，其余与 sass 都是一样的
-- stylus 对变量是没有任何设定的，可以是以\$开头，或者任何的字符，而且与变量之间可以用冒号，空格隔开，但是在 stylus 中不能用@开头
-
-解析：[参考](https://blog.csdn.net/pedrojuliet/article/details/72887490)
-
-
-
-
-## 44.position 的值， relative 和 absolute 分别是相对于谁进行定位的？
-
-答案：
-
-- absolute :生成绝对定位的元素， 相对于最近一级的 定位不是 static 的父元素来进行定位。
-- fixed （老 IE 不支持）生成绝对定位的元素，通常相对于浏览器窗口或 frame 进行定位。
-- relative 生成相对定位的元素，相对于其在普通流中的位置进行定位。
-- static 默认值。没有定位，元素出现在正常的流中
-- sticky 生成粘性定位的元素，容器的位置根据正常文档流计算得出
-
-
-
-
-## 45.对偏移、卷曲、可视的理解
-
-答案：
+1. **二进制分组**：
+   - 每 **3字节（24bit）** 原始数据分为一组
+   - 每组拆分为 **4个6bit** 单元
+2. **码表映射**：
+   - 6bit 值（0-63）映射到 64 字符表：
 
 ```
-偏移
-offsetWidth	  width  +  padding  +  border
-offsetHeight	height +  padding  +  border
-offsetLeft
-offsetTop
-offsetParent
-注意：没有offsetRight和offsetBottom
-************************************************************************************************
-
-卷曲
-scrollWidth    width  +  padding
-scrollHeight   当内部的内容溢出盒子的时候， 顶边框的底部，计算到内容的底部；如果内容没有溢出盒子，计算方式为盒子内部的真实高度（边框到边框）
-scrollLeft     这个scroll系列属性不是只读的
-scrollTop
-scroll()
-
-此函数可以获取卷曲的高度和卷曲的宽度
-function myScroll() {
-   return {
-      top: window.pageYOffset  || document.documentElement.scrollTop  || document.body.scrollTop  || 0,
-      left: window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0
-    };
-
-}
-
-滚动滚动条的时候触发事件
-box（window）.onscroll = function () {}
-************************************************************************************************
-
-可视
-clientWidth   获取的是元素内部的真实宽度 width  +  padding
-clientHeight  边框之间的高度
-clientLeft    相当于左边框的宽度  如果元素包含了滚动条，并且滚动条显示在元素的左侧。这时，clientLeft属性会包含滚动条的宽度17px
-clientTop     相当于顶边框的宽度
-client()
-
-此函数可以获取浏览器可视区域的宽高
-function myClient() {
-    return {
-        wid: window.innerWidth  || document.documentElement.clientWidth  || document.body.clientWidth  || 0,
-       heit: window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight || 0
-    };
-}
-
-----------------------------------------------------------------------------------------------
-@offsetHeight和style.height的区别
-
-demo.style.height只能获取行内样式，如果样式写到了其他地方，甚至根本就没写，便无法获取
-style.height是字符串（而且带单位），offsetHeight是数值
-demo.style.height可以设置行内样式，offsetHeight是只读属性
-因此，一般用demo.offsetHeight来获取某元素的真实宽度/高度，用style.height来设置宽度/高度
-
-----------------------------------------------------------------------------------------------
-@offsetLeft和style.left的区别
-
-一、style.left只能获取行内样式
-二、offsetLeft只读，style.left可读可写
-三、offsetLeft是数值，style.left是字符串并且有单位px
-四、如果没有加定位，style.left获取的数值可能是无效的
-五、最大区别在于offsetLeft以border左上角为基准，style.left以margin左上角为基准
-
-----------------------------------------------------------------------------------------------
-@scrollHeight和scrollWidth
-
-标签内部实际内容的高度/宽度
-不计算边框，如果内容不超出盒子，值为盒子的宽高（不带边框）
-如果内容超出了盒子，就是从顶部或左部边框内侧一直到内容a的最外部分
-
-----------------------------------------------------------------------------------------------
-@scrollTop和scrollLeft
-
-被卷去部分的 顶部/左侧 到可视区域 顶部/左侧 的距离
+    A-Z (0-25), a-z (26-51), 0-9 (52-61), + (62), / (63)
 ```
 
+3. **填充处理**
 
+   - 数据不足 3字节时用 `=` 补位
 
+   - 示例：1字节数据 → 编码后 2字符 + 2个 `=`
 
+#### 2. 计算示例
 
-## 46.精灵图和 base64 如何选择？
+原始数据：`Man` (ASCII: 77, 97, 110)
 
-答案：
+```
+ 二进制流：
+01001101 01100001 01101110
 
-## Css Sprites：
+分组为6bit：
+010011 010110 000101 101110
 
-介绍：
-Css Sprites（雪碧图或 css 精灵），是网页图片处理的一种方式，它允许你将一个页面涉及到的所有零星图片都包含到一张大图中去，这样一来，当访问该页面时，载入的图片就不会像以前那样一幅一幅地慢慢显示出来了。
+对应Base64：
+19(T) 22(W) 5(F) 46(u) → "TWFu"
+```
 
-原理：
-将许多的小图片整合到一张大图片中，利用 css 中的 background-image 属性，background-position 属性定位某个图片位置，来达到在大图片中引用某个部位的小图片的效果。
+### 二、核心优势
 
-优点：
-减少网页的 http 请求，提升网页加载速度。
-合并多张小图片成大图，能减少字节总数（大图大小 <= 多张小图大小）.
+#### 1. 跨系统兼容
 
-缺点：
-前期需要处理图片将小图合并，多些许工程量。
-对于需要经常改变的图片维护起来麻烦。
+- 将二进制转为纯文本，兼容所有文本处理系统
+- 可嵌入 JSON/XML/YAML 等文本格式
 
-## base64：
+#### 2. 传输可靠性
 
-介绍：
-base64 是网络上最常见的用于传输 8Bit 字节代码的编码方式之一，要求把每三个 8Bit 的字节转换为四个 6Bit 的字节，Base64 是网络上最常见的用于传输 8Bit 字节代码的编码方式之一。
+- 避免二进制传输时的编码问题（如邮件系统、HTTP 头）
+- 示例：HTTP 认证头
 
-通俗点讲：将资源原本二进制形式转成以 64 个字符基本单位，所组成的一串字符串。
-比如一张图片转成 base64 编码后就像这样，图片直接以 base64 形式嵌入文件中（很长没截完）：
+```bash
+Authorization: Basic dXNlcjpwYXNz
+```
 
+#### 3. 数据嵌入
 
-生成 base64 编码：
-图片生成 base64 可以用一些工具，如在线工具，但在项目中这样一个图片这样生成是挺繁琐。
-特别说下，webpack 中的 url-loader 可以完成这个工作，可以对限制大小的图片进行 base64 的转换，非常方便。
+- 前端资源内联：
 
-优点：
-base64 的图片会随着 html 或者 css 一起下载到浏览器,减少了请求.
-可避免跨域问题
+```HTML
+  <img src="data:image/png;base64,iVBORw0KGgo..."/>
+```
 
-缺点：
-老东西（低版本）的 IE 浏览器不兼容。
-体积会比原来的图片大一点。
-css 中过多使用 base64 图片会使得 css 过大，不利于 css 的加载。
-
-适用场景：
-应用于小的图片几 k 的，太大的图片会转换后的大小太大，得不偿失。
-用于一些 css sprites 不利处理的小图片，如一些可以通过 background-repeat 平铺来做成背景的图片
-
-解析：[参考](https://www.cnblogs.com/wangqi2019/p/10498627.html)
-
-
-
-
-## 47.如果设计中使用了非标准的字体，你该如何去实现？
-
-答案：使用`@font-face`并为不同的`font-weight`定义`font-family`。
-
-
-
-
-## 48.知道 css 有个 content 属性吗？有什么作用？有什么应用？
-
-答案：知道。css 的 content 属性专门应用在 before/after 伪元素上，用来插入生成内容。最常见的应用是利用伪类清除浮动。
+- CSS 内嵌：
 
 ```css
-//一种常见利用伪类清除浮动的代码
-.clearfix:after {
-  content: "."; //这里利用到了content属性
-  display: block;
-  height: 0;
-  visibility: hidden;
-  clear: both;
-}
-.clearfix {
-  zoom: 1;
+  .icon {
+    background: url(data:image/svg+xml;base64,PHN2Zy...);
+  }
+```
+
+### 三、主要缺点
+
+#### 1. 体积膨胀
+
+- 33% 体积增加
+
+  - 3字节 → 4字符
+  - 1MB 文件 → ~1.33MB Base64
+
+- 示例对比：
+
+  | 原始格式 | Base64 编码后 | 增长率 |
+  | -------- | ------------- | ------ |
+  | 100KB    | 133KB         | +33%   |
+  | 1MB      | 1.33MB        | +33%   |
+
+#### 2. 处理开销
+
+- 编码/解码 CPU 消耗
+  - 比直接二进制处理多 2-3 倍时间
+  - 大数据量时显著影响性能
+
+#### 3. 可读性差
+
+- 编码后字符串无业务语义：
+
+```
+   // Base64
+  SGVsbG8gV29ybGQh
+  
+  // vs 原始数据
+  "Hello World!"
+```
+
+### 四、优化实践
+
+#### 1. 适用场景
+
+✅ **小文件嵌入**（<4KB） ✅ **关键资源内联**（首屏CSS/LOGO） ✅ **二进制文本化传输**
+
+#### 2. 规避方案
+
+❌ **大文件传输** → 使用二进制格式 ❌ **高频访问资源** → 单独文件 + 缓存 ❌ **敏感数据** → 先加密再编码
+
+#### 3. 现代替代方案
+
+1. **WebP 图像**：比 Base64 PNG 小 50-70%
+
+```HTML
+   <picture>
+     <source srcset="image.webp" type="image/webp">
+     <img src="image.png">
+   </picture>
+```
+
+1. **HTTP/2 Server Push**：避免内联资源
+
+```nginx
+   location / {
+     http2_push /assets/logo.png;
+   }
+```
+
+1. **Web Fonts 子集化**：
+
+```CSS
+   @font-face {
+     font-family: 'Fira';
+     src: url('fira-subset.woff2') format('woff2');
+     unicode-range: U+000-5FF; /* 只包含必要字符 */
+   }
+```
+
+### 五、技术实现对比
+
+| 编码方式 | 可逆性 | 体积变化 | 典型应用          |
+| -------- | ------ | -------- | ----------------- |
+| Base64   | 是     | +33%     | 数据URI、邮件附件 |
+| Base58   | 是     | +20%~30% | 比特币地址        |
+| Hex      | 是     | +100%    | 二进制调试输出    |
+| Gzip     | 是     | -50%~90% | 网络传输压缩      |
+
+### 六、性能测试数据
+
+```JavaScript
+// Node.js 基准测试
+const buffer = Buffer.alloc(1024 * 1024); // 1MB 数据
+console.time('encode');
+const encoded = buffer.toString('base64');
+console.timeEnd('encode'); 
+// 约 15-20ms (M1 MacBook Pro)
+```
+
+**关键指标**：
+
+- 编码速度：50-100MB/s (现代CPU)
+- 解码速度比编码快 20-30%
+
+### 七、安全注意事项
+
+1. **非加密**
+   - Base64 不是加密！可用 `atob()` 直接解码
+   - 敏感数据需先加密：
+
+```JavaScript
+     // 错误方式
+     const insecure = btoa('password123'); 
+     
+     // 正确方式
+     const secure = encryptAES('password123').then(btoa);
+```
+
+2. **XSS 风险**：
+
+```HTML
+   <!-- 危险：解码后可能执行JS -->
+   <script>eval(atob('alert(1)'))</script>
+```
+
+### 八、编程语言支持
+
+| 语言       | 编码方法              | 解码方法              | 备注              |
+| ---------- | --------------------- | --------------------- | ----------------- |
+| JavaScript | `btoa()`              | `atob()`              | 仅支持ASCII字符串 |
+| Python     | `base64.b64encode()`  | `base64.b64decode()`  | 支持bytes对象     |
+| Java       | `Base64.getEncoder()` | `Base64.getDecoder()` | 需Java 8+         |
+| PHP        | `base64_encode()`     | `base64_decode()`     |                   |
+
+```Python
+# Python 示例
+import base64
+encoded = base64.b64encode(b'binary\x00data')  # b'YmluYXJ5AGRhdGE='
+```
+
+### 九、总结建议
+
+1. **何时使用**：
+   - 需要文本化二进制数据时
+   - 嵌入 <4KB 的临界资源
+   - 协议要求ASCII传输的场景
+2. **避免场景**：
+   - 大文件传输（>100KB）
+   - 高频处理的热路径代码
+   - 需要人类可读的数据
+
+
+
+## 36. CSS 预处理器对比：Stylus/Sass/Less
+
+以下是三大主流 CSS 预处理器（Stylus, Sass, Less）的详细对比分析：
+
+### 一、核心共同点
+
+1. **变量支持**
+
+```Scss
+   // Sass/Less/Stylus 均支持
+   $primary-color: #3498   $primary-color: #3498db; // Sass
+   @primary-color: #3498db; // Less
+   primary-color = #3498db  // Stylus
+```
+
+2.**嵌套语法**
+
+```Scss
+   .parent {
+     color: red;
+     .child {
+       font-weight: bold;
+     }
+   }
+```
+
+3. **混合宏（Mixins）**
+
+```Scss
+   // Sass
+   @mixin center {
+     display: flex;
+     justify-content: center;
+   }
+   
+   // Less
+   .center() {
+     display: flex;
+     justify-content: center;
+   }
+   
+   // Stylus
+   center()
+     display flex
+     justify-content center
+```
+
+4. **函数与运算**
+
+```Scss
+   // 所有预处理器均支持
+   width: calc(100% - 20px);
+```
+
+5. **模块化**
+
+```Scss
+   // Sass
+   @use 'module';
+   
+   // Less
+   @import 'module.less';
+   
+   // Stylus
+   @import 'module.styl'
+```
+
+### 二、核心差异对比
+
+| 特性               | Sass (Scss/Sass)              | Less                    | Stylus                      |
+| ------------------ | ----------------------------- | ----------------------- | --------------------------- |
+| **语法风格**       | 支持缩进(.sass)和类CSS(.scss) | 类CSS（需分号/花括号）  | 极简缩进（可选括号/冒号）   |
+| **变量标识符**     | `$`                           | `@`                     | 可省略（直接赋值）          |
+| **混入返回值**     | 支持                          | 不支持                  | 支持                        |
+| **条件语句**       | `@if @else`                   | 支持但功能较弱          | 完整支持（if/else if/else） |
+| **循环控制**       | `@for`/`@each`/`@while`       | 仅递归混入模拟          | `for/in` 循环               |
+| **错误处理**       | 详细错误日志                  | 基础错误提示            | 中等错误信息                |
+| **原生函数库**     | 200+ 内置函数                 | 60+ 内置函数            | 70+ 内置函数                |
+| **用户自定义函数** | `@function`                   | 通过混入模拟            | 内置支持                    |
+| **扩展继承**       | `@extend`（智能合并选择器）   | `:extend()`（语法笨重） | `@extend`（类似Sass）       |
+| **命名空间**       | 支持                          | 支持                    | 不支持                      |
+| **Source Maps**    | 完善支持                      | 支持                    | 支持                        |
+| **热更新速度**     | 中等（Dart Sass快）           | 最快                    | 中等偏快                    |
+| **社区生态**       | 最大（React/Vue官方支持）     | 较广（Bootstrap使用）   | 较小但精                    |
+
+### 三、语法差异示例
+
+#### 1. 变量定义
+
+```Scss
+/* Sass */
+$font-stack: Helvetica, sans-serif;
+$primary-color: #333;
+
+body {
+  font: 100% $font-stack;
+  color: $primary-color;
 }
 ```
 
-after 伪元素通过 content 在元素的后面生成了内容为一个点的块级素，再利用 clear:both 清除浮动。
-那么问题继续还有，知道 css 计数器（序列数字字符自动递增）吗？如何通过 css content 属性实现 css 计数器？
+```less
+/* Less */
+@font-stack: Helvetica, sans-serif;
+@primary-color: #333;
 
-答案：css 计数器是通过设置 counter-reset 、counter-increment 两个属性 、及 counter()/counters()一个方法配合 after / before 伪类实现。
+body {
+  font: 100% @font-stack;
+  color: @primary-color;
+}
+```
+
+```stylus
+/* Stylus */
+font-stack = Helvetica, sans-serif
+primary-color = #333
+
+body
+  font: 100% font-stack
+  color: primary-color
+```
+
+#### 2. 混合宏（Mixin）
+
+```Scss
+// Sass
+@mixin border-radius($radius) {
+  border-radius: $radius;
+}
+
+.box { @include border-radius(10px); }
+```
+
+```less
+// Less
+.border-radius(@radius) {
+  border-radius: @radius;
+}
+
+.box { .border-radius(10px); }
+```
+
+```stylus
+// Stylus
+border-radius(radius)
+  border-radius radius
+
+.box
+  border-radius(10px)
+```
+
+#### 3. 继承/扩展
+
+```Scss
+// Sass
+.error {
+  border: 1px #f00;
+}
+.serious-error {
+  @extend .error;
+  border-width: 3px;
+}
+
+
+```
+
+```Less
+// Less
+.error {
+  border: 1px #f00;
+}
+.serious-error {
+  &:extend(.error);
+  border-width: 3px;
+}
+```
+
+```stylus
+// Stylus
+.error
+  border: 1px #f00
+
+.serious-error
+  @extend .error
+  border-width: 3px
+```
+
+### 四、生态系统对比
+
+| 维度         | Sass                    | Less              | Stylus              |
+| ------------ | ----------------------- | ----------------- | ------------------- |
+| **诞生时间** | 2006 (最老牌)           | 6 (最老牌)        | 2009                |
+| **维护团队** | Google/Dart团队 (主推)  | 开源社区维护      | TJ Holowaychuk (原) |
+| **安装方式** | npm/Yarn (Dart Sass)    | npm               | npm                 |
+| **框架集成** | Vue CLI/Next.js默认     | 需手动配置        | 需手动配置          |
+| **学习资源** | 官方文档完善+大量教程   | Bootstrap文档相关 | GitHub文档为主      |
+| **用户基数** | 78% (2022 State of CSS) | 48%               | 12%                 |
+
+### 五、选型建议
+
+#### 1. 推荐 Sass 的场景
+
+- 大型项目（复杂逻辑需求）
+- 需要与其他工具深度集成（如Webpack、Vite）
+- 团队协作（统一语法规范）
+- 示例：企业级中后台系统
+
+#### 2. 推荐 Less 的场景
+
+- 基于 Bootstrap 的快速开发
+- 前端新手友好（语法接近原生CSS）
+- 需要轻量级解决方案
+- 示例：内容型网站、营销落地页
+
+#### 3. 推荐 Stylus 的场景
+
+- 追求极简语法（省略括号/分号）
+- Node.js 全栈项目（语法类似JS）
+- 个人项目或小团队敏捷开发
+- 示例：原型开发、创意交互网站
+
+### 六、迁移成本对比
+
+| 转换方向    | 工具           | 注意事项            |
+| ----------- | -------------- | ------------------- |
+| Sass → Less | `sass-to-less` | 函数需手动重写      |
+| Less → Sass | `less2sass`    | 变量符号替换（@→$） |
+| → Stylus    | 需手动重构     | 语法差异大，难度高  |
+
+> **通用转换工具**：使用 [Pleeease](https://pleeease.io/) 或 [PostCSS](https://postcss.org/) 实现处理器间转换
+
+### 七、未来发展趋势
+
+1. 原生CSS功能增强
+   - CSS变量 (`--var`)
+   - `@nest` 嵌套（Chrome 120+已支持）
+   - `@custom-media` 媒体查询变量
+
+```CSS
+   :root {
+     --primary: #3498db;
+   }
+   .card {
+     color: var(--primary);
+   }
+```
+
+2. PostCSS 崛起
+
+- 通过插件系统实现预处理功能
+
+```JavaScript
+   // postcss.config.js
+   module.exports = {
+     plugins: [
+       require('postcss-nested'),  // 嵌套
+       require('postcss-mixins'),  // 混入
+       require('postcss-simple-vars') // 变量
+     ]
+   }
+```
+
+**最终建议**：新项目优先考虑 **Sass (Dart Sass)** 或 **原生CSS+ Sass)** 或 **原生CSS+PostCSS**，现有项目根据技术栈延续原有方案。预处理器的核心价值在于提升可维护性，而非取代CSS标准。
+
+
+
+## 37. 在网页中实现非标准字体的完整方案
+
+在网页中使用非标准字体（如特殊品牌字体或定制设计字体）需要特殊处理。以下是专业级的实现方案：
+
+### 一、核心实现方法
+
+#### 1. **Web字体加载 (@font-face)**
+
+```CSS
+@font-face {
+  font-family: 'MyCustomFont';
+  src: 
+    url('fonts/mycustomfont-regular.woff2') format('woff2'),
+    url('fonts/mycustomfont-regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap; /* 优化加载体验 */
+}
+```
+
+#### 2. **多字重支持**
+
+```CSS
+/* 粗体版本 */
+@font-face {
+  font-family: 'MyCustomFont';
+  src: url('fonts/mycustomfont-bold.woff2') format('woff2');
+  font-weight: 700;
+}
+
+/* 斜体版本 */
+@font-face {
+  font-family: 'MyCustomFont';
+  src: url('fonts/mycustomfont-italic.woff2') format('woff2');
+  font-style: italic;
+}
+```
+
+#### 3. **实际应用**
+
+```CSS
+body {
+  font-family: 'MyCustomFont', 'Helvetica Neue', sans-serif;
+}
+```
+
+### 二、字体格式选择策略
+
+| 格式      | 优点                | 浏览器支持 | 推荐优先级 |
+| --------- | ------------------- | ---------- | ---------- |
+| **WOFF2** | 压缩率最高（小30%） | 现代浏览器 | 首选       |
+| **WOFF**  | 良好压缩，广泛支持  | IE9+       | 🥈次选      |
+| **TTF**   | 原始格式，兼容性好  | 所有浏览器 | 🥉备用      |
+| **EOT**   | 仅IE专用            | IE6-9      | ️避免       |
+
+### 三、性能优化关键措施
+
+#### 1. **字体子集化**
+
+- 使用工具提取仅需的字符集：
+
+```Bash
+  # 使用pyftsubset
+  pyftsubset MyFont.ttf --output-file=MyFont-Subset.woff2 \
+    --text="ABCabc123你好世界" \
+    --flavor=woff2
+```
+
+#### 2. **预加载关键字体**
+
+```HTML
+<head>
+  <link rel="preload" href="fonts/mycustomfont-bold.woff2" 
+        as="font" type="font/woff2" crossorigin>
+</head>
+```
+
+#### 3. **智能加载策略**
+
+```CSS
+@font-face {
+  font-display: swap; /* 文本先用后备字体显示，自定义字体加载后替换 */
+}
+```
+
+#### 4. **CSS大小控制**
+
+```CSS
+/* 仅加载必要字重 */
+h1 {
+  font-family: 'MyCustomFont';
+  font-weight: 700; /* 只需加载bold字重 */
+}
+```
+
+### 四、不同场景实现方案
+
+#### 方案1：自托管字体 (完全控制)
+
+**步骤**：
+
+1. 获取合法字体授权（⚠️ 必须确认许可协议允许Web嵌入）
+2. 转换字体格式：
+
+```Bash
+   npm install -g ttf2woff ttf2woff2
+   ttf2woff2 MyFont.ttf MyFont.woff2
+```
+
+1. 按章节三优化字体文件
+2. 部署到CDN或项目目录
+
+#### 方案2：使用字体托管服务
+
+**推荐服务**：
+
+- **Google Fonts** (免费)：
+
+```HTML
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+```
+
+- **Adobe Fonts** (付费)：
+
+```HTML
+  <script>
+    (function(d) {
+      var config = {...}, /* Adobe提供的配置代码 */
+      // ... 
+    })(document);
+  </script>
+```
+
+#### 方案3：动态加载字体
+
+```JavaScript
+// 使用Font Face Observer检测字体加载
+const font = new FontFaceObserver('MyCustomFont');
+
+font.load().then(() => {
+  document.documentElement.classList.add('fonts-loaded');
+});
+
+/* CSS中 */
+body {
+  font-family: sans-serif;
+}
+
+.fonts-loaded body {
+  font-family: 'MyCustomFont', sans-serif;
+}
+```
+
+### 五、特殊字体场景处理
+
+#### 1. **图标字体 (Icon Fonts)**
+
+```CSS
+@font-face {
+  font-family: 'IconFont';
+  src: url('icons.woff2') format('woff2');
+}
+
+.icon::before {
+  font-family: 'IconFont';
+  content: "\e001"; /* Unicode码点 */
+}
+```
+
+#### 2. **可变字体 (Variable Fonts)**
+
+```CSS
+@font-face {
+  font-family: 'VF';
+  src: url('font.woff2') format('woff2-variations');
+  font-weight: 100 900; /* 支持100-900字重范围 */
+}
+
+h1 {
+  font-family: 'VF';
+  font-weight: 650; /* 使用中间字重 */
+}
+```
+
+#### 3. **中文等大字体文件**
+
+**优化策略**：
+
+1. 按路由拆分字体子集
+2. 动态生成所需字符
+3. 使用本地存储缓存字体
+4. 提供系统字体回退方案：
+
+```CSS
+   body {
+     font-family: 'MyCustomFont', 
+                  'PingFang SC', /* 苹果系统 */
+                  'Microsoft YaHei', /* 微软雅黑 */
+                  sans-serif;
+   }
+```
+
+### 六、法律与版权注意事项
+
+1. **字体授权检查**：
+   - 确认Web Font Embedding许可
+   - 商业字体需购买Web授权
+   - 开源字体遵守OFL许可证（如思源字体）
+2. **免费字体资源**：
+   - Google Fonts：完全免费可商用
+   - Font Squirrel：精选免费商业字体
+   - Adobe Fonts：包含在Creative Cloud订阅中
+
+### 七、性能监控与评估
+
+1. **字体加载性能指标**：
+   - FOUT (Flash of Unstyled Text)：未样式文本闪烁
+   - FOIT (Flash of Invisible Text)：文本不可见期
+   - LCP (Largest Contentful Paint)：字体对最大内容绘制的影响
+2. **监控工具**：
+
+```Bash
+   lighthouse https://yoursite.com --view --preset=perf
+```
+
+### 最佳实践总结
+
+1. **优先使用WOFF2格式**：最佳压缩比
+2. **必须添加font-display**：`swap`或`optional`
+3. **预加载关键字体**：特别是标题字体
+4. **提供完整备用栈**：确保内容可读性
+5. **定期检查版权**：避免法律风险
+6. **监控性能影响**：字体不应拖慢LCP
+
+> **特别提示**：对于中文等大字集字体，建议使用系统字体作为主要方案，仅在标题等关键部位使用自定义字体。超大字体文件（>500KB）会显著影响页面性能。
+
+
+
+## 38. CSS `content` 属性深度解析
+
+`content` 属性是 CSS 中最独特且功能强大的属性之一，主要用于**伪元素（`::before` 和 `::after`）** 中，用于在文档中**动态生成内容**。
+
+### 一、核心作用概述
+
+| 作用         | 说明                                   |
+| ------------ | -------------------------------------- |
+| **内容生成** | 在伪元素中创建不存在于 HTML 的视觉内容 |
+| **动态插入** | 结合 CSS 函数插入动态内容              |
+| **装饰增强** | 添加纯装饰性元素而不污染 HTML          |
+| **语义扩展** | 提供额外的上下文信息                   |
+
+### 二、语法与取值
+
+```CSS
+selector::before {
+  content: normal | none | [ <string> | <uri> | <counter> | attr() | open-quote | close-quote | no-open-quote | no-close-quote ]+ ;
+}
+```
+
+#### 可用值类型：
+
+- **字符串文本**：`content: "★ ";`
+- **图像资源**：`content: url(icon.svg);`
+- **属性值**：`content: attr(data-tooltip);`
+- **计数器**：`content: counter(section) ". ";`
+- **引号符号**：`content: open-quote;`
+- **特殊字符**：`content: "\2022";` (Unicode)
+- **复合值**：`content: "[" attr(href) "]";`
+
+### 三、关键应用场景
+
+#### 1. 装饰性元素（最常用）
+
+```CSS
+/* 添加图标前缀 */
+.link-external::after {
+  content: " ↗";
+}
+
+/* 列表项装饰 */
+li::before {
+  content: "• ";
+  color: #3498db;
+  padding-right: 8px;
+}
+
+/* 引文装饰 */
+blockquote::before {
+  content: open-quote;
+  font-size: 2em;
+  line-height: 0;
+  vertical-align: -0.4em;
+}
+```
+
+#### 2. 动态提示信息
+
+```HTML
+<a href="/docs" data-tooltip="点击查看文档">帮助</a>
+<style>
+a[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  /* 定位样式... */
+}
+</style>
+```
+
+#### 3. 自动编号系统
+
+```CSS
+/* 章节自动编号 */
+body { counter-reset: chapter; }
+
+h2 { 
+  counter-increment: chapter; 
+}
+
+h2::before {
+  content: "第" counter(chapter) "章: ";
+  font-weight: bold;
+}
+```
+
+#### 4. 打印样式优化
+
+```CSS
+/* 打印时显示链接URL */
+@media print {
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #777;
+  }
+}
+```
+
+#### 5. 表单验证提示
+
+```
+CSSinput:invalid::after {
+  content: "✖ " attr(data-error);
+  color: #e74c3c;
+  display: block;
+}
+```
+
+#### 6. 语言敏感内容
+
+```CSS
+/* 英文引号 */
+:lang(en) q { quotes: '"' '"' "'" "'"; }
+
+/* 中文引号 */
+:lang(zh) q { quotes: "「" "」"; }
+
+q::before { content: open-quote; }
+q::after  { content: close-quote; }
+```
+
+#### 7. 图像替代方案
+
+```CSS
+/* 图标替代文本 */
+.icon-print::before {
+  content: url(print-icon.svg);
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+}
+
+/* 屏幕阅读器友好 */
+.sr-only::before {
+  content: url(spinner.svg);
+  /* 视觉隐藏技巧... */
+}
+```
+
+### 四、高级技巧与实战示例
+
+#### 1. 动态内容拼接
+
+```CSS
+/* 用户名提示 */
+.user-card::after {
+  content: "用户ID: " attr(data-user-id) 
+           " | 注册于: " attr(data-reg-date);
+  display: block;
+  font-size: 0.8em;
+}
+```
+
+### 2. 动画效果组合
+
+```CSS
+.loading::after {
+  content: ".";
+  animation: dots 1.5s infinite steps(4, end);
+}
+
+@keyframes dots {
+  0%, 25% { content: "."; }
+  50%     { content: ".."; }
+  75%,100% { content: "..."; }
+}
+```
+
+### 3. 自定义复选框
+
+```CSS
+input[type="checkbox"].custom + label::before {
+  content: "";
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #3498db;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+input[type="checkbox"].custom:checked + label::before {
+  content: "✓";
+  text-align: center;
+  line-height: 18px;
+}
+```
+
+### 五、重要注意事项
+
+1. **伪元素限制**：
+   - 只能用于 `::before`, `::after`, `::marker` 等伪元素
+   - 普通元素无效
+2. **可访问性问题**：
+   - 多数屏幕阅读器会读取 `content` 文本
+   - 图标字体可使用 `aria-hidden="true"`
+
+```CSS
+   .sr-only {
+     position: absolute;
+     width: 1px;
+     height: 1px;
+     padding: 0;
+     margin: -1px;
+     overflow: hidden;
+     clip: rect(0, 0, 0, 0);
+     white-space: nowrap;
+     border: 0;
+   }
+   
+   .icon::before {
+     content: "📧";
+     /* 辅助技术会读取此内容 */
+   }
+```
+
+3. **内容不可选**：
+   - 生成的内容默认不可被用户选中（可使用 `user-select: text;` 更改）
+
+4. **SEO 影响**：
+
+- 搜索引擎通常忽略 `content` 生成的内容
+- **不要用于核心内容**
+
+5. **性能考量**：
+
+- 避免大量复杂 `content` 导致重排
+
+- 图像引用需优化尺寸
+
+### 六、浏览器兼容性
+
+| 特性        | 兼容性          |
+| ----------- | --------------- |
+| 基础功能    | IE8+ (部分功能) |
+| `attr()` 值 | IE8+            |
+| 计数器      | IE8+            |
+| URL 值      | IE9+            |
+| `quotes`    | IE8+            |
+| Unicode     | 全支持          |
+
+> 对于旧版 IE，可使用条件注释提供降级方案
+
+### 七、最佳实践指南
+
+1. **命名规范**
+   - 使用 `data-*` 属性存储动态内容
+
+```HTML
+<div data-badge="New">产品</div>
+<style>
+    [data-badge]::after {
+     content: attr(data-badge);
+   }
+</style>
+   
+```
+
+2. **移动端优化**：
+
+```CSS
+   /* 小屏隐藏装饰内容 */
+   @media (max-width: 480px) {
+     .decoration::before {
+       content: none;
+     }
+   }
+```
+
+3. **维护性建议**
+   - 集中管理内容变量
+
+```CSS
+   :root {
+     --checkmark: "✓";
+     --external-icon: " ↗";
+   }
+   
+   .external-link::after {
+     content: var(--external-icon);
+   }
+```
+
+### 总结
+
+`content` 属性的核心价值在于**分离内容与表现**，适用于：
+
+✅ 纯装饰性元素（图标、分隔符） ✅ 动态提示信息（工具提示） ✅ 自动生成内容（编号、引号） ✅ 打印优化（显示URL）
+
+避免用于：
+
+❌ 关键内容展示（影响SEO和可访问性） ❌ 替代HTML语义元素 ❌ 复杂交互组件（优先使用JavaScript）
+
+合理使用 `content` 属性可以显著提升代码可维护性，同时保持HTML的语义化和简洁性。
 
 
 
 
-## 49.CSS 选择器的优先级是如何计算的？
+## 39. CSS 选择器的优先级是如何计算的？
 
-答案：浏览器通过优先级规则，判断元素展示哪些样式。优先级通过 4 个维度指标确定，我们假定以`a、b、c、d`命名，分别代表以下含义：
+浏览器通过优先级规则，判断元素展示哪些样式。优先级通过 4 个维度指标确定，我们假定以`a、b、c、d`命名，分别代表以下含义：
 
 1. `a`表示是否使用内联样式（inline style）。如果使用，`a`为 1，否则为 0。
 2. `b`表示 ID 选择器的数量。
@@ -5060,9 +5873,7 @@ after 伪元素通过 content 在元素的后面生成了内容为一个点的�
 
 
 
-## 50.请阐述`Float`定位的工作原理。
-
-答案：
+## 40. 请阐述`Float`定位的工作原理。
 
 浮动（float）是 CSS 定位属性。浮动元素从网页的正常流动中移出，但是保持了部分的流动性，会影响其他元素的定位（比如文字会围绕着浮动元素）。这一点与绝对定位不同，绝对定位的元素完全从文档流中脱离。
 
@@ -5452,109 +6263,6 @@ overflow: hidden;
 
 
 
-## 71.利用伪元素画三角
-
-答案：
-
-```css
-.info-tab {
-  position: relative;
-}
-.info-tab::after {
-  content: "";
-  border: 4px solid transparent;
-  border-top-color: #2c8ac2;
-  position: absolute;
-  top: 0;
-}
-```
-
-
-
-
-## 72.过渡与动画的区别是什么
-
-答案：
-
-- transition
-  可以在一定的时间内实现元素的状态过渡为最终状态，用于模拟以一种过渡动画效果，但是功能有限，只能用于制作简单的动画效果而动画属性
-- animation
-  可以制作类似 Flash 动画，通过关键帧控制动画的每一步，控制更为精确，从而可以制作更为复杂的动画。
-
-
-
-
-## 73.去除 inline-block 元素间间距的方法
-
-答案：
-
-- 移除空格
-- 使用 margin 负值
-- 使用 font-size:0
-- letter-spacing
-- word-spacing
-
-解析：更详细的介绍请看[去除 inline-block 元素间间距的 N 种方法](https://www.zhangxinxu.com/wordpress/2012/04/inline-block-space-remove-%E5%8E%BB%E9%99%A4%E9%97%B4%E8%B7%9D/)
-
-
-
-
-## 74.为什么要初始化 CSS 样式
-
-答案：
-
-- 因为浏览器的兼容问题，不同浏览器对有些标签的默认值是不同的，如果没对 CSS 初始化往往会出现浏览器之间的页面显示差异。
-- 去掉标签的默认样式如：margin,padding，其他浏览器默认解析字体大小，字体设置。
-
-
-
-
-## 75.行内元素和块级元素有哪些
-
-答案：
-
-### 行内元素
-
-一个行内元素只占据它对应标签的边框所包含的空间<br>
-一般情况下，行内元素只能包含数据和其他行内元素
-
-```
-b, big, i, small, tt
-abbr, acronym, cite, code, dfn, em, kbd, strong, samp, var
-a, bdo, br, img, map, object, q, script, span, sub, sup
-button, input, label, select, textarea
-```
-
-### 块级元素
-
-占据一整行，高度、行高、内边距和外边距都可以改变，可以容纳块级标签和其他行内标签<br>
-
-```
-header,form,ul,ol,table,article,div,hr,aside,figure,canvas,video,audio,footer
-```
-
-
-
-
-## 76. 设备像素比
-
-答案：
-
-
-
-
-## 77. ::bofore 和 :after 中双冒号和单冒号有什么区别？
-
-答案：
-
-
-
-
-## 78. 说下 CSS3 中一些样式的兼容，分别指兼容哪些浏览器
-
-答案：
-
-
 
 
 ## 79. 有哪些手段可以优化 CSS, 提高性能
@@ -5588,37 +6296,6 @@ header,form,ul,ol,table,article,div,hr,aside,figure,canvas,video,audio,footer
 
 
 
-## 80. 怎么样实现边框 0.5 个像素？
-
-答案：
-
-
-
-
-## 81. transform translate transition 的区别
-
-答案：
-
-
-
-
-## 82. 请解释一下 CSS3 的 Flexbox（弹性盒布局模型）,以及适用场景？
-
-答案：
-
-
-
-
-## 83. 用纯 CSS 创建一个三角形的原理是什么？
-
-答案：
-
-
-
-
-## 84. 一个满屏 品 字布局 如何设计?
-
-答案：
 
 
 
@@ -5659,10 +6336,6 @@ header,form,ul,ol,table,article,div,hr,aside,figure,canvas,video,audio,footer
 
 
 ## 90. 让页面里的字体变清晰，变细用 CSS 怎么做？
-
-答案：
-
--webkit-font-smoothing: antialiased;
 
 
 
@@ -5736,127 +6409,13 @@ header,form,ul,ol,table,article,div,hr,aside,figure,canvas,video,audio,footer
 
 
 
-
-## 101.标准模式与怪异模式的区别
-
-答案：浏览器解析 CSS 的两种模式：标准模式(strict mode)和怪异模式(quirks mode)
-
-标准模式：浏览器按 W3C 标准解析执行代码；
-
-怪异模式：使用浏览器自己的方式解析执行代码，因为不同浏览器解析执行的方式不一样，所以称之为怪异模式。
-
-浏览器解析时使用标准模式还是怪异模式，与网页中的 DTD 声明直接相关，DTD 声明定义了标准文档的类型（标准模式解析）文档类型，会使浏览器使用相关的方式加载网页并显示，忽略 DTD 声明，将使网页进入怪异模式（quirks mode）。
-
-区别是：
-
-1、盒模型：
-
-在怪异模式下，盒模型为 IE 模型
-
-
-而在 W3C 标准的盒模型中为：
-
-
-2、图片元素的垂直对齐方式
-
-对于 inline 元素和 table-cell 元素，标准模式下 vertical-align 属性默认取值是 baseline；在怪异模式下，table 单元格中的图片的 vertical-align 属性默认取值是 bottom。因此在图片底部会有及像素的空间。
-
-3、`<table>`元素中的字体
-CSS 中，对于 font 的属性都是可以继承的。怪异模式下，对于 table 元素，字体的某些元素将不会从 body 等其他封装元素继承中的得到，特别是 font-size 属性。
-
-4、内联元素的尺寸
-
-- 标准模式下，non-replaced inline 元素无法自定义大写；
-- 怪异模式下，定义这些元素的 width、height 属性可以影响这些元素显示的尺寸。
-
-5、元素的百分比高度
-
-- CSS 中对于元素的百分比高度规定：百分比为元素包含块的高度，不可为负值；如果包含块的高度没有显示给出，该值等同于 auto，所以百分比的高度必须是在元素有高度声明的情况下使用。
-- 当一个元素使用百分比高度是，标准模式下，高度取决于内容变化，怪异模式下，百分比高度被准确应用
-
-6、元素溢出的处理
-
-标准模式下，overflow 取值默认为 visible；在怪异模式在，该溢出会被当做扩展 box 来对待，即元素的大小由内容决定，溢出不会裁剪，元素框自动调整，包含溢出内容。
-
-
-
-## 66.css reset 与 css sprites
-
-答案：
-
-css reset ：重置浏览器默认属性
-
-css sprites ：由多个小图片组成的大图，减少服务器对图片的请求数
-
-
-
-## 67.IE6 遇到什么 bug？解决办法是？
-
-答案：
-
-一、IE6 双倍边距 bug
-
-当页面上的元素使用 float 浮动时，不管是向左还是向右浮动;只要该元素带有 margin 像素都会使该值乘以 2，例如“margin-left:10px” 在 IE6 中，该值就会被解析为 20px。想要解决这个 BUG 就需要在该元素中加入 display:inline 或 display:block 明确其元素类型即可解决双倍边距的 BUG
-
-二、IE6 中 3 像素问题及解决办法
-
-当元素使用 float 浮动后，元素与相邻的元素之间会产生 3px 的间隙。诡异的是如果右侧的容器没设置高度时 3px 的间隙在相邻容器的内部，当设定高度后又跑到容器的相反侧了。要解决这类 BUG 的话，需要使布局在同一行的元素都加上 float 浮动。
-
-三、IE6 中奇数宽高的 BUG
-
-IE6 中奇数的高宽显示大小与偶数高宽显示大小存在一定的不同。其中要问题是出在奇数高宽上。要解决此类问题，只需要尽量将外部定位的 div 高宽写成偶数即可。
-
-四、IE6 中图片链接的下方有间隙
-
-IE6 中图片的下方会存在一定的间隙，尤其在图片垂直挨着图片的时候，即可看到这样的间隙。要解决此类问题，需要将 img 标签定义为 display:block 或定义 vertical-align 对应的属性。也可以为 img 对应的样式写入 font-size:0
-
-五、IE6 下空元素的高度 BUG
-
-如果一个元素中没有任何内容，当在样式中为这个元素设置了 0-19px 之间的高度时。此元素的高度始终为 19px。
-
-解决的方法有四种:
-
-1.在元素的 css 中加入：overflow:hidden
-
-2.在元素中插入 html 注释：
-
-3.在元素中插入 html 的空白符：
-
-4.在元素的 css 中加入：font-size:0
-
-六、重复文字的 BUG
-
-在某些比较复杂的排版中，有时候浮动元素的最后一些字符会出现在 clear 清除元素的下面。
-
-解决方法如下：
-
-1.确保元素都带有 display:inline
-
-2.在最后一个元素上使用“margin-right:-3px
-
-3.为浮动元素的最后一个条目加上条件注释，xxx
-
-4.在容器的最后元素使用一个空白的 div，为这个 div 指定不超过容器的宽度。
-
-七、IE6 中 z-index 失效
-
-具体 BUG 为，元素的父级元素设置的 z-index 为 1，那么其子级元素再设置 z-index 时会失效，其层级会继承父级元素的设置，造成某些层级调整上的 BUG。
-
-写在最后：实际上 IE6 中，很多 BUG 的解决方法都可以使用 display:inline、font-size:0、float 解决。因此我们在书写代码时要记住，一旦使用了 float 浮动，就为元素增加一个 display:inline 样式，可以有效的避免浮动造成的样式错乱问题。使用空 DIV 时，为了避免其高度影响布局美观，也可以为其加上 font-size:0 这样就很容易避免一些兼容上的问题。
-
-解析：[参考](https://www.cnblogs.com/rightzhao/p/3474162.html)
-
-
-
 ## 68.实现模糊搜索结果的关键词高亮显示
 
 答案：
 
 
 
-## 69.介绍css3中position:sticky（网易）
-
-答案：
+## 69.介绍css3中position:sticky
 
 
 
