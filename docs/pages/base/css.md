@@ -18,36 +18,36 @@ div {
 
 这里设置的 `width` 和 `height` 仅针对内容区域。
 
-- **内边距（Padding）**：位于内容区域和边框之间，用于控制内容与边框的距离。内边距使内容在盒子内部有一定的空白空间。可以通过 `padding - top`、`padding - right`、`padding - bottom`、`padding - left` 分别设置四个方向的内边距，也可以使用 `padding` 简写属性统一设置。例如：
+- **内边距（Padding）**：位于内容区域和边框之间，用于控制内容与边框的距离。内边距使内容在盒子内部有一定的空白空间。可以通过 `padding-top`、`padding-right`、`padding-bottom`、`padding-left` 分别设置四个方向的内边距，也可以使用 `padding` 简写属性统一设置。例如：
 
 ```css
 div {
   padding: 10px; /* 四个方向内边距均为10px */
   /* 或者 */
-  padding - top: 5px;
-  padding - right: 10px;
-  padding - bottom: 5px;
-  padding - left: 10px;
+  padding-top: 5px;
+  padding-right: 10px;
+  padding-bottom: 5px;
+  padding-left: 10px;
 }
 ```
 
-- **边框（Border）**：围绕在内边距之外，定义了盒子的边界。可以设置边框的宽度（`border - width`）、样式（`border - style`，如实线 `solid`、虚线 `dashed` 等）和颜色（`border - color`）。同样有针对四个方向的单独设置属性和简写属性。例如：
+- **边框（Border）**：围绕在内边距之外，定义了盒子的边界。可以设置边框的宽度（`border-width`）、样式（`border-style`，如实线 `solid`、虚线 `dashed` 等）和颜色（`border-color`）。同样有针对四个方向的单独设置属性和简写属性。例如：
 
 ```css
 div {
   border: 1px solid black; /* 1px宽黑色实线边框 */
   /* 或者 */
-  border - top: 2px dashed red;
+  border-top: 2px dashed red;
 }
 ```
 
-- **外边距（Margin）**：在边框之外，用于控制盒子与其他盒子之间的距离。和内边距、边框类似，有四个方向的单独设置属性（`margin - top`、`margin - right`、`margin - bottom`、`margin - left`）以及简写属性 `margin`。例如：
+- **外边距（Margin）**：在边框之外，用于控制盒子与其他盒子之间的距离。和内边距、边框类似，有四个方向的单独设置属性（`margin-top`、`margin-right`、`margin-bottom`、`margin-left`）以及简写属性 `margin`。例如：
 
 ```css
 div {
   margin: 20px; /* 四个方向外边距均为20px */
   /* 或者 */
-  margin - bottom: 30px;
+  margin-bottom: 30px;
 }
 ```
 
@@ -66,11 +66,11 @@ div {
 
 该 `div` 元素实际占据的水平空间为 `100 + 2 * 10 + 2 * 1 + 2 * 5 = 132px`。
 
-- **怪异盒模型（IE 盒模型）**：早期 IE 浏览器采用的盒模型。**<u>在怪异盒模型中，`width` 和 `height` 包含了内容区域、内边距和边框。</u>**即元素实际占据的空间宽度是 `width + 2 * margin`，高度同理。例如，同样的 CSS 代码，在怪异盒模型下，设置的 `width = 100px` 已经包含了内边距和边框，实际内容区域宽度小于 `100px`。可以通过 `box - sizing` 属性来切换盒模型类型，`box - sizing: content - box` 表示标准盒模型（默认值），`box - sizing: border - box` 表示怪异盒模型。例如：
+- **怪异盒模型（IE 盒模型）**：早期 IE 浏览器采用的盒模型。**<u>在怪异盒模型中，`width` 和 `height` 包含了内容区域、内边距和边框。</u>**即元素实际占据的空间宽度是 `width + 2 * margin`，高度同理。例如，同样的 CSS 代码，在怪异盒模型下，设置的 `width = 100px` 已经包含了内边距和边框，实际内容区域宽度小于 `100px`。可以通过 `box-sizing` 属性来切换盒模型类型，`box-sizing: content-box` 表示标准盒模型（默认值），`box-sizing: border-box` 表示怪异盒模型。例如：
 
 ```css
 div {
-  box - sizing: border - box;
+  box-sizing: border-box;
   width: 100px;
   padding: 10px;
   border: 1px solid black;
@@ -5708,7 +5708,7 @@ q::after  { content: close-quote; }
 }
 ```
 
-### 2. 动画效果组合
+#### 2. 动画效果组合
 
 ```CSS
 .loading::after {
@@ -5723,7 +5723,7 @@ q::after  { content: close-quote; }
 }
 ```
 
-### 3. 自定义复选框
+#### 3. 自定义复选框
 
 ```CSS
 input[type="checkbox"].custom + label::before {
@@ -5853,7 +5853,7 @@ input[type="checkbox"].custom:checked + label::before {
 
 
 
-## 39. CSS 选择器的优先级是如何计算的？
+## 39. CSS 选择器优先级的计算规则？
 
 浏览器通过优先级规则，判断元素展示哪些样式。优先级通过 4 个维度指标确定，我们假定以`a、b、c、d`命名，分别代表以下含义：
 
@@ -5873,51 +5873,267 @@ input[type="checkbox"].custom:checked + label::before {
 
 
 
-## 40. 请阐述`Float`定位的工作原理。
 
-浮动（float）是 CSS 定位属性。浮动元素从网页的正常流动中移出，但是保持了部分的流动性，会影响其他元素的定位（比如文字会围绕着浮动元素）。这一点与绝对定位不同，绝对定位的元素完全从文档流中脱离。
+CSS 选择器优先级是通过一个**权重系统**来计算的，当多个规则作用于同一元素时，优先级高的规则生效。计算规则如下（从高到低）：
 
-CSS 的`clear`属性通过使用`left`、`right`、`both`，让该元素向下移动（清除浮动）到浮动元素下面。
+### 1. **优先级权重组成（四位数：0,0,0,0）**
 
-如果父元素只包含浮动元素，那么该父元素的高度将塌缩为 0。我们可以通过清除（clear）从浮动元素后到父元素关闭前之间的浮动来修复这个问题。
+- **千位**：内联样式（如 `<div style="color:red">`），权重 **1000**
+- **百位**：ID 选择器（如 `#header`），每个 **100**
+- **十位**：类选择器（`.class`）、属性选择器（`[type="text"]`）、伪类（`:hover`），每个 **10**
+- **个位**：元素选择器（`div`）、伪元素（`::before`），每个 **1**
 
-有一种 hack 的方法，是自定义一个`.clearfix`类，利用伪元素选择器`::after`清除浮动。[另外还有一些方法](https://css-tricks.com/all-about-floats/#article-header-id-4)，比如添加空的`<div></div>`和设置浮动元素父元素的`overflow`属性。与这些方法不同的是，`clearfix`方法，只需要给父元素添加一个类，定义如下：
+> 💡 注意：通用选择器（`*`）、组合符（`+`, `>`, `~`）和 `:not()` **不增加优先级**（但 `:not()` 内部的选择器会计入权重）。
 
-```css
-.clearfix::after {
-  content: "";
-  display: block;
-  clear: both;
+### 2. **计算步骤**
+
+1. 统计选择器中 **ID 选择器**的数量 → 百位
+2. 统计 **类/属性/伪类**选择器的数量 → 十位
+3. 统计 **元素/伪元素**选择器的数量 → 个位
+4. 内联样式直接记为 **1000**
+5. 忽略 `!important`（它是独立机制，优先级最高）
+
+#### 示例：
+
+| 选择器                        | 计算      | 优先级值 |
+| ----------------------------- | --------- | -------- |
+| `h1`                          | (0,0,0,1) | 0001     |
+| `#main .item`                 | (0,1,1,0) | 0110     |
+| `div#header ul li:last-child` | (0,1,1,3) | 0113     |
+| `style="color:blue"`          | (1,0,0,0) | 1000     |
+
+### 3. **优先级比较规则**
+
+- **从左到右逐级比较**：先比千位 → 百位 → 十位 → 个位。
+
+```
+CSS  /* 优先级 0100 vs 0030 → ID 选择器权重更高 */
+  #nav { color: red; }      /* 0,1,0,0 → 0100 */
+  body .menu li { color: blue; } /* 0,0,3,2 → 0032 */
+
+  /* 结果：红色生效 */
+```
+
+- **相同优先级**：后定义的规则覆盖先定义的。
+
+```
+CSS  .box { color: red; }
+  .box { color: green; } /* 绿色生效 */
+```
+
+- **`!important`**：直接覆盖所有规则（慎用！）
+
+```
+CSS  .title { color: gray !important; } /* 强制生效 */
+  #header .title { color: blue; }
+```
+
+### 4. **特殊场景**
+
+- **`:not()` 伪类**：本身不计权重，但内部选择器参与计算：
+
+```
+CSS
+
+
+
+
+
+
+  div:not(#main)  /* 权重 = ID(#main) + 元素(div) = 0101 */
+```
+
+- **继承样式**：优先级最低（低于所有直接选择的样式）。
+- **用户代理样式**（浏览器默认样式）：优先级为 0。
+
+### 优先级速记口诀
+
+> **"内联 > ID > 类/伪类 > 元素"** **"!important 是核武器"**
+
+### 最佳实践
+
+1. **避免滥用 ID 选择器**（权重过高难以覆盖）
+2. **减少嵌套层级**（如 `.nav li` 而非 `header ul#nav li`）
+3. **慎用 `!important`**（破坏优先级流，难维护）
+4. **现代方案**：用 CSS 变量或 CSS-in-JS 管理样式冲突
+
+> ⚠️ 注意：CSS 优先级**不会进位**！ 如 `0,0,11,0`（110）仍低于 `0,1,0,0`（100）。
+
+
+
+## 40. CSS `Float` 定位的工作原理及使用场景
+
+###  一、`Float` 定位的工作原理
+
+`float` 是 CSS 中一种经典的定位机制，其核心作用是**使元素脱离常规文档流，并沿其容器的左侧或右侧对齐**，同时允许后续的**行内内容（如文本）环绕它**。工作原理可分解如下：
+
+1. **脱离文档流**：
+   - 当元素设置 `float: left` 或 `float: right` 时，它会从正常布局流中“浮起”。
+   - 后续非浮动元素会**无视浮动元素的位置**，直接占据其原有空间（块级元素会占满整行）。
+   - **例外**：行内内容（如文本、图片）会感知浮动元素，自动环绕其周围。
+2. **定位规则**：
+   - 浮动元素会尽量靠近父容器的**左侧**（`float: left`）或**右侧**（`float: right`）。
+   - 多个浮动元素会**水平排列**（若空间足够），直到容器宽度不足时换行。
+   - 浮动元素不能超出父容器的内边距边界。
+3. **高度坍塌（Collapsing）**：
+   - 父容器若仅包含浮动元素，其高度会塌陷为 `0`（因为浮动元素不占据文档流空间）。 **解决方案**：通过 `clearfix` 技巧（如父容器添加 `overflow: hidden` 或 `::after { clear: both }`）恢复高度。
+
+### 二、何时使用 `float`？
+
+尽管现代布局推荐使用 Flexbox 或 Grid，`float` 在以下场景仍有用武之地：
+
+#### ✅ 1. **文字环绕效果（原始设计目的）**
+
+例如图片被文本环绕：
+
+```CSS
+img {
+ float: left; /* 图片左浮动，文本自然环绕 */
+ margin-right: 15px;
 }
 ```
 
-值得一提的是，把父元素属性设置为`overflow: auto`或`overflow: hidden`，会使其内部的子元素形成块格式化上下文（Block Formatting Context），并且父元素会扩张自己，使其能够包围它的子元素。
+#### ✅ 2. **传统多栏布局（旧项目维护）**
 
-解析：[参考](https://css-tricks.com/all-about-floats/)
+在需要兼容老旧浏览器或维护旧代码时：
+
+```CSS
+.column {
+ float: left;  /* 创建多栏布局 */
+ width: 33.33%;
+}
+.container::after { clear: both; } /* 清除浮动 */
+```
+
+#### ✅ 3. **固定侧边栏 + 流动内容**
+
+例如左侧固定导航栏：
+
+```CSS
+.sidebar {
+ float: left;
+ width: 200px;
+}
+.content {
+ margin-left: 220px; /* 文本避开浮动区域 */
+}
+```
+
+### 三、何时避免使用 `float`？
+
+- **现代布局需求**：优先选择 Flexbox（一维布局）或 Grid（二维布局），它们更易控制对齐、间距和响应式。
+- **避免高度坍塌问题**：Flexbox/Grid 无需额外清除浮动。
+- **动态内容布局**：Flexbox/Grid 能更灵活处理动态尺寸内容。
+
+### 总结
+
+| **场景**             | **是否推荐 `float`** | **替代方案**       |
+| -------------------- | -------------------- | ------------------ |
+| 文字环绕图片/元素    | ✅ 首选               | 无                 |
+| 旧版浏览器兼容       | ⚠️ 临时方案           | Polyfill + Flexbox |
+| 多栏布局（现代项目） | ❌ 避免               | Flexbox / Grid     |
+| 响应式布局           | ❌响应式布局          | ❌ 避免             |
+
+> **最佳实践**：在新项目中，优先使用 Flexbox/Grid 实现布局；仅当需要文本环绕或维护旧代码时才使用 `float`，并务必处理高度坍塌问题。
+
+
+
+## 41. CSS `z-index` 属性与层叠上下文（Stacking Context）
+
+### **`z-index` 属性**
+
+- **作用**：控制定位元素在 **z轴方向**（垂直于屏幕）的堆叠顺序（元素覆盖关系）。
+- **特性**
+  - **仅对定位元素生效**：需设置 `position` 为 `relative`/`absolute`/`fixed`/`sticky`。
+  - **取值**
+    - `auto`（默认）：不创建新层叠上下文，堆叠顺序等于父级。
+    - **整数值**（负/零/正）：数值越大越靠近用户，数值相同则按DOM顺序后来居上。
+  - **无单位**：不接受百分比、em等。
+
+```CSS
+.box {
+  position: absolute;
+  z-index: 100; /* 控制堆叠层级 */
+}
+```
+
+### **层叠上下文（Stacking Context）**
+
+层叠上下文是HTML中的一个三维概念，它创建了一个**独立的层级环境**。内部的子元素按规则堆叠，且**与外部上下文隔离**。
+
+#### **创建层叠上下文的条件**
+
+以下CSS属性会触发新的层叠上下文：
+
+1. **根元素** `<html>`（天然层叠上下文）。
+2. `position: absolute/relative` 且 `z-index` 不为 `auto`。
+3. `position: fixed/sticky`（即使 `z-index: auto`）。
+4. `flex` 或 `grid` 容器的子项，且 `z-index` 不为 `auto`。
+5. `opacity < 1`。
+6. `transform` 不为 `none`（如 `transform: scale(1)`）。
+7. `filter` 不为 `none`（如 `filter: blur(5px)`）。
+8. `isolation: isolate`（显式创建）。
+9. `mix-blend-mode` 不为 `normal`。
+10. `will-change` 属性指定上述属性。
+
+### **层叠顺序（Stacking Order）规则**
+
+在同一个层叠上下文内，元素从下到上的堆叠顺序（优先级递增）：
+
+| 顺序 | 类型                              | 说明                     |
+| ---- | --------------------------------- | ------------------------ |
+| 1    | 层叠上下文的**背景/边框**         | 根元素自身的背景色、边框 |
+| 2    | **负 z-index** 的子元素           | `z-index: -1` 等         |
+| 3    | **块级元素**（非定位）            | 如 `div`、`p`            |
+| 4    | **浮动元素**                      | `float: left/right`      |
+| 5    | **行内元素**（非定位）            | 如 `span`、文本          |
+| 6    | **z-index: auto 或 0** 的定位元素 | 默认定位元素             |
+| 7    | **正 z-index** 的子元素           | `z-index: 1` 等          |
+
+> ✅ **关键规则**：
+>
+> - **内部元素受限于父级上下文**：子元素的 `z-index` 只在父层叠上下文中生效。
+> - **跨上下文比较**：比较的是层叠上下文根元素的层级（由父上下文中的层叠顺序决定）。
+
+### **实战示例**
+
+```HTML
+<div class="parent" style="position: relative; z-index: 1;">
+  <div class="child" style="z-index: 100;"></div> <!-- 仅在父上下文内生效 -->
+</div>
+<div class="sibling" style="position: relative; z-index: 2;"></div>
+```
+
+- `.child` 的 `z-index: 100` 只在 `.parent` 内部有效。
+- `.sibling` 的 `z-index: 2` > `.parent` 的 `z-index: 1`，因此整个 `.sibling` 覆盖 `.parent` 及其子元素。
+
+### **常见问题与解决方案**
+
+1. **z-index 无效？**
+   - 检查元素是否为定位元素（`position`）。
+   - 检查是否被父级层叠上下文隔离（如父元素设置了 `opacity` 或 `transform`）。
+2. **避免滥用 z-index**：
+   - 优先使用DOM顺序和布局控制覆盖关系。
+   - 大项目中用CSS变量管理层级（如 `--z-modal: 1000;`）。
+3. **调试技巧**：
+   - 浏览器开发者工具 → Elements → Layers 查看层叠上下文。
+   - 临时添加 `outline` 或 `box-shadow` 可视化层级。
+
+### **总结**
+
+| 场景                 | 策略                                           |
+| -------------------- | ---------------------------------------------- |
+| 控制同一容器内的覆盖 | 在父级内设置子元素的 `z-index`                 |
+| 全局弹窗/遮罩        | 用 `z-index: 1000` 并确保元素在根上下文        |
+| 隐藏元素但保留布局   | `z-index: -1` + 父级设置层叠上下文             |
+| 现代布局             | Flex/Grid 子项用 `z-index` 需父容器非 `static` |
+
+> ⚠️ **注意**：层叠上下文是CSS堆叠规则的核心，理解其创建条件和层级隔离特性，可高效解决元素覆盖问题。
 
 
 
 
-## 51.请阐述`z-index`属性，并说明如何形成层叠上下文（stacking context）
-
-答案：
-
-CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序。`z-index`只能影响`position`值不是`static`的元素。
-
-没有定义`z-index`的值时，元素按照它们出现在 DOM 中的顺序堆叠（层级越低，出现位置越靠上）。非静态定位的元素（及其子元素）将始终覆盖静态定位（static）的元素，而不管 HTML 层次结构如何。
-
-层叠上下文是包含一组图层的元素。 在一组层叠上下文中，其子元素的`z-index`值是相对于该父元素而不是 document root 设置的。每个层叠上下文完全独立于它的兄弟元素。如果元素 B 位于元素 A 之上，则即使元素 A 的子元素 C 具有比元素 B 更高的`z-index`值，元素 C 也永远不会在元素 B 之上.
-
-每个层叠上下文是自包含的：当元素的内容发生层叠后，整个该元素将会在父层叠上下文中按顺序进行层叠。少数 CSS 属性会触发一个新的层叠上下文，例如`opacity`小于 1，`filter`不是`none`，`transform`不是`none`。
-
-解析：[参考 1](https://css-tricks.com/almanac/properties/z/z-index/)、[参考 2](https://philipwalton.com/articles/what-no-one-told-you-about-z-index/)、[参考 3](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context)
-
-
-
-
-## 52.如何解决不同浏览器的样式兼容性问题？
-
-答案：
+## 42. 如何解决不同浏览器的样式兼容性问题？
 
 - 在确定问题原因和有问题的浏览器后，使用单独的样式表，仅供出现问题的浏览器加载。这种方法需要使用服务器端渲染。
 - 使用已经处理好此类问题的库，比如 Bootstrap。
@@ -5927,9 +6143,7 @@ CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序。`z-index`只�
 
 
 
-## 53.如何为功能受限的浏览器提供页面？ 使用什么样的技术和流程？
-
-答案：
+## 43. 如何为功能受限的浏览器提供页面？ 使用什么样的技术和流程？
 
 - 优雅的降级：为现代浏览器构建应用，同时确保它在旧版浏览器中正常运行。
 - Progressive enhancement - The practice of building an application for a base level of user experience, but adding functional enhancements when a browser supports it.
@@ -5941,7 +6155,7 @@ CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序。`z-index`只�
 
 
 
-## 54.有什么不同的方式可以隐藏内容（使其仅适用于屏幕阅读器）？
+## 44. 有什么不同的方式可以隐藏内容（使其仅适用于屏幕阅读器）？
 
 答案：
 
@@ -5961,7 +6175,7 @@ CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序。`z-index`只�
 
 
 
-## 55.除了`screen`，你还能说出一个 @media 属性的例子吗？
+## 45. @media 属性详解
 
 答案：
 
@@ -5979,7 +6193,7 @@ CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序。`z-index`只�
 
 
 
-## 56.编写高效的 CSS 应该注意什么？
+## 46.编写高效的 CSS 应该注意什么？
 
 答案：
 
@@ -5995,7 +6209,7 @@ CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序。`z-index`只�
 
 
 
-## 57.使用 CSS 预处理的优缺点分别是什么？
+## 47.使用 CSS 预处理的优缺点分别是什么？
 
 答案：
 
@@ -6016,21 +6230,6 @@ CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序。`z-index`只�
 
 
 
-## 58.对于你使用过的 CSS 预处理，说说喜欢和不喜欢的地方？
-
-答案：
-
-喜欢：
-
-- 绝大部分优点上题以及提过。
-- Less 用 JavaScript 实现，与 NodeJS 高度结合。
-
-不喜欢：
-
-- 我通过`node-sass`使用 Sass，它用 C ++ 编写的 LibSass 绑定。在 Node 版本切换时，我必须经常重新编译。
-- Less 中，变量名称以`@`作为前缀，容易与 CSS 关键字混淆，如`@media`、`@import`和`@font-face`。
-
-
 
 
 ## 59. 解释浏览器如何确定哪些元素与 CSS 选择器匹配。
@@ -6042,44 +6241,6 @@ CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序。`z-index`只�
 例如，对于形如`p span`的选择器，浏览器首先找到所有`<span>`元素，并遍历它的父元素直到根元素以找到`<p>`元素。对于特定的`<span>`，只要找到一个`<p>`，就知道`<span>`已经匹配并停止继续匹配。
 
 解析：[参考](https://stackoverflow.com/questions/5797014/why-do-browsers-match-css-selectors-from-right-to-left)
-
-
-
-
-## 60.说说你对盒模型的理解，以及如何告知浏览器使用不同的盒模型渲染布局。
-
-答案：
-
-CSS 盒模型描述了以文档树中的元素而生成的矩形框，并根据排版模式进行布局。每个盒子都有一个内容区域（例如文本，图像等）以及周围可选的`padding`、`border`和`margin`区域。
-
-CSS 盒模型负责计算：
-
-- 块级元素占用多少空间。
-- 边框是否重叠，边距是否合并。
-- 盒子的尺寸。
-
-盒模型有以下规则：
-
-- 块级元素的大小由`width`、`height`、`padding`、`border`和`margin`决定。
-- 如果没有指定`height`，则块级元素的高度等于其包含子元素的内容高度加上`padding`（除非有浮动元素，请参阅下文）。
-- 如果没有指定`width`，则非浮动块级元素的宽度等于其父元素的宽度减去父元素的`padding`。
-- 元素的`height`是由内容的`height`来计算的。
-- 元素的`width`是由内容的`width`来计算的。
-- 默认情况下，`padding`和`border`不是元素`width`和`height`的组成部分。
-
-解析：[参考](https://www.smashingmagazine.com/2010/06/the-principles-of-cross-browser-css-coding/#understand-the-css-box-model)
-
-
-
-
-## 61.`* { box-sizing: border-box; }`会产生怎样的效果？
-
-答案：
-
-- 元素默认应用了`box-sizing: content-box`，元素的宽高只会决定内容（content）的大小。
-- `box-sizing: border-box`改变计算元素`width`和`height`的方式，`border`和`padding`的大小也将计算在内。
-- 元素的`height` = 内容（content）的高度 + 垂直方向的`padding` + 垂直方向`border`的宽度
-- 元素的`width` = 内容（content）的宽度 + 水平方向的`padding` + 水平方向`border`的宽度
 
 
 
@@ -6101,18 +6262,7 @@ CSS 盒模型负责计算：
 
 
 
-## 63.你使用过哪些现有的 CSS 框架？你是如何改进它们的？
-
-答案：
-
-- **Bootstrap**： 更新周期缓慢。Bootstrap 4 已经处于 alpha 版本将近两年了。添加了在页面中广泛使用的微调按钮组件。
-- **Semantic UI**：源代码结构使得自定义主题很难理解。非常规主题系统的使用体验很差。外部库的路径需要硬编码（hard code）配置。变量重新赋值没有 Bootstrap 设计得好。
-- **Bulma**： 需要很多非语义的类和标记，显得很多余。不向后兼容，以至于升级版本后，会破坏应用的正常运行。
-
-
-
-
-## 64.你了解 CSS Flex 和 Grid 吗？
+## 64. Flex 布局详解
 
 答案：Flex 主要用于一维布局，而 Grid 则用于二维布局。
 
@@ -6144,7 +6294,7 @@ flex 容器中存在两条轴， 横轴和纵轴， 容器中的每个单元称�
 5. flex
 6. align-self
 
-### Grid
+## 64. Grid 详解
 
 CSS 网格布局用于将页面分割成数个主要区域，或者用来定义组件内部元素间大小、位置和图层之间的关系。
 
@@ -6153,7 +6303,7 @@ CSS 网格布局用于将页面分割成数个主要区域，或者用来定义�
 
 
 
-## 65.响应式设计与自适应设计有何不同？
+## 65. 响应式设计与自适应设计有何不同？
 
 答案：
 
@@ -6168,7 +6318,7 @@ CSS 网格布局用于将页面分割成数个主要区域，或者用来定义�
 
 
 
-## 66.你有没有使用过视网膜分辨率的图形？当中使用什么技术？
+## 66. 你有没有使用过视网膜分辨率的图形？当中使用什么技术？
 
 答案：我倾向于使用更高分辨率的图形（显示尺寸的两倍）来处理视网膜显示。更好的方法是使用媒体查询，像`@media only screen and (min-device-pixel-ratio: 2) { ... }`，然后改变`background-image`。
 
@@ -6181,7 +6331,7 @@ CSS 网格布局用于将页面分割成数个主要区域，或者用来定义�
 
 
 
-## 67.什么情况下，用`translate()`而不用绝对定位？什么时候，情况相反。
+## 67. 什么情况下，用`translate()`而不用绝对定位？什么时候，情况相反。
 
 答案：`translate()`是`transform`的一个值。改变`transform`或`opacity`不会触发浏览器重新布局（reflow）或重绘（repaint），只会触发复合（compositions）。而改变绝对定位会触发重新布局，进而触发重绘和复合。`transform`使浏览器为元素创建一个 GPU 图层，但改变绝对定位会使用到 CPU。 因此`translate()`更高效，可以缩短平滑动画的绘制时间。
 
@@ -6190,43 +6340,7 @@ CSS 网格布局用于将页面分割成数个主要区域，或者用来定义�
 解析：[参考 1](https://www.paulirish.com/2012/why-moving-elements-with-translate-is-better-than-posabs-topleft/)、[参考 2](https://neal.codes/blog/front-end-interview-css-questions)、[参考 3](https://quizlet.com/28293152/front-end-interview-questions-css-flash-cards/)、[参考 4](http://peterdoes.it/2015/12/03/a-personal-exercise-front-end-job-interview-questions-and-my-answers-all/)
 
 
-
-
-## 68.一边固定宽度一边宽度自适应
-
-答案：可以使用 flex 布局 复制下面的 HTML 和 CSS 代码 用浏览器打开可以看到效果
-
-```html
-<div class="wrap">
-  <div class="div1"></div>
-  <div class="div2"></div>
-</div>
-```
-
-```css
-.wrap {
-  display: flex;
-  justify-content: space-between;
-}
-.div1 {
-  min-width: 200px;
-}
-.div2 {
-  width: 100%;
-  background: #e6e6e6;
-}
-html,
-body,
-div {
-  height: 100%;
-  margin: 0;
-}
-```
-
-
-
-
-## 69.display:none、visibile:hidden、opacity:0 的区别
+## 69. display:none、visibile:hidden、opacity:0 的区别
 
 答案：
 
@@ -6239,7 +6353,7 @@ div {
 
 
 
-## 70.文本超出部分显示省略号
+## 70. 文本超出部分显示省略号
 
 答案：
 
