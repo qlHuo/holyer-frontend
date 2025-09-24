@@ -1349,15 +1349,6 @@ const child = new Child('小明', 12);
 
 
 
-
-## 11. 什么是原型链？ 
-
-答案：通过一个对象的__proto__可以找到它的原型对象，原型对象也是一个对象，就可以通过原型对象的__proto__，最后找到了我们的 Object.prototype,从实例的原型对象开始一直到 Object.prototype 就是我们的原型链
-
-解析：
-
-
-
 ##  11. JavaScript 原型链详解
 
 原型链（Prototype Chain）是 JavaScript 实现继承和属性查找的核心机制，它是 JavaScript 区别于基于类的语言的重要特征。
@@ -2172,382 +2163,873 @@ function debounce(fn, delay) {
 
 
 
+## 16. JavaScript 中判断 NaN 的几种方法
 
-## 16. 如何判断 NaN
+在 JavaScript 中，判断一个值是否为 `NaN`（Not-a-Number）需要特别注意，因为 `NaN` 具有一些特殊性质：
 
-答案：isNaN()方法
+### 一、NaN 的特殊性质
 
-解析：isNaN(NaN) // true
+1. `NaN` 是 JavaScript 中唯一不等于自身的值：
+
+```JavaScript
+NaN === NaN; // false
+NaN == NaN;  // false
+```
+
+2. `typeof NaN` 返回 `"number"`：
+
+```JavaScript
+typeof NaN; // "number"
+```
+
+### 二、判断 NaN 的正确方法
+
+#### 1. 使用 `Number.isNaN()`（ES6 推荐）
+
+```JavaScript
+Number.isNaN(NaN);        // true
+Number.isNaN(0/0);       // true
+Number.isNaN('abc'/10);  // true
+
+Number.isNaN(123);       // false
+Number.isNaN('123');     // false
+Number.isNaN(true);      // false
+Number.isNaN(null);      // false
+Number.isNaN(undefined); // false
+```
+
+**特点**：
+
+- 只对真正的 `NaN` 返回 `true`
+- 不会对非数字值进行类型转换
+
+#### 2. 使用全局 `isNaN()`（不推荐）
+
+```JavaScript
+isNaN(NaN);       // true
+isNaN(undefined); // true
+isNaN('abc');     // true
+isNaN({});        // true
+
+isNaN(123);       // false
+isNaN('123');     // false (字符串可转为数字)
+isNaN(true);      // false (true转为1)
+```
+
+**特点**：
+
+- 会先尝试将参数转换为数字，再判断是否为 `NaN`
+- 容易产生误判（如 `isNaN('abc')` 返回 `true`）
+
+#### 3. 利用 `NaN` 不等于自身的特性
+
+```JavaScript
+function isNaNValue(value) {
+  return value !== value;
+}
+
+isNaNValue(NaN); // true
+isNaNValue(123); // false
+```
+
+#### 4. 使用 `Object.is()`（ES6）
+
+```JavaScript
+Object.is(NaN, NaN); // true
+Object.is(0/0, NaN);  // true
+
+Object.is('abc', NaN); // false
+```
+
+### 三、不同方法的比较
+
+| 方法                | NaN  | "abc" | undefined | 123  | "123" | true | null |
+| ------------------- | ---- | ----- | --------- | ---- | ----- | ---- | ---- |
+| `Number.isNaN()`    | ✓    | ✗     | ✗         | ✗    | ✗     | ✗    | ✗    |
+| 全局 `isNaN()`      | ✓    | ✓     | ✓         | ✗    | ✗     | ✗    | ✗    |
+| `value !== value`   | ✓    | ✗     | ✗         | ✗    | ✗     | ✗    | ✗    |
+| `Object.is(x, NaN)` | ✓    | ✗     | ✗         | ✗    | ✗     | ✗    | ✗    |
+
+(✓ 表示返回 true，✗ 表示返回 false)
+
+### 四、实际应用场景
+
+#### 1. 数学计算后的验证
+
+```JavaScript
+function safeDivide(a, b) {
+  const result = a / b;
+  if (Number.isNaN(result)) {
+    throw new Error('无效的计算结果');
+  }
+  return result;
+}
+```
+
+#### 2. 数据清洗
+
+```
+JavaScriptfunction cleanData(arr) {
+  return arr.filter(item => !Number.isNaN(Number(item)));
+}
+
+cleanData(['123', 'abc', '45.6', NaN]); // ['123', '45.6']
+```
+
+#### 3. 表单验证
+
+```JavaScript
+function validateInput(input) {
+  const num = parseFloat(input);
+  if (Number.isNaN(num)) {
+    return '请输入有效的数字';
+  }
+  return num;
+}
+```
+
+### 五、最佳实践建议
+
+1. **始终使用 `Number.isNaN()`** 替代全局 `isNaN()`
+2. 在 TypeScript 中，可以使用类型守卫：
+
+```TypeScript
+function isNaN(value: unknown): value is typeof NaN {
+ return Number.isNaN(value);
+}
+```
+
+3. 对于旧浏览器环境，添加 polyfill：
+
+```JavaScript
+if (!Number.isNaN) {
+ Number.isNaN = function(value) {
+   return typeof value === 'number' && isNaN(value);
+ };
+}
+```
+
+记住，正确判断 `NaN` 对于处理数学运算、数据验证和错误处理非常重要，选择合适的方法可以避免许多潜在的错误。
 
 
 
 
 ## 17. new 一个对象的过程中发生了什么
 
-答案：
+当使用 `new` 操作符创建对象时，JavaScript 引擎会执行一系列特定的步骤。以下是 `new` 一个对象的完整过程：
 
-```js
-// 1. 创建空对象；
-var obj = {};
-// 2. 设置新对象的 constructor 属性为构造函数的名称，设置新对象的__proto__属性指向构造函数的 prototype 对象；
-obj.__proto__ = ClassA.prototype;
-// 3. 使用新对象调用函数，函数中的 this 被指向新实例对象：
-ClassA.call(obj); //{}.构造函数();
-// 4. 如果无返回值或者返回一个非对象值，则将新对象返回；如果返回值是一个新对象的话那么直接直接返回该对象。
+### 一、基本执行步骤
+
+1. **创建一个新的空对象**
+
+```JavaScript
+const obj = {};
 ```
 
+2. **将新对象的原型指向构造函数的 `prototype` 属性**
 
+```JavaScript
+obj.__proto__ = Constructor.prototype;
+```
 
+3. **将构造函数内部的 `this` 绑定到这个新对象**
 
-## 19.for in 和 for of
+```JavaScript
+Constructor.call(obj);
+```
 
-答案：
+4. **执行构造函数内部的代码**（初始化对象属性）
 
-1、for in
+5. **如果构造函数没有显式返回对象，则返回这个新对象**
 
-- 1.一般用于遍历对象的可枚举属性。以及对象从构造函数原型中继承的属性。对于每个不同的属性，语句都会被执行。
-- 2.不建议使用 for in 遍历数组，因为输出的顺序是不固定的。
-- 3.如果迭代的对象的变量值是 null 或者 undefined, for in 不执行循环体，建议在使用 for in 循环之前，先检查该对象的值是不是 null 或者 undefined
+### 二、详细过程解析
 
-2、for of
+假设有以下构造函数：
 
-- 1.for…of 语句在可迭代对象（包括 Array，Map，Set，String，TypedArray，arguments 对象等等）上创建一个迭代循环，调用自定义迭代钩子，并为每个不同属性的值执行语句
+```JavaScript
+function Person(name, age) {
+  this.name = name;
+  this.age = age;
+  
+  this.sayHello = function() {
+    console.log(`Hello, I'm ${this.name}`);
+  };
+}
+```
 
-解析：
+当执行 `const p = new Person('张三', 25)` 时：
 
-```js
-var s = {
-  a: 1,
-  b: 2,
-  c: 3
+#### 1. 内存中创建新对象
+
+```JavaScript
+const obj = {};
+```
+
+#### 2. 设置原型链
+
+```JavaScript
+obj.__proto__ = Person.prototype;
+// 现代写法：Object.setPrototypeOf(obj, Person.prototype)
+```
+
+#### 3. 绑定 this 并执行构造函数
+
+```JavaScript
+Person.call(obj, '张三', 25);
+// 相当于：
+// obj.name = '张三';
+// obj.age = 25;
+// obj.sayHello = function() {...}
+```
+
+#### 4. 处理返回值
+
+- 如果构造函数没有 `return` 或返回原始值，则返回新对象
+- 如果构造函数返回对象，则返回该对象而非新创建的对象
+
+### 三、特殊情况处理
+
+#### 1. 构造函数返回原始值
+
+```JavaScript
+function Car() {
+  this.name = 'BMW';
+  return 123; // 会被忽略
+}
+const car = new Car(); // 仍然是Car对象
+```
+
+#### 2. 构造函数返回对象
+
+```JavaScript
+function Bike() {
+  this.name = 'Honda';
+  return { type: 'Motorcycle' }; // 会替换新对象
+}
+const bike = new Bike(); // { type: 'Motorcycle' }
+```
+
+### 四、手动实现 new 操作符
+
+理解 `new` 的工作原理后，我们可以手动实现一个类似的函数：
+
+```JavaScript
+function myNew(Constructor, ...args) {
+  // 1. 创建新对象并设置原型
+  const obj = Object.create(Constructor.prototype);
+  
+  // 2. 执行构造函数并绑定this
+  const result = Constructor.apply(obj, args);
+  
+  // 3. 处理返回值
+  return result instanceof Object ? result : obj;
+}
+
+// 使用示例
+const p = myNew(Person, '李四', 30);
+```
+
+### 五、ES6 Class 的情况
+
+`class` 语法本质上是构造函数的语法糖，`new` 的行为相同：
+
+```JavaScript
+class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+}
+
+// 底层仍然执行new操作的标准步骤
+const cat = new Animal('Tom');
+```
+
+### 六、重要注意事项
+
+1. **箭头函数不能用作构造函数**，因为它们没有 `this` 绑定和 `prototype` 属性
+
+```JavaScript
+const Foo = () => {};
+new Foo(); // 报错：Foo is not a constructor
+```
+
+1. **构造函数通常首字母大写**（约定而非强制）
+2. **忘记使用 `new` 的后果**：
+
+```JavaScript
+const p = Person('张三', 25); // this指向全局对象（严格模式下报错）
+console.log(window.name); // '张三'
+```
+
+3. **安全模式构造函数**（防止忘记 `new`）：
+
+```JavaScript
+function Person(name) {
+ if (!(this instanceof Person)) {
+   return new Person(name);
+ }
+ this.name = name;
+}
+```
+
+### 七、性能考虑
+
+1. 频繁使用 `new` 创建对象会影响性能，考虑对象池技术
+2. 方法最好定义在原型上而非构造函数内，避免重复创建：
+
+```JavaScript
+function Person(name) {
+ this.name = name;
+}
+
+// 优于在构造函数内定义
+Person.prototype.sayHello = function() {
+ console.log(`Hello, ${this.name}`);
 };
-var s1 = Object.create(s);
-for (var prop in s1) {
-  console.log(prop); //a b c
-  console.log(s1[prop]); //1 2 3
-}
-for (let prop of s1) {
-  console.log(prop); //报错如下 Uncaught TypeError: s1 is not iterable
-}
-for (let prop of Object.keys(s1)) {
-  console.log(prop); // a b c
-  console.log(s1[prop]); //1 2 3
+```
+
+理解 `new` 的执行过程对于掌握 JavaScript 面向对象编程至关重要，也是实现高级设计模式的基础。
+
+
+
+## 18. JavaScript 中 `for...in` 和 `for...of` 的深度解析
+
+### 一、核心区别概述
+
+| 特性         | `for...in`                     | `for...of`                         |
+| ------------ | ------------------------------ | ---------------------------------- |
+| **迭代内容** | 对象的可枚举属性（包括原型链） | 可迭代对象的值                     |
+| **适用对象** | 普通对象                       | 数组、字符串、Map、Set等可迭代对象 |
+| **键/值**    | 获取键名(key)                  | 获取值(value)                      |
+| **原型属性** | 会遍历原型链上的可枚举属性     | 只遍历对象自身的可迭代元素         |
+| **顺序保证** | ES6+ 对普通对象有顺序保证      | 严格按迭代器顺序                   |
+
+### 二、`for...in` 详解
+
+#### 基本语法
+
+```JavaScript
+for (const key in object) {
+  console.log(key); // 属性名
+  console.log(object[key]); // 属性值
 }
 ```
 
+#### 特点
 
+1. 遍历对象及其原型链上的**可枚举属性**
+2. 不保证顺序（虽然ES6规范了普通对象的属性顺序，但不建议依赖）
+3. 会跳过Symbol属性
+4. 通常需要配合`hasOwnProperty`检查
 
+#### 示例
 
-## 20. 如何判断 JS 变量的一个类型（至少三种方式）
+```JavaScript
+const obj = { a: 1, b: 2 };
 
-答案：typeof、instanceof、 constructor、 prototype
+// 添加原型属性
+Object.prototype.c = 3;
 
-
-
-
-## 21. for in、Object.keys 和 Object.getOwnPropertyNames 对属性遍历有什么区别？
-
-答案：
-
-- for in 会遍历自身及原型链上的可枚举属性
-- Object.keys 会将对象自身的可枚举属性的 key 输出
-- 会将自身所有的属性的 key 输出
-
-解析：
-
-ECMAScript 将对象的属性分为两种：数据属性和访问器属性。
-
-```js
-var parent = Object.create(Object.prototype, {
-  a: {
-    value: 123,
-    writable: true,
-    enumerable: true,
-    configurable: true
-  }
-});
-// parent继承自Object.prototype，有一个可枚举的属性a（enumerable:true）。
-
-var child = Object.create(parent, {
-  b: {
-    value: 2,
-    writable: true,
-    enumerable: true,
-    configurable: true
-  },
-  c: {
-    value: 3,
-    writable: true,
-    enumerable: false,
-    configurable: true
-  }
-});
-//child 继承自 parent ，b可枚举，c不可枚举
-```
-
-### for in
-
-```js
-for (var key in child) {
-  console.log(key);
+for (const key in obj) {
+  console.log(key); // 输出 'a', 'b', 'c'
 }
-// b
-// a
-// for in 会遍历自身及原型链上的可枚举属性
-```
 
-如果只想输出自身的可枚举属性，可使用 hasOwnProperty 进行判断(数组与对象都可以，此处用数组做例子)
-
-```js
-let arr = [1, 2, 3];
-Array.prototype.xxx = 1231235;
-for (let i in arr) {
-  if (arr.hasOwnProperty(i)) {
-    console.log(arr[i]);
+// 只遍历自身属性
+for (const key in obj) {
+  if (obj.hasOwnProperty(key)) {
+    console.log(key); // 输出 'a', 'b'
   }
 }
-// 1
-// 2
-// 3
 ```
 
-### Object.keys
+### 三、`for...of` 详解
 
-```js
-console.log(Object.keys(child));
-// ["b"]
-// Object.keys 会将对象自身的可枚举属性的key输出
+#### 基本语法
+
+```JavaScript
+for (const value of iterable) {
+  console.log(value);
+}
 ```
 
-### Object.getOwnPropertyNames
+#### 特点
 
-```js
-console.log(Object.getOwnPropertyNames(child));
-// ["b","c"]
-// 会将自身所有的属性的key输出
+1. 遍历**可迭代对象**的值（实现了`[Symbol.iterator]`方法的对象）
+2. 不会遍历原型链上的属性
+3. 保证按照迭代器的返回值顺序
+4. 可以遍历Map、Set等ES6新增数据结构
+
+#### 示例
+
+```JavaScript
+const arr = ['a', 'b', 'c'];
+
+for (const value of arr) {
+  console.log(value); // 输出 'a', 'b', 'c'
+}
+
+// 字符串迭代
+for (const char of 'hello') {
+  console.log(char); // 输出 'h', 'e', 'l', 'l', 'o'
+}
+
+// Map迭代
+const map = new Map([['a', 1], ['b', 2]]);
+for (const [key, value] of map) {
+  console.log(key, value); // 输出 'a' 1, 'b' 2
+}
 ```
 
+### 四、适用场景对比
 
+#### 使用 `for...in` 的情况
 
+1. 遍历普通对象的属性
+2. 需要检查原型链属性时
+3. 调试对象结构时
 
-## 22.iframe 跨域通信和不跨域通信
+#### 使用 `for...of` 的情况
 
-答案：
+1. 遍历数组元素
+2. 处理字符串字符
+3. 操作Map、Set等集合
+4. 需要直接获取值而非键时
 
-### 不跨域通信
+### 五、特殊注意事项
 
-主页面
+#### 1. 数组遍历的陷阱
 
-```html
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title></title>
-  </head>
-  <body>
-    <iframe
-      name="myIframe"
-      id="iframe"
-      class=""
-      src="flexible.html"
-      width="500px"
-      height="500px"
-    >
-    </iframe>
-  </body>
-  <script type="text/javascript" charset="utf-8">
-    function fullscreen() {
-      alert(1111);
+```JavaScript
+const arr = ['a', 'b', 'c'];
+arr.customProp = 'd';
+
+// for...in 会包含自定义属性
+for (const key in arr) {
+  console.log(key); // 输出 '0', '1', '2', 'customProp'
+}
+
+// for...of 只迭代数组元素
+for (const value of arr) {
+  console.log(value); // 输出 'a', 'b', 'c'
+}
+```
+
+#### 2. 对象转换为可迭代对象
+
+普通对象默认不可迭代，但可以手动实现：
+
+```JavaScript
+const obj = { a: 1, b: 2 };
+
+// 添加迭代器
+obj[Symbol.iterator] = function*() {
+  for (const key in this) {
+    if (this.hasOwnProperty(key)) {
+      yield [key, this[key]];
     }
-  </script>
-</html>
+  }
+};
+
+// 现在可以用for...of
+for (const [key, value] of obj) {
+  console.log(key, value); // 输出 'a' 1, 'b' 2
+}
 ```
 
-子页面 flexible.html
+#### 3. 性能考虑
 
-```html
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title></title>
-  </head>
-  <body>
-    我是子页面
-  </body>
-  <script type="text/javascript" charset="utf-8">
-    // window.parent.fullScreens()
-    function showalert() {
-      alert(222);
-    }
-  </script>
-</html>
+- `for...of` 通常比 `for...in` 性能更好
+- 对于纯数组遍历，传统的 `for` 循环最快
+
+### 六、常见可迭代对象
+
+1. **内置可迭代对象**：
+   - Array
+   - String
+   - Map
+   - Set
+   - TypedArray
+   - arguments 对象
+   - NodeList (DOM集合)
+2. **生成器函数**：
+
+```JavaScript
+   function* gen() {
+     yield 1;
+     yield 2;
+   }
+   for (const num of gen()) {
+     console.log(num); // 1, 2
+   }
 ```
 
-1、主页面要是想要调取子页面的 showalert 方法
+### 七、最佳实践建议
 
-```js
-myIframe.window.showalert();
+1. **数组遍历**：优先使用 `for...of` 或 `forEach()`
+2. **对象属性遍历**：使用 `for...in` + `hasOwnProperty` 检查
+3. **需要索引时**：考虑传统 `for` 循环或 `Array.prototype.forEach`
+4. **避免修改遍历中的对象**：可能导致不可预测的行为
+5. **Map/Set操作**：总是使用 `for...of` 获取键值对
+
+
+
+## 19. JavaScript 属性遍历方法对比
+
+### 核心区别总结
+
+| 方法                           | 遍历范围                         | 包含不可枚举属性 | 包含 Symbol 属性 | 包含原型链属性 | 输出类型  |
+| ------------------------------ | -------------------------------- | ---------------- | ---------------- | -------------- | --------- |
+| `for...in`                     | 对象自身及原型链的可枚举属性     | ❌                | ❌                | ✅              | 键名(key) |
+| `Object.keys()`                | 对象自身的可枚举属性             | ❌                | ❌                | ❌              | 键名数组  |
+| `Object.getOwnPropertyNames()` | 对象自身的所有属性（不含Symbol） | ✅                | ❌                | ❌              | 键名数组  |
+
+### 详细说明
+
+#### 1. `for...in`
+
+- **特点**：会遍历对象自身和原型链上的可枚举属性
+- **注意点**
+  - 需要配合 `hasOwnProperty` 过滤原型属性
+  - 不保证遍历顺序（虽然现代浏览器有实现顺序）
+  - 跳过 Symbol 属性
+- **示例**：
+
+```JavaScript
+const obj = { a: 1 };
+Object.defineProperty(obj, 'b', { value: 2, enumerable: false });
+
+for (const key in obj) {
+ console.log(key); // 只输出 'a'
+}
 ```
 
-2、子页面要掉主页面的 fullscreen 方法
+#### 2. `Object.keys()`
 
-```js
-window.parent.fullScreens();
+- **特点**：只返回对象自身的可枚举属性名数组
+- **注意点**
+  - 不包含原型链属性
+  - 不包含不可枚举属性
+  - 不包含 Symbol 属性
+- **示例**：
+
+```JavaScript
+const obj = { a: 1 };
+Object.defineProperty(obj, 'b', { value: 2, enumerable: false });
+
+console.log(Object.keys(obj)); // ['a']
 ```
 
-3、js 在 iframe 子页面获取父页面元素:
+#### 3. `Object.getOwnPropertyNames()`
 
-```js
-window.parent.document.getElementById("元素id");
+- **特点**：返回对象自身的所有属性名数组（包括不可枚举）
+- **注意点**
+  - 不包含原型链属性
+  - 包含不可枚举属性
+  - 不包含 Symbol 属性
+- **示例**：
+
+```JavaScript
+const obj = { a: 1 };
+Object.defineProperty(obj, 'b', { value: 2, enumerable: false });
+
+console.log(Object.getOwnPropertyNames(obj)); // ['a', 'b']
 ```
 
-4、js 在父页面获取 iframe 子页面元素代码如下:
+## 补充说明
 
-```js
-window.frames["iframe_ID"].document.getElementById("元素id");
+如果需要获取 Symbol 属性，需使用：
+
+```JavaScript
+const obj = { [Symbol('foo')]: 'bar' };
+console.log(Object.getOwnPropertySymbols(obj)); // [Symbol(foo)]
 ```
 
-### 跨域通信
+要获取所有类型的自身属性（包括 Symbol）：
 
-使用[postMessage(官方用法）](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/postMessage)
-
-子页面
-
-```js
-window.parent.postMessage("hello", "http://127.0.0.1:8089");
+```JavaScript
+const allProps = [
+  ...Object.getOwnPropertyNames(obj),
+  ...Object.getOwnPropertySymbols(obj)
+];
 ```
 
-父页面接收
 
-```js
-window.addEventListener("message", function(event) {
-  alert(123);
+
+
+
+## 20. iframe 通信机制详解：跨域与非跨域场景
+
+### 一、非跨域通信（同源 iframe）
+
+当父窗口和 iframe 加载的页面**同源**（协议、域名、端口相同）时，可以直接访问彼此的属性和方法。
+
+#### 1. 父窗口访问 iframe 内容
+
+```JavaScript
+// 获取 iframe 的 window 对象
+const iframeWindow = document.getElementById('myIframe').contentWindow;
+
+// 获取 iframe 的 document 对象
+const iframeDoc = iframeWindow.document;
+
+// 调用 iframe 中的函数
+iframeWindow.childFunction();
+
+// 访问 iframe 中的变量
+console.log(iframeWindow.someVariable);
+```
+
+### 2. iframe 访问父窗口内容
+
+```JavaScript
+// 获取父窗口对象
+const parentWindow = window.parent;
+
+// 访问父窗口的属性和方法
+parentWindow.parentFunction();
+console.log(parentWindow.someVariable);
+
+// 获取顶级窗口（多层 iframe 时）
+const topWindow = window.top;
+```
+
+### 二、跨域通信（不同源 iframe）
+
+当父窗口和 iframe **不同源**时，浏览器会阻止直接访问，需要使用以下方法进行安全通信：
+
+#### 1. postMessage API（推荐）
+
+**父窗口发送消息**：
+
+```JavaScript
+const iframe = document.getElementById('myIframe');
+iframe.contentWindow.postMessage('Hello from parent', 'https://child-domain.com');
+```
+
+**iframe 接收消息**：
+
+```JavaScript
+window.addEventListener('message', (event) => {
+  // 验证来源
+  if (event.origin !== 'https://parent-domain.com') return;
+  
+  console.log('Received:', event.data);
+  // 回复消息
+  event.source.postMessage('Hello back!', event.origin);
 });
 ```
 
-解析：[参考](https://blog.csdn.net/weixin_41229588/article/details/93719894)
+#### 2. 跨域设置（有限场景）
 
+如果两个域**有共同上级域**，可以设置 `document.domain`（现代浏览器已限制此方法）：
 
-
-
-## 23.H5 与 Native 如何交互
-
-答案：jsBridge
-
-解析：[参考](https://segmentfault.com/a/1190000010356403)
-
-
-
-
-## 24.如何判断一个对象是否为数组
-
-答案：
-
-第一种方法：使用 instanceof 操作符。
-
-第二种方法：使用 ECMAScript 5 新增的 Array.isArray()方法。
-
-第三种方法：使用使用 Object.prototype 上的原生 toString()方法判断。
-
-
-
-
-## 25.`<script>` 标签的 defer 和 asnyc 属性的作用以及二者的区别？
-
-答案：
-
-- 1、defer 和 async 的网络加载过程是一致的，都是异步执行。
-- 2、区别在于加载完成之后什么时候执行，可以看出 defer 是文档所有元素解析完成之后才执行的。
-- 3、如果存在多个 defer 脚本，那么它们是按照顺序执行脚本的，而 async，无论声明顺序如何，只要加载完成就立刻执行
-
-解析：
-
-无论`<script>`标签是嵌入代码还是引用外部文件，只要不包含 defer 属性和 async 属性（这两个属性只对外部文件有效），浏览器会按照`<script>`的出现顺序对他们依次进行解析，也就是说，只有在第一个`<script>`中的代码执行完成之后，浏览器才会执行第二个`<script>`中的代码，并且在解析时，页面的处理会暂时停止。
-
-嵌入代码的解析=执行
-外部文件的解析=下载+执行
-
-script 标签存在两个属性，defer 和 async，这两个属性只对外部文件有效
-
-## 只有一个脚本的情况
-
-```js
-<script src="a.js" />
+```JavaScript
+// 父页面和 iframe 页面都设置
+document.domain = 'example.com'; // 从 a.example.com 和 b.example.com 设置为相同域
 ```
 
-没有 defer 或 async 属性，浏览器会立即下载并执行相应的脚本，并且在下载和执行时页面的处理会停止。
+#### 3. 片段标识符（hash）通信
 
-```js
-<script defer src="a.js" />
+**父窗口修改 iframe 的 hash**：
+
+```JavaScript
+const iframe = document.getElementById('myIframe');
+iframe.src = iframe.src.replace(/#.*$/, '') + '#' + message;
 ```
 
-有了 defer 属性，浏览器会立即下载相应的脚本，在下载的过程中页面的处理不会停止，等到文档解析完成脚本才会执行。
+**iframe 监听 hash 变化**：
 
-```js
-<script async src="a.js" />
+```JavaScript
+window.addEventListener('hashchange', () => {
+  const message = location.hash.substring(1);
+  console.log('Received:', message);
+});
 ```
 
-有了 async 属性，浏览器会立即下载相应的脚本，在下载的过程中页面的处理不会停止，下载完成后立即执行，执行过程中页面处理会停止。
+#### 4. 跨域资源共享（CORS）
 
-```js
-<script defer async src="a.js" />
+适用于 AJAX 请求：
+
+```JavaScript
+// 服务器端需要设置响应头
+Access-Control-Allow-Origin: https://parent-domain.com
 ```
 
-如果同时指定了两个属性,则会遵从 async 属性而忽略 defer 属性。
+## 三、安全注意事项
 
-下图可以直观的看出三者之间的区别:
+1. **postMessage 必须验证 origin**
 
-
-其中蓝色代表 js 脚本网络下载时间，红色代表 js 脚本执行，绿色代表 html 解析。
-
-## 多个脚本的情况
-
-这里只列举两个脚本的情况：
-
-```js
-<script src="a.js"></script>
-<script src="b.js"></script>
+```
+JavaScript   window.addEventListener('message', (event) => {
+     if (event.origin !== 'https://trusted-domain.com') return;
+     // 处理消息
+   });
 ```
 
-没有 defer 或 async 属性，浏览器会立即下载并执行脚本 a.js，在 a.js 脚本执行完成后才会下载并执行脚本 b.js，在脚本下载和执行时页面的处理会停止。
+1. **避免使用已弃用的方法**
+   - 避免使用 `document.domain`（现代浏览器已限制）
+   - 避免使用 `window.name` 进行通信（不安全）
+2. **敏感操作需要二次验证**
+   - 即使通过 postMessage 通信，关键操作仍需后端验证
 
-```js
-<script defer src="a.js"></script>
-<script defer src="b.js"></script>
+## 四、通信方案对比
+
+| 方法            | 适用场景       | 安全性 | 实时性 | 数据量限制 |
+| --------------- | -------------- | ------ | ------ | ---------- |
+| postMessage     | 任意跨域通信   | 高     | 高     | 较大       |
+| document.domain | 同主域不同子域 | 低     | 中     | 无         |
+| window.hash     | 简单数据通信   | 中     | 中     | 较小       |
+| CORS            | AJAX 跨域请求  | 高     | 高     | 较大       |
+
+## 五、最佳实践建议
+
+1. **优先使用 postMessage**：最安全可靠的跨域通信方案
+2. **双向验证来源**：发送和接收方都要验证消息来源
+3. **定义通信协议**：规范消息格式和类型，例如：
+
+```
+JavaScript   // 消息格式示例
+   const message = {
+     type: 'UPDATE_DATA',
+     payload: { ... },
+     timestamp: Date.now()
+   };
 ```
 
-有了 defer 属性，浏览器会立即下载相应的脚本 a.js 和 b.js，在下载的过程中页面的处理不会停止，等到文档解析完成才会执行这两个脚本。HTML5 规范要求脚本按照它们出现的先后顺序执行，因此第一个延迟脚本会先于第二个延迟脚本执行，而这两个脚本会先于 DOMContentLoaded 事件执行。
-在现实当中，延迟脚本并不一定会按照顺序执行，也不一定会在 DOMContentLoaded 事件触发前执行，因此最好只包含一个延迟脚本。
+1. **考虑使用库简化**：如 `iframe-resizer`、`postmate` 等库封装复杂逻辑
 
-```js
-<script async src="a.js"></script>
-<script async src="b.js"></script>
+## 六、完整示例
+
+### 父窗口代码
+
+```
+HTML<iframe id="myIframe" src="https://child-domain.com"></iframe>
+<script>
+  const iframe = document.getElementById('myIframe');
+  
+  // 发送消息
+  iframe.onload = () => {
+    iframe.contentWindow.postMessage(
+      { type: 'GREETING', text: 'Hello iframe!' },
+      'https://child-domain.com'
+    );
+  };
+
+  // 接收消息
+  window.addEventListener('message', (event) => {
+    if (event.origin !== 'https://child-domain.com') return;
+    if (event.data.type === 'RESPONSE') {
+      console.log('Received:', event.data.text);
+    }
+  });
+</script>
 ```
 
-有了 async 属性，浏览器会立即下载相应的脚本 a.js 和 b.js，在下载的过程中页面的处理不会停止，a.js 和 b.js 哪个先下载完成哪个就立即执行，执行过程中页面处理会停止，但是其他脚本的下载不会停止。标记为 async 的脚本并不保证按照制定它们的先后顺序执行。异步脚本一定会在页面的 load 事件前执行，但可能会在 DOMContentLoaded 事件触发之前或之后执行。
+### iframe 代码
 
-[参考](https://blog.csdn.net/weixin_42561383/article/details/86564715)
+```
+JavaScript// 接收消息
+window.addEventListener('message', (event) => {
+  if (event.origin !== 'https://parent-domain.com') return;
+  
+  if (event.data.type === 'GREETING') {
+    console.log('Received:', event.data.text);
+    // 回复消息
+    event.source.postMessage(
+      { type: 'RESPONSE', text: 'Message received!' },
+      event.origin
+    );
+  }
+});
+```
+
+通过合理选择通信方式并实施安全措施，可以安全高效地实现 iframe 间的数据交换。
+
+
+
+## 21. `<script>` 标签的 defer 和 async 属性解析
+
+### 核心区别
+
+| 特性         | 无属性 (默认)              | `async`                        | `defer`                                |
+| ------------ | -------------------------- | ------------------------------ | -------------------------------------- |
+| **加载时机** | 立即加载，阻塞HTML解析     | 异步加载，不阻塞解析           | 异步加载，不阻塞解析                   |
+| **执行时机** | 加载完后立即执行，阻塞渲染 | 加载完后立即执行，可能阻塞渲染 | HTML解析完成后，DOMContentLoaded前执行 |
+| **执行顺序** | 按文档顺序                 | 加载完成的顺序                 | 按文档顺序                             |
+| **适用场景** | 无特殊需求                 | 独立第三方脚本                 | 依赖DOM的脚本                          |
+
+### 详细说明
+
+#### 1. 普通 `<script>` (无属性)
+
+```HTML
+<script src="script.js"></script>
+```
+
+- **行为**：立即暂停HTML解析 → 下载脚本 → 执行脚本 → 继续HTML解析
+- **影响**：会明显阻塞页面渲染
+
+#### 2. `async` (异步执行)
+
+```HTML
+<script async src="script.js"></script>
+```
+
+- **特点**
+  - 异步下载（不阻塞HTML解析）
+  - **下载完成后立即执行**（可能中断HTML解析）
+  - 多个async脚本**执行顺序不确定**（先下载完的先执行）
+- **适用**：Google Analytics等独立第三方脚本
+
+### 3. `defer` (延迟执行)
+
+```HTML
+<script defer src="script.js"></script>
+```
+
+- **特点**
+  - 异步下载（不阻塞HTML解析）
+  - **等到HTML完全解析后**，按文档顺序执行
+  - 在`DOMContentLoaded`事件前执行
+- **适用**：需要操作DOM或依赖其他脚本的代码
+
+### 执行时序图示
+
+```
+ HTML解析开始
+├── 普通script: 下载 → 执行 (阻塞)
+├── async script: 下载 → (HTML继续解析) → 下载完成立即执行
+└── defer script: 下载 → (HTML解析完成) → 按顺序执行
+```
+
+### 最佳实践建议
+
+1. **关键脚本**：使用`defer`保持执行顺序（如依赖DOM的脚本）
+2. **独立脚本**：使用`async`加速加载（如统计代码）
+3. **内联脚本**：放在`</body>`前，或使用`defer`
+4. **模块化**：现代开发建议使用ES模块(`<script type="module">`，默认defer行为)
+
+[参考链接](https://blog.csdn.net/weixin_42561383/article/details/86564715)
 
 
 
 
-## 26.Object.prototype.toString.call() 和 instanceOf 和 Array.isArray() 区别好坏
+## 22. Object.prototype.toString.call() 和 instanceOf 和 Array.isArray() 对比
 
-答案：
-
-- Object.prototype.toString.call()
+- **Object.prototype.toString.call()**
+  
   - 优点：这种方法对于所有基本的数据类型都能进行判断，即使是 null 和 undefined 。
   * 缺点：不能精准判断自定义对象，对于自定义对象只会返回[object Object]
-- instanceOf
+- **instanceOf**
+  
   - 优点：instanceof 可以弥补 Object.prototype.toString.call()不能判断自定义实例化对象的缺点。
   - 缺点： instanceof 只能用来判断对象类型，原始类型不可以。并且所有对象类型 instanceof Object 都是 true，且不同于其他两种方法的是它不能检测出 iframes。
-- Array.isArray()
+- **Array.isArray()**
+  
   - 优点：当检测 Array 实例时，Array.isArray 优于 instanceof ，因为 Array.isArray 可以检测出 iframes
   - 缺点：只能判别数组
 
-解析：
+
 
 ### Object.prototype.toString.call()
 
@@ -2651,15 +3133,15 @@ if (!Array.isArray) {
 
 
 
-## 27.什么是面向对象？
+## 23. 什么是面向对象？
 
 答案：面向对象是把构成问题事务分解成各个对象，建立对象的目的不是为了完成一个步骤，而是为了描叙某个事物在整个解决问题的步骤中的行为。
 
 解析：
 
-- 面向对象和面向过程的异同
-  - 面向过程就是分析出解决问题所需要的步骤，然后用函数把这些步骤一步一步实现，使用的时候一个一个依次调用就可以了。
-  - 面向对象是把构成问题事务分解成各个对象，建立对象的目的不是为了完成一个步骤，而是为了描叙某个事物在整个解决问题的步骤中的行为。
+面向对象和面向过程的异同
+- 面向过程就是分析出解决问题所需要的步骤，然后用函数把这些步骤一步一步实现，使用的时候一个一个依次调用就可以了。
+- 面向对象是把构成问题事务分解成各个对象，建立对象的目的不是为了完成一个步骤，而是为了描叙某个事物在整个解决问题的步骤中的行为。
 
 
 
@@ -5562,9 +6044,9 @@ document.body.appendChild(df);
 - 原型链是由一些用来继承和共享属性的对象组成的（有限的）对象链。
 - JavaScript 的数据对象有那些属性值？
   　　 writable：这个属性的值是否可以改。
-    　　 configurable：这个属性的配置是否可以删除，修改。
-    　　 enumerable：这个属性是否能在 for…in 循环中遍历出来或在 Object.keys 中列举出来。
-    　　 value：属性值。
+        　　 configurable：这个属性的配置是否可以删除，修改。
+        　　 enumerable：这个属性是否能在 for…in 循环中遍历出来或在 Object.keys 中列举出来。
+        　　 value：属性值。
 - 当我们需要一个属性的时，Javascript 引擎会先看当前对象中是否有这个属性， 如果没有的话，就会查找他的 Prototype 对象是否有这个属性。
 
 ```js
