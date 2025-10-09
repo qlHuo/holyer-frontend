@@ -1230,3 +1230,89 @@ DOM（文档对象模型）树是将 HTML 或 XML 文档表示为树形结构的
 在构建 DOM 树的过程中，如果遇到 JavaScript 脚本（例如 `<script>` 标签内的代码），浏览器默认会暂停 DOM 树的构建，先执行 JavaScript 代码。因为 JavaScript 可能会修改文档结构（如创建新元素、删除元素等），所以需要确保脚本执行完毕后再继续构建 DOM 树，以保证 DOM 树的正确性。当文档中的所有内容都被解析并构建成节点，且节点之间按照层次关系连接好后，DOM 树就构建完成，此时网页的结构在内存中以树形结构表示，后续的 JavaScript 操作、CSS 样式渲染等都基于此 DOM 树进行。
 
 
+
+## 41. 重排（Reflow）与重绘（Repaint）的区别及触发条件
+
+### 核心区别
+
+| 特性         | 重排 (Reflow)                                                | 重绘 (Repaint)                                               |
+| ------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **定义**     | 浏览器重新计算元素的几何属性（位置、大小等），导致页面布局变化 | 浏览器重新绘制受影响元素的可见部分（颜色、背景等），但不改变布局 |
+| **性能消耗** | 高（需要重新计算布局和绘制）                                 | 较低（只需重新绘制，不涉及布局计算）                         |
+| **触发顺序** | 总是先于重绘发生                                             | 在重排后发生，或单独发生（当只有外观变化时）                 |
+
+### 触发重排的操作（布局变化）
+
+1. **几何属性变化**：
+   - 修改宽度/高度（`width`, `height`）
+   - 修改边距/填充（`margin`, `padding`）
+   - 修改边框（`border-width`）
+   - 修改定位方式（`position: static → absolute`）
+2. **布局相关变化**：
+   - 添加/删除DOM元素
+   - 元素内容变化（文本变化、图片大小变化）
+   - 修改`display: none`（会导致子树重排）
+   - 激活CSS伪类（如`:hover`可能改变布局）
+3. **窗口变化**：
+   - 窗口大小改变（`resize`事件）
+   - 滚动页面（可能影响固定定位元素）
+   - 改变字体大小
+4. **计算值获取**（强制同步重排）：
+
+```JavaScript
+// 这些操作会强制浏览器立即重排以提供准确值
+elem.offsetLeft/Top/Width/Height
+elem.getComputedStyle()
+elem.scrollTop/Left/Width/Height
+elem.clientTop/Left/Width/Height
+```
+
+### 触发重绘的操作（外观变化）
+
+1. **颜色相关**：
+   - 修改颜色（`color`）
+   - 修改背景（`background`）
+   - 修改边框颜色（`border-color`）
+   - 修改透明度（`opacity`）
+2. **视觉效果**：
+   - 修改阴影（`box-shadow`）
+   - 修改圆角（`border-radius`）
+   - 修改可见性（`visibility: hidden`）
+   - 修改轮廓（`outline`）
+3. **不触发重排的重绘**：
+
+```CSS
+/* 仅触发重绘的例子 */
+.element {
+ color: red;          /* 颜色变化 */
+ background: #fff;    /* 背景变化 */
+ opacity: 0.8;        /* 透明度变化 */
+}
+```
+
+### 优化建议
+
+1. **减少重排**：
+   - 使用`transform`和`opacity`实现动画（启用GPU加速）
+   - 批量DOM操作（使用`documentFragment`）
+   - 避免频繁读取布局属性（如先读取后修改）
+2. **代码示例优化**：
+
+```JavaScript
+// 不好的做法（多次重排）
+element.style.width = '100px';
+element.style.height = '200px';
+element.style.margin = '10px';
+
+// 好的做法（一次重排）
+element.style.cssText = 'width:100px; height:200px; margin:10px;';
+// 或使用class
+element.classList.add('new-styles');
+```
+
+3. **使用开发者工具检测**
+
+- Chrome DevTools → Performance → 录制时勾选"Paint flashing"（重绘会绿色闪烁）
+- Chrome DevTools → Rendering → 勾选"Layout Shift Regions"（重排会蓝色高亮）
+
+理解重排和重绘的机制可以帮助开发者编写性能更高的前端代码，特别是在动画和频繁DOM操作的场景中。
