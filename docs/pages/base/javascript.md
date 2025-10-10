@@ -924,13 +924,10 @@ element.addEventListener('click', (event) => {
 
 2. **event.currentTarget**：当前处理事件的元素（等于 `this`）
 
-3. event.eventPhase
-
-   ：表示事件当前所处阶段
-
-   - 1: 捕获阶段
+3. **event.eventPhase**：表示事件当前所处阶段
+- 1: 捕获阶段
    - 2: 目标阶段
-   - 3: 冒泡阶段
+- 3: 冒泡阶段
 
 ### 七、捕获与冒泡的执行顺序
 
@@ -5602,108 +5599,944 @@ func(); // undefined - this 指向全局或undefined(严格模式)
 
 
 
+## 46. JavaScript 浮点数精度问题简述
 
-## 63. 浮点数精度
+### 核心问题
 
-答案：[参考](https://www.css88.com/archives/7340)
+JavaScript 采用 **IEEE 754 双精度浮点数**标准（64位）表示所有数字，导致：
 
-
-
-
-## 64.自执行函数?用于什么场景？好处?
-
-答案：
-
-自执行函数:
-1、声明一个匿名函数
-2、马上调用这个匿名函数。<br>
-作用：创建一个独立的作用域。<br>
-
-好处：防止变量弥散到全局，以免各种 js 库冲突。隔离作用域避免污染，或者截断作用域链，避免闭包造成引用变量无法释放。利用立即执行特性，返回需要的业务函数或对象，避免每次通过条件判断来处理<br>
-
-场景：一般用于框架、插件等场景
-
-
-
-
-## 65.多个页面之间如何进行通信
-
-答案：有如下几个方式：
-
-- cookie
-- web worker
-- localeStorage 和 sessionStorage
-
-
-
-
-## 66.css 动画和 js 动画的差异
-
-答案：
-
-1. 代码复杂度，js 动画代码相对复杂一些
-2. 动画运行时，对动画的控制程度上，js 能够让动画，暂停，取消，终止，css 动画不能添加事件
-3. 动画性能看，js 动画多了一个 js 解析的过程，性能不如 css 动画好
-
-解析：[参考](https://zhuanlan.zhihu.com/p/41479807)
-
-
-
-
-## 67.如何做到修改 url 参数页面不刷新
-
-答案：
-
-HTML5 引入了 `history.pushState()` 和 `history.replaceState()` 方法，它们分别可以添加和修改历史记录条目。
-
-```js
-let stateObj = {
-  foo: "bar"
-};
-
-history.pushState(stateObj, "page 2", "bar.html");
+```JavaScript
+0.1 + 0.2 === 0.3;  // false
+// 实际结果：0.30000000000000004
 ```
 
-假设当前页面为 `foo.html`，执行上述代码后会变为 `bar.html`，点击浏览器后退，会变为 `foo.html`，但浏览器并不会刷新。
-`pushState()` 需要三个参数: 一个状态对象, 一个标题 (目前被忽略), 和 (可选的) 一个 URL. 让我们来解释下这三个参数详细内容：
+### 产生原因
 
-- 状态对象 — 状态对象 `state` 是一个 JavaScript 对象，通过 `pushState ()` 创建新的历史记录条目。无论什么时候用户导航到新的状态，`popstate` 事件就会被触发，且该事件的 `state` 属性包含该历史记录条目状态对象的副本。
-  状态对象可以是能被序列化的任何东西。原因在于 Firefox 将状态对象保存在用户的磁盘上，以便在用户重启浏览器时使用，我们规定了状态对象在序列化表示后有 640k 的大小限制。如果你给 `pushState()` 方法传了一个序列化后大于 640k 的状态对象，该方法会抛出异常。如果你需要更大的空间，建议使用 `sessionStorage` 以及 `localStorage`.
+1. **二进制浮点数本质**：
+   - 十进制小数转换为二进制时可能出现无限循环（如 0.1 → 0.0001100110011...）
+   - 64位存储空间需截断，导致精度丢失
+2. **两次转换误差**：
+   - 十进制 → 二进制（输入时精度丢失）
+   - 二进制运算
+   - 二进制 → 十进制（输出时二次误差）
 
-- 标题 — Firefox 目前忽略这个参数，但未来可能会用到。传递一个空字符串在这里是安全的，而在将来这是不安全的。二选一的话，你可以为跳转的 `state` 传递一个短标题。
+### 典型场景
 
-- URL — 该参数定义了新的历史 URL 记录。注意，调用 `pushState()` 后浏览器并不会立即加载这个 URL，但可能会在稍后某些情况下加载这个 URL，比如在用户重新打开浏览器时。新 URL 不必须为绝对路径。如果新 URL 是相对路径，那么它将被作为相对于当前 URL 处理。新 URL 必须与当前 URL 同源，否则 `pushState()` 会抛出一个异常。该参数是可选的，缺省为当前 URL。
+1. 小数运算：
+
+```JavaScript
+0.7 * 180 === 126;  // false (实际 125.99999999999999)
+```
+
+1. 大整数：
+
+```JavaScript
+9999999999999999 === 10000000000000000; // true (超过15位精度丢失)
+```
+
+### 解决方案
+
+#### 1. 精度处理（推荐）
+
+```JavaScript
+// 四舍五入保留指定位数
+(0.1 + 0.2).toFixed(2); // "0.30"（字符串）
+parseFloat((0.1 + 0.2).toFixed(10)); // 0.3（数字）
+
+// 自定义精度计算函数
+function add(num1, num2) {
+  const factor = Math.pow(10, Math.max(num1.toString().split('.')[1]?.length || 0, 
+                                      num2.toString().split('.')[1]?.length || 0));
+  return (num1 * factor + num2 * factor) / factor;
+}
+```
+
+#### 2. 使用整数运算
+
+```JavaScript
+// 转为整数计算后再还原
+(0.1 * 10 + 0.2 * 10) / 10 === 0.3; // true
+```
+
+#### 3. 使用第三方库
+
+- [decimal.js](https://github.com/MikeMcl/decimal.js/)
+- [big.js](https://github.com/MikeMcl/big.js/)
+- [math.js](https://github.com/josdejong/mathjs)
+
+```javascript
+import Decimal from 'decimal.js';
+new Decimal(0.1).plus(0.2).equals(0.3); // true
+```
+
+#### 4. 比较数字时的容错处理
+
+```JavaScript
+// 设置误差范围（epsilon）
+function epsEqu(x, y) {
+  return Math.abs(x - y) < Number.EPSILON;
+}
+epsEqu(0.1+0.2, 0.3); // true
+```
+
+### 注意事项
+
+1. **不要直接比较浮点数**：始终使用容差或精度处理
+2. **财务计算务必谨慎**：建议使用整数（分而非元）或专用库
+3. **大整数使用BigInt**：
+
+```JavaScript
+const big = 9999999999999999n; // BigInt字面量
+```
 
 
 
 
-## 68.数组方法 pop() push() unshift() shift()
+## 47. JavaScript 自执行函数（IIFE）详解
 
-答案：
+### 一、基本概念
 
-- arr.pop() 从后面删除元素，只能是一个，返回值是删除的元素
-- arr.push() 从后面添加元素，返回值为添加完后的数组的长度
-- arr.unshift() 从前面添加元素, 返回值是添加完后的数组的长度
-- arr.shift() 从前面删除元素，只能删除一个 返回值是删除的元素
+自执行函数（Immediately Invoked Function Expression，IIFE）是定义后立即执行的函数表达式：
+
+```JavaScript
+(function() {
+  // 函数体
+})();
+
+// 或者
+(function() {
+  // 函数体
+}());
+```
+
+### 二、主要用途
+
+#### 1. 创建独立作用域（最常用）
+
+```JavaScript
+(function() {
+  var privateVar = '私有变量';
+  // 这里的变量不会污染全局作用域
+})();
+
+console.log(privateVar); // ReferenceError
+```
+
+#### 2. 模块化开发（ES6之前）
+
+```JavaScript
+var myModule = (function() {
+  var privateVar = '私有数据';
+  
+  function privateMethod() {
+    console.log(privateVar);
+  }
+  
+  return {
+    publicMethod: function() {
+      privateMethod();
+    }
+  };
+})();
+
+myModule.publicMethod(); // 访问公开接口
+```
+
+#### 3. 避免变量污染
+
+```JavaScript
+// 传统方式会污染全局
+for (var i = 0; i < 10; i++) {
+  setTimeout(function() {
+    console.log(i); // 全部输出10
+  }, 100);
+}
+
+// IIFE解决方案
+for (var i = 0; i < 10; i++) {
+  (function(j) {
+    setTimeout(function() {
+      console.log(j); // 0-9
+    }, 100);
+  })(i);
+}
+```
+
+#### 4. 库/框架封装
+
+```JavaScript
+// jQuery 常用模式
+(function(global, $) {
+  // 安全使用$符号
+  $('body').css('background', 'red');
+})(window, jQuery);
+```
+
+### 三、主要优势
+
+1. **作用域隔离**：避免变量污染全局命名空间
+2. **数据私有化**：实现封装，暴露必要接口
+3. **内存效率**：执行后内部变量可被垃圾回收
+4. **解决闭包问题**：如循环中的异步回调
+5. **兼容性**：在ES6之前实现模块化
+
+### 四、现代替代方案
+
+虽然IIFE仍有价值，但ES6+提供了更优雅的替代方案：
+
+#### 1. 块级作用域（let/const）
+
+```JavaScript
+for (let i = 0; i < 10; i++) {
+  setTimeout(() => console.log(i), 100); // 0-9
+}
+```
+
+#### 2. ES6模块
+
+```JavaScript
+// module.js
+const privateVar = '私有数据';
+export function publicMethod() {
+  console.log(privateVar);
+}
+
+// main.js
+import { publicMethod } from './module.js';
+publicMethod();
+```
+
+### 五、高级用法
+
+#### 1. 带参数的IIFE
+
+```JavaScript
+(function($, window) {
+  // 安全使用jQuery和window
+  $(window).on('load', function() {
+    console.log('loaded');
+  });
+})(jQuery, window);
+```
+
+#### 2. 异步IIFE
+
+```JavaScript
+JavaScript(async function() {
+  const data = await fetchData();
+  console.log(data);
+})();
+```
+
+#### 3. 返回结果的IIFE
+
+```JavaScript
+JavaScriptconst result = (function() {
+  const calc = 2 + 2;
+  return calc * 2;
+})();
+
+console.log(result); // 8
+```
+
+### 六、注意事项
+
+1. **分号开头**：防止前面代码缺少分号导致合并错误
+
+```JavaScript
+;(function() {
+ // ...
+})();
+```
+
+2. **避免过度使用**：现代开发中优先使用模块系统
+
+3. **性能影响**：每个IIFE都会创建新作用域，大量使用可能影响性能
+
+3. **调试困难**：匿名函数在调用栈中显示为"(anonymous)"
+
+IIFE在维护旧代码或需要快速创建隔离环境时仍然非常有用，但在新项目中建议优先使用ES6模块系统。
+
+
+
+## 48. 多个页面间通信的多种方案
+
+### 1. localStorage/sessionStorage 事件监听
+
+**适用场景**：同源页面间的通信
+
+```JavaScript
+// 页面A发送消息
+localStorage.setItem('message', JSON.stringify({ data: 'Hello' }));
+
+// 页面B监听变化
+window.addEventListener('storage', (event) => {
+  if (event.key === 'message') {
+    const data = JSON.parse(event.newValue);
+    console.log('收到消息:', data);
+  }
+});
+```
+
+**特点**：
+
+- 同浏览器不同标签页/窗口间通信
+- 存储大小限制(通常5MB)
+- 需要同源策略
+
+### 2. Broadcast Channel API
+
+**适用场景**：现代浏览器同源页面通信
+
+```JavaScript
+// 页面A
+const channel = new BroadcastChannel('app-channel');
+channel.postMessage({ type: 'update', data: '新内容' });
+
+// 页面B
+const channel = new BroadcastChannel('app-channel');
+channel.onmessage = (event) => {
+  console.log('收到消息:', event.data);
+};
+```
+
+**特点**：
+
+- 更现代的API
+- 支持任意同源页面间通信
+- 不依赖存储机制
+
+### 3. SharedWorker
+
+**适用场景**：需要复杂通信或持久连接的页面
+
+```JavaScript
+// shared-worker.js
+const ports = [];
+onconnect = (e) => {
+  const port = e.ports[0];
+  ports.push(port);
+  
+  port.onmessage = (event) => {
+    ports.forEach(p => {
+      if (p !== port) p.postMessage(event.data);
+    });
+  };
+};
+
+// 页面A和B
+const worker = new SharedWorker('shared-worker.js');
+worker.port.onmessage = (event) => {
+  console.log('收到消息:', event.data);
+};
+worker.port.postMessage('Hello');
+```
+
+**特点**：
+
+- 独立线程运行
+- 所有页面共享同一个worker实例
+- 适合复杂场景
+
+### 4. window.postMessage
+
+**适用场景**：跨窗口/iframe通信
+
+```JavaScript
+// 父窗口打开子窗口
+const child = window.open('child.html');
+
+// 父窗口发送消息
+child.postMessage('Hello', 'https://example.com');
+
+// 子窗口接收
+window.addEventListener('message', (event) => {
+  if (event.origin !== 'https://example.com') return;
+  console.log('收到消息:', event.data);
+});
+```
+
+**特点**：
+
+- 支持跨域通信(需验证origin)
+- 需要窗口引用
+- 适合iframe/弹窗场景
+
+### 5. Service Worker
+
+**适用场景**：PWA应用或离线缓存场景
+
+```JavaScript
+// service-worker.js
+self.addEventListener('message', (event) => {
+  event.waitUntil(
+    clients.matchAll().then((clients) => {
+      clients.forEach(client => {
+        client.postMessage(event.data);
+      });
+    })
+  );
+});
+
+// 页面A
+navigator.serviceWorker.controller.postMessage('更新数据');
+
+// 页面B
+navigator.serviceWorker.onmessage = (event) => {
+  console.log('收到消息:', event.data);
+};
+```
+
+**特点**：
+
+- 需要HTTPS(本地开发除外)
+- 功能强大但实现较复杂
+- 适合高级场景
+
+### 6. Cookie轮询(传统方案)
+
+**适用场景**：兼容老旧浏览器
+
+```JavaScript
+// 页面A设置cookie
+document.cookie = "message=Hello; path=/";
+
+// 页面B轮询检查
+setInterval(() => {
+  const cookies = document.cookie.split(';');
+  // 解析cookie检查变化
+}, 1000);
+```
+
+**特点**：
+
+- 兼容性好但效率低
+- 不推荐现代应用使用
+
+### 7. WebSockets
+
+**适用场景**：实时双向通信
+
+```JavaScript
+// 服务器端需要WebSocket服务
+const socket = new WebSocket('wss://example.com/socket');
+
+// 所有页面连接同一个WebSocket
+socket.onmessage = (event) => {
+  console.log('收到消息:', event.data);
+};
+
+// 发送消息
+socket.send(JSON.stringify({ type: 'update', data: '新内容' }));
+```
+
+**特点**：
+
+- 需要服务器支持
+- 实时性最好
+- 适合复杂实时应用
+
+### 选择建议
+
+1. **同源简单通信**：优先使用Broadcast Channel或localStorage
+2. **跨域通信**：使用postMessage
+3. **复杂应用**：考虑SharedWorker或WebSockets
+4. **PWA应用**：Service Worker是理想选择
+5. **兼容老旧浏览器**：Cookie轮询(尽量不用)
+
+### 安全注意事项
+
+1. 始终验证消息来源(`event.origin`)
+2. 敏感操作需要额外身份验证
+3. 避免传递未经验证的可执行代码
+
+
+
+## 49. CSS 动画 vs JavaScript 动画：核心差异与选择指南
+
+### 一、实现机制差异
+
+| 特性         | CSS 动画                      | JavaScript 动画 |
+| ------------ | ----------------------------- | --------------- |
+| **驱动方式** | 浏览器合成线程处理            | 主线程处理      |
+| **控制粒度** | 相对粗粒度                    | 精细控制        |
+| **性能优化** | 自动硬件加速                  | 需手动优化      |
+| **事件交互** | 有限（通过伪类/监听动画事件） | 完全可控        |
+
+### 二、性能对比（关键指标）
+
+1. 渲染流程差异
+
+   **CSS动画**：
+
+```bash
+Style → Layout → Paint → Composite
+（通常跳过Layout和Paint）
+```
+
+​	 **JS动画**：
+
+```bash
+JS → Style → Layout → Paint → Composite
+（每次都在主线程触发完整流程）
+```
+
+2. 帧率稳定性
+
+   - CSS动画更稳定（60fps更容易保持）
+
+   - JS动画易受主线程任务阻塞影响
+
+### 三、代码实现示例
+
+#### CSS 动画方案
+
+```CSS
+.box {
+  animation: slide 2s ease-in-out infinite;
+}
+
+@keyframes slide {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(200px); }
+  100% { transform: translateX(0); }
+}
+```
+
+#### JavaScript 动画方案
+
+```JavaScript
+// 使用requestAnimationFrame
+function animate() {
+  const box = document.querySelector('.box');
+  let start = null;
+  
+  function step(timestamp) {
+    if (!start) start = timestamp;
+    const progress = timestamp - start;
+    const translateX = Math.sin(progress / 1000) * 200;
+    box.style.transform = `translateX(${translateX}px)`;
+    if (progress < 2000) {
+      requestAnimationFrame(step);
+    }
+  }
+  
+  requestAnimationFrame(step);
+}
+```
+
+### 四、适用场景选择指南
+
+#### 优先使用 **CSS动画** 当：
+
+1. 简单状态变化（hover、focus等）
+2. 不需要实时交互的入场/离场动画
+3. 需要高性能的移动端动画
+4. 硬件加速效果（transform/opacity）
+
+#### 优先使用 **JavaScript动画** 当：
+
+1. 需要复杂路径动画（贝塞尔曲线）
+2. 需要实时交互控制（游戏、拖拽）
+3. 需要动态计算属性（滚动视差）
+4. 需要暂停/反转/精细时间控制
+
+### 五、现代优化方案
+
+#### 1. Web Animations API（两者优势结合）
+
+```JavaScript
+const box = document.querySelector('.box');
+box.animate([
+  { transform: 'translateX(0)' },
+  { transform: 'translateX(200px)' }
+], {
+  duration: 2000,
+  iterations: Infinity,
+  easing: 'ease-in-out'
+});
+```
+
+#### 2. CSS变量+JS控制
+
+```CSS
+.box {
+  transition: transform 0.3s;
+  transform: translateX(var(--pos, 0));
+}
+JavaScript// 通过JS更新CSS变量
+box.style.setProperty('--pos', '100px');
+```
+
+#### 3. 性能优化技巧
+
+- **优先使用transform和opacity**（跳过Layout/Paint）
+- **will-change**提前声明动画元素
+
+```CSS
+.animated-element {
+  will-change: transform, opacity;
+}
+```
+
+- **分离动画层**减少重绘区域
+
+### 六、调试工具
+
+1. Chrome DevTools → Performance面板分析帧率
+2. Layers面板查看合成层情况
+3. CSS Triggers网站查询属性触发哪些渲染阶段
+
+> **现代最佳实践**：先用CSS实现基础动画，复杂交互部分用Web Animations API补充，关键性能路径使用will-change优化。
+
+
+
+## 50. 修改URL参数不刷新页面的方法
+
+### 1. 使用History API（推荐）
+
+#### pushState方法
+
+```JavaScript
+// 修改URL不刷新页面
+window.history.pushState(
+  { page: "new" }, // 状态对象
+  "新标题",        // 标题（大多数浏览器忽略）
+  "?param=value"   // 新URL
+);
+
+// 监听URL变化
+window.addEventListener('popstate', (event) => {
+  console.log("URL变化了:", window.location.href);
+});
+```
+
+#### replaceState方法（不产生历史记录）
+
+```JavaScript
+window.history.replaceState(
+  null,
+  "",
+  window.location.pathname + "?param=newValue"
+);
+```
+
+### 2. 使用URLSearchParams API（现代浏览器）
+
+```JavaScript
+// 获取当前参数
+const params = new URLSearchParams(window.location.search);
+
+// 修改参数
+params.set('page', '2');
+params.set('sort', 'asc');
+
+// 更新URL不刷新
+window.history.pushState({}, '', `?${params.toString()}`);
+
+// 删除参数
+params.delete('filter');
+window.history.replaceState({}, '', `?${params.toString()}`);
+```
+
+### 3. 结合Vue/React的路由库
+
+#### Vue Router示例
+
+```JavaScript
+// 修改query参数
+this.$router.push({ query: { ...this.$route.query, param: 'value' } });
+
+// 或使用replace
+this.$router.replace({ query: { ...this.$route.query, param: 'value' } });
+```
+
+#### React Router示例
+
+```JavaScript
+import { useHistory, useLocation } from 'react-router-dom';
+
+function MyComponent() {
+  const history = useHistory();
+  const location = useLocation();
+  
+  const updateQuery = () => {
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set('key', 'value');
+    history.push({
+      search: searchParams.toString()
+    });
+  };
+  
+  // ...
+}
+```
+
+### 4. 注意事项
+
+1. **SEO考虑**：
+   - 动态修改的URL可能不被搜索引擎抓取
+   - 重要内容应确保能通过完整URL访问
+2. **页面状态管理**：
+
+```JavaScript
+// URL变化后需要手动更新页面状态
+window.addEventListener('popstate', () => {
+ const params = new URLSearchParams(window.location.search);
+ loadData(params.get('page'));
+});
+```
+
+3. **浏览器兼容性**：
+
+   - History API支持IE10+
+
+   - 旧浏览器可使用hashchange事件（`#`部分的变化）
+
+4. **URL长度限制**：
+
+   - 不同浏览器有URL长度限制（约2000字符）
+
+   - 复杂数据建议使用sessionStorage/localStorage
+
+### 5. 完整示例
+
+```JavaScript
+function updateURLParam(key, value) {
+  const url = new URL(window.location.href);
+  const params = new URLSearchParams(url.search);
+  
+  if (value === null || value === undefined) {
+    params.delete(key);
+  } else {
+    params.set(key, value);
+  }
+  
+  // 保留hash部分
+  const newUrl = url.pathname + '?' + params.toString() + url.hash;
+  
+  window.history.pushState(
+    { [key]: value },
+    document.title,
+    newUrl
+  );
+}
+
+// 使用示例
+updateURLParam('page', 2);
+updateURLParam('search', 'keyword');
+updateURLParam('filter', null); // 删除filter参数
+```
+
+### 6. 替代方案：Hash路由
+
+```JavaScript
+// 修改hash不会刷新页面
+window.location.hash = 'section1';
+
+// 监听hash变化
+window.addEventListener('hashchange', () => {
+  console.log('当前hash:', window.location.hash);
+});
+```
+
+
+
+## 51. 事件绑定与普通事件的区别详解
+
+### 一、基本概念对比
+
+| 特性             | 普通事件 (HTML事件属性)            | 事件绑定 (JavaScript事件监听)                |
+| ---------------- | ---------------------------------- | -------------------------------------------- |
+| **定义方式**     | HTML标签属性                       | JavaScript代码                               |
+| **语法**         | `<button onclick="handleClick()">` | `element.addEventListener('click', handler)` |
+| **事件处理位置** | HTML中直接指定                     | 脚本文件中定义                               |
+| **解绑方式**     | 需要移除HTML属性                   | `removeEventListener()`                      |
+
+### 二、核心差异分析
+
+#### 1. 代码分离性
+
+- **普通事件**：违反关注点分离原则（HTML/CSS/JS混合）
+
+```HTML
+<!-- 不推荐的做法 -->
+<button onclick="console.log('Clicked')">点击</button>
+```
+
+- **事件绑定**：符合现代Web开发规范
+
+```JavaScript
+// 推荐的做法
+document.querySelector('button').addEventListener('click', () => {
+  console.log('Clicked');
+});
+```
+
+#### 2. 事件覆盖问题
+
+- **普通事件**：后定义的会覆盖前者
+
+```HTML
+<button onclick="func1()" onclick="func2()">点击</button>
+<!-- 只有func2会执行 -->
+```
+
+- **事件绑定**：可添加多个监听器
+
+```JavaScript
+btn.addEventListener('click', func1);
+btn.addEventListener('click', func2);
+// func1和func2都会执行
+```
+
+#### 3. 事件传播控制
+
+- **普通事件**：无法控制事件捕获/冒泡阶段
+- **事件绑定**：可精确控制事件阶段
+
+```JavaScript
+// 第三个参数控制事件阶段
+element.addEventListener('click', handler, true); // 捕获阶段
+element.addEventListener('click', handler, false); // 冒泡阶段
+```
+
+#### 4. 动态性
+
+- **普通事件**：静态绑定，无法动态修改
+- **事件绑定**：可动态添加/移除
+
+```JavaScript
+// 动态绑定
+function toggleHandler() {
+    if (hasHandler) {
+      btn.removeEventListener('click', handler);
+    } else {
+      btn.addEventListener('click', handler);
+    }
+}
+```
+
+### 三、性能与内存管理
+
+#### 1. 内存泄漏风险
+
+- **普通事件**：较少内存泄漏风险
+- **事件绑定**：需注意解绑（特别是单页应用）
+
+```JavaScript
+  // 组件销毁时需要解绑
+  class Component {
+    constructor() {
+      this.handleClick = this.handleClick.bind(this);
+      this.button.addEventListener('click', this.handleClick);
+    }
+    
+    destroy() {
+      this.button.removeEventListener('click', this.handleClick);
+    }
+  }
+```
+
+#### 2. 事件委托效率
+
+- **普通事件**：无法实现事件委托
+- **事件绑定**：支持高效的事件委托
+
+```JavaScript
+  // 父元素监听所有子元素事件
+  document.getElementById('list').addEventListener('click', (e) => {
+    if (e.target.matches('li.item')) {
+      // 处理li.item的点击
+    }
+  });
+```
+
+### 四、现代开发实践
+
+#### 1. 推荐使用事件绑定的场景
+
+1. **复杂交互应用**：需要多个事件处理器
+2. **动态内容**：AJAX加载的元素
+3. **组件化开发**：需要精确控制事件生命周期
+4. **需要事件传播控制**：精确控制捕获/冒泡阶段
+
+#### 2. 框架中的事件处理
+
+##### React示例（合成事件）
+
+```Jsx
+function Button() {
+  const handleClick = (e) => {
+    // React合成事件
+    console.log(e.nativeEvent); // 原生事件
+  };
+  
+  return <button onClick={handleClick}>点击</button>;
+}
+```
+
+##### Vue示例
+
+```HTML
+<template>
+  <button @click="handleClick">点击</button>
+</template>
+
+<script>
+export default {
+  methods: {
+    handleClick(e) {
+      console.log(e); // 原生事件
+    }
+  }
+}
+</script>
+```
+
+### 五、兼容性处理
+
+#### 传统IE浏览器支持
+
+```JavaScript
+// 兼容IE8及以下
+if (element.attachEvent) {
+  element.attachEvent('onclick', handler); // IE
+} else {
+  element.addEventListener('click', handler); // 标准
+}
+
+// 解绑
+if (element.detachEvent) {
+  element.detachEvent('onclick', handler);
+} else {
+  element.removeEventListener('click', handler);
+}
+```
+
+### 六、总结对比
+
+| 评估维度         | 普通事件          | 事件绑定         |
+| ---------------- | ----------------- | ---------------- |
+| **可维护性**     | 差（HTML/JS混合） | 优（关注点分离） |
+| **灵活性**       | 低                | 高               |
+| **事件覆盖**     | 会覆盖            | 可叠加           |
+| **传播控制**     | 无                | 精细控制         |
+| **内存管理**     | 自动回收          | 需手动解绑       |
+| **动态元素**     | 不支持            | 支持             |
+| **事件委托**     | 不支持            | 支持             |
+| **现代框架兼容** | 不兼容            | 完全兼容         |
+
+**最佳实践建议**：在现代Web开发中，应始终使用JavaScript事件绑定方式，只有在极少数必须与HTML紧密耦合的简单场景下才考虑使用普通事件属性。
 
 
 
 
-## 69.事件绑定与普通事件有什么区别
-
-答案：
-
-- 用普通事件添加相同事件，下面会覆盖上面的，而事件绑定不会
-- 普通事件是针对非 dom 元素，事件绑定是针对 dom 元素的事件
 
 
+## 52. IE 和 DOM 事件流的区别
 
-
-## 70. IE 和 DOM 事件流的区别
-
-答案：
-
-1.事件流的区别
+**1. 事件流的区别**
 
 IE 采用冒泡型事件 Netscape 使用捕获型事件 DOM 使用先捕获后冒泡型事件
 示例：
@@ -5724,7 +6557,7 @@ IE 采用冒泡型事件 Netscape 使用捕获型事件 DOM 使用先捕获后�
 
 DOM 事件模型： body->div->button->button->div->body (先捕获后冒泡)
 
-2.事件侦听函数的区别
+**2. 事件侦听函数的区别**
 
 IE 使用:
 
@@ -5745,227 +6578,9 @@ bCapture 参数用于设置事件绑定的阶段，true 为捕获阶段，false 
 
 
 
-## 71. IE 和标准下有哪些兼容性的写法
-
-答案：
-
-```js
-var ev = ev || window.event;
-document.documentElement.clientWidth || document.body.clientWidth;
-var target = ev.srcElement || ev.target;
-```
 
 
-
-
-## 72.变量提升
-
-答案：
-
-### 变量提升
-
-A、js 代码执行的过程
-
-- 1 变量提升
-- 2 代码从上到下依次执行
-
-var 关键字和 function 关键字声明的变量会进行变量提升
-
-B、变量提升发生的环境：发生在代码所处的当前作用域。
-
-- 变量提升
-- 1 var 关键字进行的变量提升，会把变量提前声明，但是不会提前赋值 。
-- 2 function 关键字对变量进行变量提升，既会把变量提前声明，又会把变量提前赋值，也就是把整个函数体提升到代码的顶部
-- 3 有一些代码是不会执行的但是仍旧会发生变量提升,规则适用于 1,2
-- 3.1 return 之后的代码依旧会发生变量提升，规则适用于 1，2
-- 3.2 代码报错之后的代码依旧会发生变量提升，规则适用于 1，2
-- 3.3 break 之后的代码依旧会发生变量提升，规则适用于 1,2
-- 4 有一些代码是不会执行但是仍旧会发生变量提升，但是规则要发生变化
-- 4.1 if 判断语句 if 判断语句中 var 关键字以及 function 关键字声明的变量只会发生提前声明，不会发生提前赋值,也就是不会吧函数体整体提升到当前作用域顶部。规则跟 1,2 不适用
-- 4.2 switch case 规则跟 1,2 不适用
-- 4.3 do while 规则跟 1,2 不适用
-- 4.4 try catch catch 中声明的变量只会发生提前声明，不会发生提前赋值。
-- Ps:在条件判断语句和 try catch 中的声明的变量不管是否能够执行，都只会发生提前
-- 声明，不会发生提前赋值。
-
-解析：
-
-```js
-// 如果一个变量声明了但是未赋值，那么输出这个变量就会输出 undefined
-var num;
-console.log(num);
-
-// 如果一个变量没有声明也没有赋值，那么就会报一个错：
-console.log(num); // 输出一个不存在的变量 Uncaught ReferenceError: num is not defined
-```
-
-```js
-// var 关键字进行的变量提升
-console.log(num);
-var num = 123;
-console.log(num);
-var num = 456;
-console.log(num);
-
-// 变量提升之后的代码：
-var num;
-console.log(num);
-num = 123;
-console.log(num);
-num = 456;
-console.log(num);
-```
-
-```js
-// function 关键字的变量提升
-console.log(fn);
-function fn() {
-  console.log(1);
-}
-
-// 变量提升之后的代码：
-function fn() {
-  console.log(1);
-}
-console.log(fn); // 输出fn的函数体
-```
-
-```js
-// 3.1 return 之后的代码依旧会发生变量提升  规则适用于1，2
-function fn() {
-  console.log(num);
-  return;
-  var num = 123;
-}
-fn();
-
-// 变量提升之后的代码：
-function fn() {
-  var num;
-  console.log(num);
-  return;
-  num = 123;
-}
-fn(); // undefined
-
-function fn() {
-  console.log(fo);
-  return;
-  function fo() {}
-}
-fn();
-
-// 变量提升之后的代码：
-function fn() {
-  function fo() {}
-  console.log(fo);
-  return;
-}
-fn(); //输出fo的函数体
-```
-
-```js
-//3.2 代码报错之后的代码依旧会进行变量提升，规则适用于1,2
-console.log(num);
-xsasfgdsfqdfsdf; //报一个错
-var num = 123;
-console.log(num);
-
-// 变量提升之后的代码：
-var num;
-console.log(num); //输出 undefined
-dsagdsqghdwfh; // 报一个错误 ，错误之后的代码不会被执行
-num = 123;
-console.log(num);
-```
-
-```js
-//function 关键字
-console.log(fn);
-sasgfdhwhsdqg;
-function fn() {}
-console.log(fn);
-
-// 变量提升之后的代码：
-function fn() {}
-console.log(fn); // 输出 fn 的函数体
-asdgsdgdfgfdg; // 报一个错误，报错之后的代码不会被执行
-console.log(fn);
-```
-
-```js
-//4 代码不执行，但是会进行变量提升，不过规则不适用于1,2
-//4.1 if判断语句
-console.log(num);
-if (false) {
-  var num = 123;
-}
-console.log(num)
-
-//  变量提升之后的代码：
-var num;
-console.log(num); //undefined
-if (false) {
-  num = 123;
-}
-console.log(num) //undefined
-
-console.log(fn);
-if (false) {
-  function fn() {}
-}
-console.log(fn);
-
-// 变量提升之后的代码：
-var fn;
-function fn;
-console.log(fn) //undefined
-if (false) {
-  function fn() {}
-}
-console.log(fn) //undefined
-/*function fn//Uncaught SyntaxError: Unexpected end of input*/
-```
-
-```js
-// try catch
-try {
-  console.log(num);
-} catch (e) {
-  var num = 123;
-}
-console.log(num);
-
-var num;
-try {
-  console.log(num); // undefined
-} catch (e) {
-  num = 123;
-}
-console.log(num); // undefined
-
-try {
-  console.log(fn);
-} catch (e) {
-  function fn() {}
-}
-console.log(fn);
-
-var fn;
-try {
-  console.log(fn); // undefined
-} catch (e) {
-  num = 123;
-}
-console.log(fn); // undefined
-```
-
-
-
-
-## 73.如何阻止冒泡与默认行为
-
-答案：
+## 53. 如何阻止冒泡与默认行为
 
 - 阻止冒泡行为：非 IE 浏览器 stopPropagation()，IE 浏览器 window.event.cancelBubble = true
 - 阻止默认行为：非 IE 浏览器 preventDefault()，IE 浏览器 window.event.returnValue = false
@@ -6001,32 +6616,7 @@ function stopDefault(e) {
 
 
 
-## 74.js 中 this 闭包 作用域
-
-答案：
-
-this：指向调用上下文
-
-闭包：定义一个函数就开辟了一个局部作用域，整个 js 执行环境有一个全局作用域
-
-作用域：一个函数可以访问其他函数中的变量（闭包是一个受保护的变量空间）
-
-```js
-var f = (function fn() {
-  var name = 1;
-  return function () {
-    name++;
-    console.log(name)
-  }
-})()
-
-==>undefined 有疑问
-```
-
-
-
-
-## 75.javascript 的本地对象，内置对象和宿主对象
+## 54. javascript 的本地对象，内置对象和宿主对象
 
 答案：
 
@@ -6039,10 +6629,218 @@ JS中内置了17个对象，常用的是Array对象、Date对象、正则表达�
 3. 宿主对象
 由ECMAScript实现的宿主环境提供的对象，可以理解为：浏览器提供的对象。所有的BOM和DOM都是宿主对象。
 
+## 54. JavaScript 对象分类详解
+
+### 一、本地对象 (Native Objects)
+
+**定义**：由ECMAScript规范定义的独立于宿主环境的基础对象
+
+**特点**：
+
+- 与执行环境无关
+- 在脚本运行前就已经存在
+- 需要通过new关键字实例化
+
+**常见本地对象**：
+
+```JavaScript
+// 基本对象
+Object
+Function
+Array
+String
+Number
+Boolean
+
+// 错误对象
+Error
+EvalError
+RangeError
+ReferenceError
+SyntaxError
+TypeError
+URIError
+
+// 其他
+Date
+RegExp
+Symbol (ES6)
+BigInt (ES2020)
+```
+
+**示例**：
+
+```JavaScript
+const str = new String("hello"); // String本地对象
+const arr = new Array(1, 2, 3);  // Array本地对象
+```
+
+### 二、内置对象 (Built-in Objects)
+
+**定义**：由ECMAScript实现提供、不需要实例化即可使用的对象
+
+**特点**：
+
+- 在引擎初始化时就已经创建
+- 可以直接访问其属性和方法
+- 本质上是本地对象的特殊实例
+
+**常见内置对象**：
+
+```JavaScript
+// 值属性
+Infinity
+NaN
+undefined
+globalThis (ES2020)
+
+// 函数属性
+eval()
+isNaN()
+parseInt()
+parseFloat()
+
+// 基本对象
+Math
+JSON
+Reflect (ES6)
+Proxy (ES6)
+
+// 其他
+Atomics (ES2017)
+```
+
+**示例**：
+
+```JavaScript
+Math.random(); // 直接使用Math对象
+JSON.parse('{}'); // 直接使用JSON对象
+```
+
+### 三、宿主对象 (Host Objects)
+
+**定义**：由运行环境(浏览器/Node等)提供的对象
+
+**特点**：
+
+- 依赖执行环境
+- 不同环境提供的宿主对象不同
+- 行为可能不符合ECMAScript规范
+
+#### 浏览器环境宿主对象：
+
+```JavaScript
+// 核心对象
+window
+document
+navigator
+history
+location
+
+// DOM相关
+HTMLElement
+XMLHttpRequest
+Event
+NodeList
+
+// HTML5新增
+localStorage
+sessionStorage
+WebSocket
+CanvasRenderingContext2D
+```
+
+#### Node.js环境宿主对象：
+
+```JavaScript
+global
+process
+Buffer
+module
+exports
+require()
+```
+
+**示例**：
+
+```JavaScript
+// 浏览器中
+window.alert('hello'); 
+
+// Node.js中
+process.env.PATH;
+```
+
+### 三者的关系图示
+
+```
+ ECMAScript环境
+├── 内置对象 (如Math、JSON)
+└── 本地对象 (如Object、Array)
+    
+宿主环境 (浏览器/Node)
+└── 宿主对象 (如window/document或global/process)
+```
+
+### 重要区别对比
+
+| 特性         | 本地对象       | 内置对象       | 宿主对象        |
+| ------------ | -------------- | -------------- | --------------- |
+| **定义标准** | ECMAScript规范 | ECMAScript实现 | 宿主环境实现    |
+| **实例化**   | 需要new        | 直接使用       | 环境提供        |
+| **可扩展性** | 可扩展原型     | 通常不可扩展   | 取决于环境      |
+| **跨环境**   | 所有环境一致   | 所有环境一致   | 环境特有        |
+| **示例**     | new Date()     | Math.random()  | window.location |
+
+### 现代JavaScript的扩展
+
+1. **全局对象统一**：
+   - 浏览器: `window`
+   - Node.js: `global`
+   - ES2020: `globalThis` (跨环境统一访问全局对象)
+2. **命名空间对象**：
+   - `Intl` (国际化)
+   - `WebAssembly`
+   - `console` (虽为宿主对象但已标准化)
+3. **类型化数组** (ES6)：
+
+```JavaScript
+ArrayBuffer
+Uint8Array
+Float64Array
+```
+
+### 实际开发注意事项
+
+1. **避免扩展本地对象原型**：
+
+```JavaScript
+// 不推荐
+Array.prototype.myMethod = function() {...}
+```
+
+2. **区分宿主环境**：
+
+```JavaScript
+// 安全检测DOM对象
+if (typeof document !== 'undefined') {
+ // 浏览器环境
+}
+```
+
+3. **新型API检测**：
+
+```JavaScript
+// 检查API可用性
+if ('IntersectionObserver' in window) {
+ // 使用现代API
+}
+```
 
 
 
-## 76.javascript 的同源策略
+
+## 76. javascript 的同源策略
 
 答案：一段脚本只能读取来自于同一来源的窗口和文档的属性
 
