@@ -1,29 +1,50 @@
 {
-  "hash": "6fdd1cd0",
-  "configHash": "8d0117f9",
+  "hash": "92451bbb",
+  "configHash": "2f9c07c0",
   "lockfileHash": "924941be",
-  "browserHash": "26b3a96c",
+  "browserHash": "60ac24f2",
   "optimized": {
     "vue": {
       "src": "../../../../node_modules/.pnpm/vue@3.5.19/node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "dc569237",
+      "fileHash": "fcc9f461",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../../node_modules/.pnpm/@vue+devtools-api@7.7.7/node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "026b1756",
+      "fileHash": "b456b0c3",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../../node_modules/.pnpm/@vueuse+core@12.8.2/node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "f3e16605",
+      "fileHash": "4fbbe472",
+      "needsInterop": false
+    },
+    "vitepress > @vueuse/integrations/useFocusTrap": {
+      "src": "../../../../node_modules/.pnpm/@vueuse+integrations@12.8.2_focus-trap@7.6.5/node_modules/@vueuse/integrations/useFocusTrap.mjs",
+      "file": "vitepress___@vueuse_integrations_useFocusTrap.js",
+      "fileHash": "128dd415",
+      "needsInterop": false
+    },
+    "vitepress > mark.js/src/vanilla.js": {
+      "src": "../../../../node_modules/.pnpm/mark.js@8.11.1/node_modules/mark.js/src/vanilla.js",
+      "file": "vitepress___mark__js_src_vanilla__js.js",
+      "fileHash": "826a530f",
+      "needsInterop": false
+    },
+    "vitepress > minisearch": {
+      "src": "../../../../node_modules/.pnpm/minisearch@7.1.2/node_modules/minisearch/dist/es/index.js",
+      "file": "vitepress___minisearch.js",
+      "fileHash": "1910127b",
       "needsInterop": false
     }
   },
   "chunks": {
+    "chunk-FFA2YUHY": {
+      "file": "chunk-FFA2YUHY.js"
+    },
     "chunk-S4XQ5XPY": {
       "file": "chunk-S4XQ5XPY.js"
     }

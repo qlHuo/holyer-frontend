@@ -9,6 +9,9 @@ export default defineConfig({
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/holyer-frontend/static/logo.svg' }]
   ],
   themeConfig: {
+    search: {
+      provider: 'local'
+    }, 
     // https://vitepress.dev/reference/default-theme-config
     logo: { src: '/static/logo.svg', width: 24, height: 24 },
 
