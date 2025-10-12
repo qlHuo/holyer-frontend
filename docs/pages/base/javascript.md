@@ -1572,7 +1572,7 @@ const child = new Child('小明', 12);
    - 当访问对象的属性时，如果对象自身没有该属性，就会沿着原型链向上查找
    - 原型链的尽头是 `null`（`Object.prototype.__proto__ === null`）
 
-#### 二、原型链的构成
+### 二、原型链的构成
 
 ```JavaScript
 function Person(name) {
@@ -7947,112 +7947,929 @@ document.body.appendChild(df);
 
 
 
-## 89.原型的作用 以及什么是原型
 
-答案：作用：实现资源共享
+## 63. JavaScript 作用域链详解
 
-什么是原型:实例在被创建的那一刻，构造函数的 prototype 属性的值。
+### 一、作用域链的本质
 
+作用域链（Scope Chain）是JavaScript中变量和函数查找的机制，它是一个由当前执行环境与所有父级执行环境的变量对象组成的链式结构。当访问一个变量时，JavaScript引擎会沿着这条链从内向外查找。
 
+### 二、作用域链的构成
 
+#### 1. 组成元素
 
-## 90.javascript 里面的继承怎么实现，如何避免原型链上面的对象共享
+- **变量对象（VO/Variable Object）**：存储该作用域内的变量、函数声明和函数参数
+- **活动对象（AO/Activation Object）**：函数执行时的变量对象
+- **全局对象（Global Object）**：最外层的变量对象（浏览器中是window）
 
-答案：用构造函数和原型链的混合模式去实现继承，避免对象共享可以参考经典的 extend()函数，很多前端框架都有封装的，就是用一个空函数当做中间变量
+#### 2. 创建过程
 
-
-
-
-## 91.简单介绍下 JS 的原型和原型链
-
-答案：
-
-
-
-
-## 92.说说你对作用域链的理解
-
-答案：作用域链的作用是保证执行环境里有权访问的变量和函数是有序的，作用域链的变量只能向上访问，变量访问到 window 对象即被终止，作用域链向下访问变量是不被允许的。
-
-
-
-
-## 93.JavaScript 原型，原型链 ? 有什么特点？
-
-答案：
-
-- 原型对象也是普通的对象，是对象一个自带隐式的`__proto__`属性，原型也有可能有自己的原型，如果一个原型对象的原型不为 null 的话，我们就称之为原型链。
-- 原型链是由一些用来继承和共享属性的对象组成的（有限的）对象链。
-- JavaScript 的数据对象有那些属性值？
-  　　 writable：这个属性的值是否可以改。
-        　　 configurable：这个属性的配置是否可以删除，修改。
-        　　 enumerable：这个属性是否能在 for…in 循环中遍历出来或在 Object.keys 中列举出来。
-        　　 value：属性值。
-- 当我们需要一个属性的时，Javascript 引擎会先看当前对象中是否有这个属性， 如果没有的话，就会查找他的 Prototype 对象是否有这个属性。
-
-```js
-function clone(proto) {
-  function Dummy() {}
-  Dummy.prototype = proto;
-  Dummy.prototype.constructor = Dummy;
-  return new Dummy(); //等价于Object.create(Person);
+```JavaScript
+function outer() {
+  var x = 10;
+  
+  function inner() {
+    var y = 20;
+    console.log(x + y); // 访问外部变量x
+  }
+  
+  inner();
 }
-function object(old) {
-  function F() {}
-  F.prototype = old;
-  return new F();
-}
-var newObj = object(oldObject);
+
+outer();
 ```
 
+**作用域链形成**：
+
+1. 当调用`outer()`时：
+   - outer作用域链：`[outerAO, globalVO]`
+2. 当调用`inner()`时：
+   - inner作用域链：`[innerAO, outerAO, globalVO]`
+
+### 三、关键特性
+
+#### 1. 词法作用域（静态作用域）
+
+JavaScript采用词法作用域，作用域在函数**定义时**就已经确定，而非调用时。
+
+```JavaScript
+var x = 10;
+
+function foo() {
+  console.log(x);
+}
+
+function bar() {
+  var x = 20;
+  foo(); // 输出10而非20
+}
+
+bar();
+```
+
+#### 2. 闭包与作用域链
+
+闭包是函数与其词法环境的组合，即使函数在其词法环境之外执行，也能访问该环境中的变量。
+
+```JavaScript
+function createCounter() {
+  let count = 0;
+  
+  return {
+    increment: function() {
+      count++;
+      return count;
+    },
+    get: function() {
+      return count;
+    }
+  };
+}
+
+const counter = createCounter();
+console.log(counter.increment()); // 1
+console.log(counter.get()); // 1
+```
+
+### 四、执行上下文与作用域链
+
+#### 1. 执行上下文包含
+
+- 变量对象
+- 作用域链
+- this值
+
+#### 2. 执行过程
+
+```JavaScript
+var a = 1;
+
+function outer() {
+  var b = 2;
+  
+  function inner() {
+    var c = 3;
+    console.log(a + b + c); // 6
+  }
+  
+  inner();
+}
+
+outer();
+```
+
+**内存结构**：
+
+```
+ 全局上下文
+  - VO: { a: 1, outer: function }
+  
+outer执行时
+  - AO: { b: 2, inner: function }
+  - 作用域链: [outerAO, globalVO]
+  
+inner执行时
+  - AO: { c: 3 }
+  - 作用域链: [innerAO, outerAO, globalVO]
+```
+
+### 五、特殊场景分析
+
+#### 1. with语句（已废弃）
+
+```JavaScript
+var obj = { x: 10 };
+
+with(obj) {
+  console.log(x); // 10
+  x = 20; // 修改obj.x
+}
+```
+
+**问题**：临时修改作用域链，导致性能下降和语义不清晰
+
+#### 2. try-catch
+
+```JavaScript
+try {
+  throw new Error('test');
+} catch (err) {
+  console.log(err); // Error对象
+  var catchVar = 'inside';
+}
+
+console.log(catchVar); // 'inside'（var穿透块作用域）
+```
+
+### 六、ES6带来的变化
+
+#### 1. 块级作用域（let/const）
+
+```JavaScript
+{
+  let blockScoped = 10;
+  var functionScoped = 20;
+}
+
+console.log(functionScoped); // 20
+console.log(blockScoped); // ReferenceError
+```
+
+#### 2. 暂时性死区（TDZ）
+
+```JavaScript
+console.log(a); // undefined（var提升）
+var a = 1;
+
+console.log(b); // ReferenceError（let的TDZ）
+let b = 2;
+```
+
+### 七、作用域链与性能优化
+
+1. **变量查找优化**：
+   - 尽量使用局部变量（查找层级少）
+   - 避免全局变量污染
+2. **内存管理**：
+   - 不必要的闭包会导致内存泄漏
+
+```JavaScript
+// 不好的实践
+function createHeavyClosure() {
+ const bigData = new Array(1000000).fill('*');
+
+ return function() {
+   console.log('仅需小功能');
+   // 但bigData一直被保留
+ };
+}
+```
+
+### 八、调试技巧
+
+1. 使用Chrome DevTools的Scope面板查看作用域链
+2. 通过`console.dir()`查看函数的`[[Scopes]]`属性
+
+```JavaScript
+function test() {
+ const a = 1;
+ console.dir(test);
+}
+test();
+```
+
+理解作用域链是掌握JavaScript执行机制的关键，它解释了变量查找、闭包原理以及内存管理等核心概念。现代开发中，结合ES6的块级作用域可以写出更清晰、更安全的代码。
 
 
 
-## 94.请解释什么是事件代理
+## 64. JavaScript 三大尺寸系列详解
 
-答案：
+### 一、核心区别总览
+
+| 属性系列       | 包含内容                | 是否包含边框 | 是否包含滚动条 | 是否包含隐藏内容 |
+| -------------- | ----------------------- | ------------ | -------------- | ---------------- |
+| **offset系列** | 内容+内边距+边框+滚动条 | ✅ 包含       | ✅ 包含         | ❌ 不包含         |
+| **client系列** | 内容+内边距             | ❌ 不包含     | ❌ 不包含       | ❌ 不包含         |
+| **scroll系列** | 内容+内边距+溢出内容    | ❌ 不包含     | ❌ 不包含       | ✅ 包含           |
+
+### 二、offsetWidth/offsetHeight
+
+#### 1. 定义
+
+元素在页面中占据的**总空间尺寸**，包括：
+
+- 内容宽度/高度
+- 内边距(padding)
+- 边框(border)
+- 垂直滚动条宽度（如果存在）
+
+#### 2. 计算公式
+
+```JavaScript
+const offsetWidth = width + padding-left + padding-right + border-left + border-right
+const offsetHeight = height + padding-top + padding-bottom + border-top + border-bottom
+```
+
+#### 3. 图示
+
+```
+ ┌───────────────────────────────────────┐
+│               border-top               │
+│    ┌─────────────────────────────┐    │
+│    │         padding-top          │    │
+│    │    ┌───────────────────┐    │    │
+│    │    │                   │    │    │
+│    │    │     content       │    │    │
+│    │    │                   │    │    │
+│    │    └───────────────────┘    │    │
+│    │         padding-bottom       │    │
+│    └─────────────────────────────┘    │
+│               border-bottom            │
+└───────────────────────────────────────┘
+```
+
+#### 4. 示例代码
+
+```JavaScript
+const box = document.getElementById('box');
+console.log(box.offsetWidth, box.offsetHeight);
+```
+
+### 三、clientWidth/clientHeight
+
+#### 1. 定义
+
+元素的**可视区域尺寸**，包括：
+
+- 内容宽度/高度
+- 内边距(padding)
+- **不包含**滚动条和边框
+
+#### 2. 计算公式
+
+```JavaScript
+clientWidth = width + padding-left + padding-right
+clientHeight = height + padding-top + padding-bottom
+```
+
+#### 3. 图示
+
+```
+ ┌───────────────────────────────────────┐
+│                                       │
+│    ┌─────────────────────────────┐    │
+│    │                             │    │
+│    │                             │    │
+│    │         client区域          │    │
+│    │                             │    │
+│    │                             │    │
+│    └─────────────────────────────┘    │
+│                                       │
+└───────────────────────────────────────┘
+```
+
+#### 4. 特殊用途
+
+```JavaScript
+// 获取视口尺寸
+const viewportWidth = document.documentElement.clientWidth;
+const viewportHeight = document.documentElement.clientHeight;
+```
+
+### 四、scrollWidth/scrollHeight
+
+#### 1. 定义
+
+元素的**实际内容尺寸**，包括：
+
+- 内容宽度/高度
+- 内边距(padding)
+- **包含**溢出内容（即使不可见）
+- **不包含**滚动条和边框
+
+#### 2. 计算公式
+
+```JavaScript
+scrollWidth = 实际内容宽度 + padding-left + padding-right
+scrollHeight = 实际内容高度 + padding-top + padding-bottom
+```
+
+#### 3. 图示
+
+```
+ ┌───────────────────────────────────────┐
+│    ┌─────────────────────────────┐    │
+│    │                             │    │
+│    │         可视区域            │    │
+│    │                             │    │
+│    │    ┌───────────────────┐    │    │
+│    │    │    隐藏内容       │    │    │
+│    │    └───────────────────┘    │    │
+│    │                             │    │
+│    └─────────────────────────────┘    │
+└───────────────────────────────────────┘
+```
+
+#### 4. 典型应用
+
+```JavaScript
+// 检查内容是否溢出
+function hasOverflow(element) {
+  return element.scrollHeight > element.clientHeight;
+}
+
+// 滚动到最底部
+element.scrollTop = element.scrollHeight;
+```
+
+### 五、三大系列对比实例
+
+```HTML
+<style>
+  #box {
+    width: 200px;
+    height: 100px;
+    padding: 20px;
+    border: 5px solid #333;
+    overflow: auto;
+  }
+  #content {
+    width: 300px;
+    height: 200px;
+    background: #eee;
+  }
+</style>
+
+<div id="box">
+  <div id="content"></div>
+</div>
+
+<script>
+  const box = document.getElementById('box');
+  
+  console.log('offsetWidth:', box.offsetWidth);  // 250 (200+20*2+5*2)
+  console.log('offsetHeight:', box.offsetHeight); // 150 (100+20*2+5*2)
+  
+  console.log('clientWidth:', box.clientWidth);  // 240 (200+20*2, 滚动条占10px)
+  console.log('clientHeight:', box.clientHeight); // 140 (100+20*2, 滚动条占10px)
+  
+  console.log('scrollWidth:', box.scrollWidth);  // 340 (300+20*2)
+  console.log('scrollHeight:', box.scrollHeight); // 240 (200+20*2)
+</script>
+```
+
+### 六、扩展知识
+
+#### 1. 相关位置属性
+
+| 属性       | 描述                           |
+| ---------- | ------------------------------ |
+| offsetLeft | 元素相对于offsetParent的左偏移 |
+| offsetTop  | 元素相对于offsetParent的上偏移 |
+| scrollLeft | 水平滚动条位置                 |
+| scrollTop  | 垂直滚动条位置                 |
+
+#### 2. 获取元素最终样式
+
+```JavaScript
+// 获取计算后的样式（包括实际渲染尺寸）
+const style = window.getComputedStyle(element);
+const realWidth = parseFloat(style.width);
+```
+
+#### 3. 现代API：ResizeObserver
+
+```JavaScript
+// 监听元素尺寸变化
+const observer = new ResizeObserver(entries => {
+  for (let entry of entries) {
+    console.log('新尺寸:', entry.contentRect.width, entry.contentRect.height);
+  }
+});
+observer.observe(document.getElementById('box'));
+```
+
+### 七、常见应用场景
+
+1. **响应式布局检测**
+
+```JavaScript
+function checkLayout() {
+ if (window.innerWidth < 768) {
+   // 移动端布局
+ } else {
+   // 桌面端布局
+ }
+}
+```
+
+2. **滚动加载更多**
+
+```JavaScript
+container.addEventListener('scroll', () => {
+ if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
+   loadMoreData();
+ }
+});
+```
+
+3. **元素居中定位**
+
+```JavaScript
+function centerElement(el) {
+ el.style.left = `${(window.innerWidth - el.offsetWidth) / 2}px`;
+ el.style.top = `${(window.innerHeight - el.offsetHeight) / 2}px`;
+}
+```
+
+理解这三大尺寸系列的区别，是掌握JavaScript DOM操作和页面布局的基础，对于实现复杂的交互效果和响应式设计至关重要。
+
+
+
+## 65. JavaScript 模块化规范全面解析
+
+### 一、模块化演进历程
+
+#### 1. 原始阶段（无模块化）
+
+```JavaScript
+// 全局变量污染
+var moduleA = {
+  foo: function() {}
+};
+
+// 命名冲突风险
+var moduleB = {
+  foo: function() {} // 同名方法
+};
+```
+
+#### 2. IIFE 伪模块化
+
+```JavaScript
+// 使用闭包隔离作用域
+var module = (function() {
+  var privateVar = '内部变量';
+  
+  return {
+    publicMethod: function() {
+      console.log(privateVar);
+    }
+  };
+})();
+```
+
+### 二、主流模块规范对比
+
+| 规范          | 加载方式 | 运行环境 | 特点                      | 代表实现  |
+| ------------- | -------- | -------- | ------------------------- | --------- |
+| **AMD**       | 异步     | 浏览器   | 依赖前置、提前执行        | RequireJS |
+| **CMD**       | 异步     | 浏览器   | 就近依赖、延迟执行        | SeaJS     |
+| **CommonJS**  | 同步     | Node.js  | 文件即模块、动态加载      | Node.js   |
+| **UMD**       | 兼容式   | 通用     | 兼容AMD/CommonJS/全局变量 | 多种实现  |
+| **ES Module** | 静态     | 现代环境 | 官方标准、静态分析        | 原生支持  |
+
+### 三、AMD (异步模块定义)
+
+#### 1. 核心语法
+
+```JavaScript
+// 定义模块
+define('moduleId', ['dependency'], function(dep) {
+  return {
+    doSomething: function() {}
+  };
+});
+
+// 使用模块
+require(['moduleA'], function(moduleA) {
+  moduleA.doSomething();
+});
+```
+
+#### 2. 特点分析
+
+- **依赖前置**：所有依赖必须提前声明
+- **异步加载**：适合浏览器环境
+- **提前执行**：依赖模块下载后立即执行
+
+### 四、CMD (通用模块定义)
+
+#### 1. 核心语法
+
+```JavaScript
+// 定义模块
+define(function(require, exports, module) {
+  var a = require('./a'); // 就近依赖
+  a.doSomething();
+  
+  exports.foo = function() {};
+  module.exports = {};
+});
+
+// 使用模块
+seajs.use(['moduleA'], function(moduleA) {
+  // 模块逻辑
+});
+```
+
+#### 2. 特点分析
+
+- **就近依赖**：需要时再require
+- **延迟执行**：仅执行factory函数时才加载依赖
+- **同步写法**：更符合CommonJS习惯
+
+### 五、CommonJS
+
+#### 1. 核心语法
+
+```JavaScript
+// 导出
+module.exports = {
+  foo: function() {}
+};
+// 或
+exports.foo = function() {};
+
+// 导入
+const moduleA = require('./moduleA');
+moduleA.foo();
+```
+
+#### 2. 特点分析
+
+- **同步加载**：不适合浏览器直接使用
+- **模块缓存**：多次require返回相同实例
+- **动态加载**：可在任意位置require
+
+### 六、ES Modules (ESM)
+
+#### 1. 核心语法
+
+```JavaScript
+// 导出
+export const foo = 'bar';
+export default function() {};
+
+// 导入
+import { foo } from './module.js';
+import myFunc from './module.js';
+```
+
+#### 2. 特点分析
+
+- **静态分析**：编译时确定依赖关系
+- **只读引用**：导入的值是只读视图
+- **顶层导入**：不能在条件语句中使用import
+- **异步加载**：支持动态import()
+
+### 七、UMD (通用模块定义)
+
+#### 1. 实现原理
+
+```JavaScript
+(function(root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD
+    define(['dependency'], factory);
+  } else if (typeof exports === 'object') {
+    // CommonJS
+    module.exports = factory(require('dependency'));
+  } else {
+    // 全局变量
+    root.returnExports = factory(root.dependency);
+  }
+}(this, function(dependency) {
+  // 模块逻辑
+  return {};
+}));
+```
+
+#### 2. 使用场景
+
+- 需要同时支持浏览器和Node.js的库
+- 兼容旧系统的模块化方案
+
+### 八、现代开发实践
+
+#### 1. 浏览器开发
+
+```HTML
+<!-- type="module" 启用ESM -->
+<script type="module" src="app.js"></script>
+
+<!-- 兼容旧浏览器 -->
+<script nomodule src="legacy-bundle.js"></script>
+```
+
+#### 2. Node.js 开发
+
+```JavaScript
+// package.json
+{
+  "type": "module" // 启用ESM
+  // 或省略(默认CommonJS)
+}
+```
+
+#### 3. 动态导入
+
+```JavaScript
+// 按需加载
+button.addEventListener('click', async () => {
+  const module = await import('./module.js');
+  module.doSomething();
+});
+```
+
+### 九、模块系统选择指南
+
+1. **新项目**：优先使用ES Modules
+2. **Node.js后端**：CommonJS或ESM
+3. **浏览器库开发**：UMD保证兼容性
+4. **旧系统维护**：根据现有规范选择AMD/CMD
+
+### 十、模块化最佳实践
+
+1. **单一职责**：每个模块只做一件事
+2. **明确依赖**：避免隐式依赖全局变量
+3. **避免循环依赖**：设计清晰的模块层次
+4. **合理拆分**：平衡模块粒度与请求数量
+
+理解不同模块规范的特点和适用场景，有助于在不同环境中选择合适的模块化方案，构建可维护的JavaScript应用。
+
+[告别混乱！一文搞懂 JavaScript 模块化规范：CommonJS、AMD、ES6 Module在现代 JavaSc - 掘金](https://juejin.cn/post/7407644269995851816)
+
+
+
+## 66. Web开发中的会话跟踪方法详解
+
+### 一、基础会话跟踪技术
+
+#### 1. Cookie 机制
+
+**原理**：服务器通过Set-Cookie头部在客户端存储小型文本数据
+
+```Http
+HTTP/1.1 200 OK
+Set-Cookie: sessionid=38afes7a8; Path=/; HttpOnly; Secure
+```
+
+**特点**：
+
+- 每次请求自动携带（同域）
+- 4KB大小限制
+- 可设置过期时间（会话Cookie/持久Cookie）
+- 安全属性：Secure（仅HTTPS）、HttpOnly（防XSS）
+
+**示例代码**：
+
+```JavaScript
+// 服务端设置Cookie（Node.js）
+res.setHeader('Set-Cookie', [
+  `user_token=abc123; Max-Age=${60*60*24}; HttpOnly`,
+  'theme=dark; SameSite=Lax'
+]);
+
+// 客户端读取（浏览器）
+document.cookie // "user_token=abc123; theme=dark"
+```
+
+#### 2. Session 机制
+
+**原理**：服务器端存储会话数据，客户端只保存Session ID
+
+**典型实现流程**：
+
+1. 客户端首次访问生成唯一Session ID
+2. 服务器创建对应存储（内存/Redis/DB）
+3. 通过Cookie将Session ID返回客户端
+4. 后续请求携带Session ID验证
+
+**存储方案对比**：
+
+| 存储方式 | 优点               | 缺点             |
+| -------- | ------------------ | ---------------- |
+| 内存     | 速度快             | 重启丢失，扩展难 |
+| 数据库   | 持久化             | 性能较低         |
+| Redis    | 高性能，分布式支持 | 需要额外基础设施 |
+
+### 二、现代Web会话技术
+
+#### 1. Token 认证（JWT）
+
+**结构**：Header.Payload.Signature
+
+```
+ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.
+eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.
+SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+```
+
+**实现流程**：
+
+```JavaScript
+// 生成Token
+const jwt = require('jsonwebtoken');
+const token = jwt.sign(
+  { userId: 123 }, 
+  'secret_key', 
+  { expiresIn: '1h' }
+);
+
+// 客户端存储（通常使用localStorage）
+localStorage.setItem('auth_token', token);
+
+// 验证Token
+jwt.verify(token, 'secret_key', (err, decoded) => {
+  console.log(decoded.userId) // 123
+});
+```
+
+**优势**：
+
+- 无状态服务器设计
+- 跨域/跨服务支持
+- 自包含用户信息
+
+#### 2. Web Storage
+
+**localStorage**：
+
+```JavaScript
+// 存储
+localStorage.setItem('user_prefs', JSON.stringify({ theme: 'dark' }));
+
+// 读取
+const prefs = JSON.parse(localStorage.getItem('user_prefs'));
+
+// 特点：持久化存储，同源策略限制
+```
+
+**sessionStorage**：
+
+```JavaScript
+// 仅限当前标签页会话期
+sessionStorage.setItem('form_draft', data);
+
+// 标签页关闭自动清除
+```
+
+### 三、高级会话管理方案
+
+#### 1. OAuth 2.0 / OpenID Connect
+
+**适用场景**：第三方认证/单点登录(SSO)
+
+**授权码模式流程**：
+
+1. 用户点击"通过Google登录"
+2. 跳转到Google授权页面
+3. 返回授权码到回调URL
+4. 后端用授权码换取access_token
+5. 使用token获取用户信息
+
+#### 2. 浏览器指纹识别
+
+**技术组合**：
+
+- UserAgent
+- 屏幕分辨率
+- 时区
+- WebGL渲染特征
+- 已安装字体
+
+**示例库**：
+
+```JavaScript
+import FingerprintJS from '@fingerprintjs/fingerprintjs';
+
+(async () => {
+  const fp = await FingerprintJS.load();
+  const { visitorId } = await fp.get();
+  console.log(visitorId); // 唯一指纹
+})();
+```
+
+#### 3. HTTP Strict Transport Security (HSTS)
+
+```Http
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+```
+
+- 强制HTTPS连接
+- 预防SSL剥离攻击
+
+### 四、安全最佳实践
+
+1. **敏感数据**：
+   - 永远不要在前端存储敏感信息
+   - 使用HttpOnly + Secure Cookie
+2. **CSRF防护**：
+
+```JavaScript
+// 生成并验证CSRF Token
+app.use(csurf({ cookie: true }));
+```
+
+3. **会话过期**：
+
+- 设置合理过期时间
+- 提供"记住我"选项时使用Refresh Token
+
+4. **权限控制**：
+
+```JavaScript
+// JWT权限验证中间件
+function authMiddleware(req, res, next) {
+ if (!req.user.isAdmin) return res.sendStatus(403);
+ next();
+}
+```
+
+### 五、移动端特殊考量
+
+1. **安全存储**：
+   - iOS Keychain
+   - Android Keystore
+2. **深度链接(Deep Link)**：
+
+```XML
+<!-- Android Manifest -->
+<intent-filter>
+ <data android:scheme="myapp" android:host="auth" />
+</intent-filter>
+```
+
+3. 应用间通信
+
+- 使用自定义URL Scheme
+- 验证来源应用签名
+
+### 六、新兴技术趋势
+
+1. **Web Authentication API**：
+
+```JavaScript
+// 生物识别认证
+const credential = await navigator.credentials.create({
+ publicKey: publicKeyOptions
+});
+```
+
+2. **SameSite Cookie属性**：
+
+```Http
+Set-Cookie: session=abc123; SameSite=Strict; Secure
+```
+
+- Strict: 完全禁止第三方Cookie
+- Lax: 允许安全跨站请求（默认）
+
+3. **Privacy Sandbox**
+
+- 替代第三方Cookie的隐私保护方案
+- FLoC（联邦学习队列）等提案
+
+**选择会话跟踪方案时需综合考虑：**
+
+- 应用类型（Web/移动端/桌面）
+- 安全要求
+- 用户体验
+- 基础设施支持
+
+**现代Web应用通常采用组合方案，例如：**
+
+- 主会话：JWT + HttpOnly Cookie
+- 辅助跟踪：指纹识别（匿名行为分析）
+- 第三方集成：OAuth 2.0
 
 
 
 
-## 95.offsetWidth/offsetHeight,clientWidth/clientHeight 与 scrollWidth/scrollHeight 的区别
-
-答案：
 
 
-
-
-## 96.谈谈你对 AMD、CMD 的理解
-
-答案：
-
-
-
-
-## 97.web 开发中会话跟踪的方法有哪些
-
-答案：
-
-
-
-
-## 98.说几条写 JavaScript 的基本规范？
-
-答案：
-
-
-
-
-## 99.JavaScript 有几种类型的值？你能画一下他们的内存图吗？
-
-答案：
-
-
-
-
-## 100.eval 是做什么的？
-
-答案：
+## 67. eval 是做什么的？
 
 1. 它的功能是把对应的字符串解析成 JS 代码并运行
 2. 应该避免使用 eval，不安全，非常耗性能（2 次，一次解析成 js 语句，一次执行）
@@ -8060,79 +8877,409 @@ var newObj = object(oldObject);
 
 
 
-## 101.js 延迟加载的方式有哪些？
 
-答案：defer 和 async、动态创建 DOM 方式（用得最多）、按需异步载入 js
+## 68. Attribute 和 Property 的相同点与区别
+
+### 相同点
+
+1. **都用于描述元素特征**：两者都可以存储与DOM元素相关的信息
+2. **存在映射关系**：大多数标准HTML attribute会初始化对应的DOM property
+3. **都可以被修改**：两者都可以通过JavaScript进行读写操作
+
+### 核心区别
+
+| 特性           | Attribute                             | Property                  |
+| -------------- | ------------------------------------- | ------------------------- |
+| **本质**       | HTML标签上的特性                      | DOM对象上的JavaScript属性 |
+| **存储位置**   | 存在于HTML文档中                      | 存在于内存中的DOM对象     |
+| **数据类型**   | 始终是字符串                          | 可以是任意JavaScript类型  |
+| **同步性**     | 修改不一定反映到property              | 修改不一定反映到attribute |
+| **访问方式**   | 使用`getAttribute()`/`setAttribute()` | 直接通过对象属性访问      |
+| **命名差异**   | 小写命名(如`class`)                   | 可能不同(如`className`)   |
+| **自定义属性** | 支持任意`data-*`属性                  | 需要先定义                |
+
+### 典型示例
+
+```js
+// html
+<input id="username" type="text" value="默认值" data-id="12345" disabled>
+
+const input = document.getElementById('username');
+
+// Attribute操作
+console.log(input.getAttribute('value')); // "默认值" (字符串)
+input.setAttribute('value', '新属性值');
+
+// Property操作
+console.log(input.value); // 可能已被用户修改的值
+input.value = '新属性值'; // 不会改变attribute
+
+// 布尔属性对比
+console.log(input.getAttribute('disabled')); // "" (空字符串表示true)
+console.log(input.disabled); // true (布尔值)
+
+// 自定义属性
+console.log(input.getAttribute('data-id')); // "12345"
+console.log(input.dataset.id); // "12345"
+
+```
+
+### 重要说明
+
+1. **初始同步**：元素创建时，attribute会初始化对应的property
+2. **单向同步**：某些property变化会更新attribute(如`value`)，但大多数不会
+3. **布尔属性**：如`disabled`、`checked`等，attribute存在即为true，property需要布尔值
+4. **性能考虑**：直接操作property通常比操作attribute更高效
 
 
 
 
-## 102.attribute 和 property 的区别是什么？
+
+
+## 69. 谈一谈你理解的函数式编程？
+
+函数式编程(Functional Programming, FP)是一种**编程范式**，它将计算视为数学函数的求值，强调**避免状态变化**和**不可变数据**。以下是我对函数式编程核心思想的理解：
+
+### 一、核心原则
+
+1. 函数是一等公民
+   - 函数可以像变量一样被传递、赋值和返回
+   - 示例：
+
+```JavaScript
+ const add = (a, b) => a + b;
+ const calculate = (fn, x, y) => fn(x, y);
+ calculate(add, 2, 3); // 5
+```
+
+2. 纯函数(Pure Functions)
+
+   - 相同输入永远得到相同输出
+
+   - 无副作用(不改变外部状态)
+
+​	示例：
+
+```JavaScript
+ // 纯函数
+const square = x => x * x;
+
+// 非纯函数(依赖外部状态)
+let taxRate = 0.1;
+const calculateTax = amount => amount * taxRate;
+```
+
+3. 不可变性(Immutability)
+
+   - 数据一旦创建就不能被修改
+
+   - 任何"修改"都返回新数据
+
+示例：
+
+```JavaScript
+ // 非函数式(直接修改)
+ const arr = [1, 2, 3];
+ arr.push(4); // 修改原数组
+
+ // 函数式(创建新数组)
+ const newArr = [...arr, 4]; 
+```
+
+### 二、关键技术
+
+1. 高阶函数(Higher-Order Functions)
+
+   - 接收函数作为参数或返回函数
+
+   示例：
+
+```JavaScript
+ const map = (arr, fn) => arr.map(fn);
+ map([1, 2, 3], x => x * 2); // [2, 4, 6]
+```
+
+2. 函数组合(Function Composition)
+   - 将多个简单函数组合成复杂功能
+
+​	示例：
+
+```JavaScript
+ const compose = (f, g) => x => f(g(x));
+ const toUpperCase = str => str.toUpperCase();
+ const exclaim = str => str + '!';
+ const shout = compose(exclaim, toUpperCase);
+ shout('hello'); // "HELLO!"
+```
+
+3. 柯里化(Currying)
+   - 将多参数函数转换为一系列单参数函数
+
+​	示例：
+
+```JavaScript
+ const curry = fn => a => b => fn(a, b);
+ const add = (a, b) => a + b;
+ const curriedAdd = curry(add);
+ curriedAdd(2)(3); // 5
+```
+
+### 三、优势价值
+
+1. **可预测性**：纯函数使代码行为更可预测
+2. **可测试性**：不依赖外部状态，易于单元测试
+3. **并发安全**：无共享状态，减少竞态条件
+4. **模块化**：小函数易于组合和重用
+5. **可维护性**：代码更简洁、声明式
+
+### 四、JavaScript中的实践
+
+虽然JS不是纯函数式语言，但支持FP特性：
+
+```JavaScript
+// 现代JS中的函数式风格
+const users = [
+  { name: 'Alice', age: 25 },
+  { name: 'Bob', age: 30 }
+];
+
+// 链式操作(函数式风格)
+const result = users
+  .filter(user => user.age > 25)
+  .map(user => user.name)
+  .join(', ');
+
+console.log(result); // "Bob"
+```
+
+### 五、适用场景
+
+1. 数据处理和转换
+2. 状态管理(如Redux)
+3. 并发编程
+4. 数学计算密集型应用
+
+函数式编程不是银弹，但与现代软件开发的需求高度契合，特别是在构建可维护、可扩展的大型应用方面表现出色。理解FP思想有助于写出更干净、更健壮的代码。
+
+
+
+## 70. 快速打乱数组的几种方法
+
+### 1. Fisher-Yates 洗牌算法（最优方法）
+
+这是最经典、最高效的数组乱序算法，时间复杂度为 O(n)：
+
+```JavaScript
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]]; // ES6 解构赋值交换元素
+  }
+  return array;
+}
+
+// 使用示例
+const arr = [1, 2, 3, 4, 5];
+console.log(shuffleArray(arr));
+```
+
+### 2. 使用 sort() 结合随机数（简洁但不完全随机）
+
+```JavaScript
+function shuffleSimple(array) {
+  return array.sort(() => Math.random() - 0.5);
+}
+
+// 使用示例
+const arr = [1, 2, 3, 4, 5];
+console.log(shuffleSimple(arr));
+```
+
+*注意：这种方法虽然简洁，但并不是完全均匀的随机分布，不适合对随机性要求高的场景*
+
+### 3. Lodash 库的 shuffle 方法（适用于已使用 Lodash 的项目）
+
+```JavaScript
+// 需要先安装 lodash：npm install lodash
+const _ = require('lodash');
+
+const arr = [1, 2, 3, 4, 5];
+console.log(_.shuffle(arr));
+```
+
+### 4. ES6 单行实现（基于 Fisher-Yates）
+
+```JavaScript
+const shuffle = arr => arr.reduceRight((r, _, __, s) => 
+  (r.push(s.splice(Math.random() * s.length | 0, 1)[0]), r), []);
+
+// 使用示例
+const arr = [1, 2, 3, 4, 5];
+console.log(shuffle(arr));
+```
+
+### 性能比较
+
+1. **Fisher-Yates 算法**是最优选择，时间复杂度 O(n)，空间复杂度 O(1)
+2. **sort() 方法**虽然简洁，但时间复杂度 O(n log n)，且随机性不够均匀
+3. **Lodash 的实现**也是基于 Fisher-Yates，适合大型项目
+
+### 注意事项
+
+- 如果需要保留原数组不变，可以先创建副本：
+
+```JavaScript
+const shuffled = shuffleArray([...originalArray]);
+```
+
+- 对于大型数组，避免使用 `sort()` 方法，性能较差
+- 加密场景需要使用加密安全的随机数生成器，而不是 `Math.random()`
+
+
+
+
+
+## 71. JavaScript 中 `prototype` 和 `__proto__` 的关系详解
+
+### 核心关系总结
+
+| 特性         | `prototype`                  | `__proto__`                                              |
+| ------------ | ---------------------------- | -------------------------------------------------------- |
+| **归属对象** | 函数对象                     | 所有对象                                                 |
+| **作用**     | 构造函数创建实例时的原型模板 | 对象实际的原型引用                                       |
+| **访问方式** | `Func.prototype`             | `obj.__proto__` (已废弃) 或 `Object.getPrototypeOf(obj)` |
+| **修改影响** | 影响后续创建的实例           | 直接影响当前对象的原型链                                 |
+| **标准程度** | 标准属性                     | 非标准(但被广泛实现)                                     |
+
+### 关系图示
+
+```
+ 构造函数 (Function)
+│
+├── prototype 属性 → 原型对象 (prototype object)
+│   │
+│   ├── constructor 属性指回构造函数
+│   └── 其他共享属性和方法
+│
+实例对象 (Object)
+│
+└── [[Prototype]] (通过 __proto__ 访问) → 指向构造函数的 prototype
+```
+
+### 具体关系解析
+
+1. **构造函数与实例的关系**：
+
+```JavaScript
+function Person(name) {
+ this.name = name;
+}
+
+// 在原型上添加方法
+Person.prototype.sayHello = function() {
+ console.log(`Hello, I'm ${this.name}`);
+};
+
+const john = new Person('John');
+
+// 关系验证
+console.log(john.__proto__ === Person.prototype); // true
+console.log(Person.prototype.constructor === Person); // true
+```
+
+2. **原型链的形成**：
+
+```JavaScript
+// 继承关系
+function Student(name, grade) {
+ Person.call(this, name);
+ this.grade = grade;
+}
+
+// 设置原型链
+Student.prototype = Object.create(Person.prototype);
+Student.prototype.constructor = Student;
+
+const alice = new Student('Alice', 3);
+
+// 原型链验证
+console.log(alice.__proto__ === Student.prototype); // true
+console.log(alice.__proto__.__proto__ === Person.prototype); // true
+```
+
+### 现代 JavaScript 中的最佳实践
+
+1. **避免直接使用 `__proto__`**：
+
+```JavaScript
+// 不推荐
+obj.__proto__ = newProto;
+
+// 推荐使用标准方法
+Object.setPrototypeOf(obj, newProto);
+const proto = Object.getPrototypeOf(obj);
+```
+
+2. **ES6 类语法糖**：
+
+```JavaScript
+class Person {
+ constructor(name) {
+   this.name = name;
+ }
+
+ sayHello() {
+   console.log(`Hello, I'm ${this.name}`);
+ }
+}
+
+class Student extends Person {
+ constructor(name, grade) {
+   super(name);
+   this.grade = grade;
+ }
+}
+
+// 底层原型关系仍然成立
+console.log(Student.prototype.__proto__ === Person.prototype); // true
+```
+
+### 特殊案例说明
+
+1. **基本包装类型的原型**：
+
+```JavaScript
+const str = 'hello';
+console.log(str.__proto__ === String.prototype); // true
+```
+
+2. **函数的双重原型链**：
+
+```JavaScript
+function Foo() {}
+
+// 函数作为对象有 __proto__
+console.log(Foo.__proto__ === Function.prototype); // true
+
+// 函数作为构造函数有 prototype
+console.log(Foo.prototype.__proto__ === Object.prototype); // true
+```
+
+3. **Object.create(null) 创建的无原型对象**：
+
+```JavaScript
+   const obj = Object.create(null);
+   console.log(obj.__proto__); // undefined
+```
+
+理解 `prototype` 和 `__proto__` 的关系是掌握 JavaScript 原型继承机制的关键，它们共同构成了 JavaScript 的原型链系统，实现了基于原型的面向对象编程。
+
+
+
+
+## 109. UIWebView 和 JavaScript 之间是怎么交互的?
 
 答案：
-
-
-
-
-## 103.什么是面向对象编程及面向过程编程，它们的异同和优缺点
-
-答案：
-
-
-
-
-## 104.谈一谈你理解的函数式编程？
-
-答案：
-
-
-
-
-## 105.对原生 Javascript 了解程度
-
-答案：
-
-
-
-
-## 106.Js 动画与 CSS 动画区别及相应实现
-
-答案：
-
-
-
-
-## 107.快速的让一个数组乱序
-
-答案：
-
-const arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-console.log(arr.sort(() => 0.5 - Math.random()))
-
-
-
-
-## 108.prototype 和__proto__的关系是什么？
-
-答案：
-
-
-
-
-## 109.UIWebView 和 JavaScript 之间是怎么交互的?
-
-答案：
-
-
-
-
-## 110.IE 与火狐的事件机制有什么区别？如何阻止冒泡
-
-答案：
-
-1.  我们在网页中的某个操作（有的操作对应多个事件）。例如：当我们点击一个按钮就会产生一个事件。是可以被 JavaScript 侦测到的行为。
-2.  事件处理机制：IE 是事件冒泡、火狐是 事件捕获；
-3.  ev.stopPropagation();
 
 
 
@@ -8215,16 +9362,6 @@ window.event?window.event.cancelBubble=true:e.stopPropagation();
 
 
 
-## 119.分别阐述 split(),slice(),splice(),join()？
-
-答案：
-
-- join()用于把数组中的所有元素拼接起来放入一个字符串。所带的参数为分割字符串的分隔符，默认是以逗号分开。归属于 Array
-- split()即把字符串分离开，以数组方式存储。归属于 Stringstring
-- slice() 方法可从已有的数组中返回选定的元素。该方法并不会修改数组，而是返回一个子数组。如果想删除数组中的一段元素，应该使用方法 Array.splice()
-- splice() 方法向/从数组中添加/删除项目，然后返回被删除的项目。返回的是含有被删除的元素的数组。
-
-
 
 
 ## 120.事件、IE 与火狐的事件机制有什么区别？ 如何阻止冒泡？
@@ -8235,24 +9372,6 @@ window.event?window.event.cancelBubble=true:e.stopPropagation();
 2. 事件处理机制：IE 是事件冒泡、firefox 同时支持两种事件模型，也就是：捕获型事件和冒泡型事件
 3. ev.stopPropagation();
    注意旧 ie 的方法：ev.cancelBubble = true;
-
-
-
-
-## 121.内置函数(原生函数)
-
-答案：
-
-- String
-- Number
-- Boolean
-- Object
-- Function
-- Array
-- Date
-- RegExp
-- Error
-- Symbol
 
 
 
@@ -8305,30 +9424,6 @@ console.log(o1.a) // 3
 
 
 
-## 125.数组和对象有哪些原生方法，列举一下？
-
-答案：
-
-- Array.concat( ) 连接数组
-- Array.join( ) 将数组元素连接起来以构建一个字符串
-- Array.length 数组的大小
-- Array.pop( ) 删除并返回数组的最后一个元素
-- Array.push( ) 给数组添加元素
-- Array.reverse( ) 颠倒数组中元素的顺序
-- Array.shift( ) 将元素移出数组
-- Array.slice( ) 返回数组的一部分
-- Array.sort( ) 对数组元素进行排序
-- Array.splice( ) 插入、删除或替换数组的元素
-- Array.toLocaleString( ) 把数组转换成局部字符串
-- Array.toString( ) 将数组转换成一个字符串
-- Array.unshift( ) 在数组头部插入一个元素
-
-- Object.hasOwnProperty( ) 检查属性是否被继承
-- Object.isPrototypeOf( ) 一个对象是否是另一个对象的原型
-- Object.propertyIsEnumerable( ) 是否可以通过 for/in 循环看到属性
-- Object.toLocaleString( ) 返回对象的本地字符串表示
-- Object.toString( ) 定义一个对象的字符串表示
-- Object.valueOf( ) 指定对象的原始值
 
 
 
@@ -8364,11 +9459,6 @@ console.log(o1.a) // 3
 
 
 
-## 130.原型继承
-
-答案：所有的 JS 对象都有一个 prototype 属性，指向它的原型对象。当试图访问一个对象的属性时，如果没有在该对象上找到，它还会搜寻该对象的原型，以及该对象的原型的原型，依次层层向上搜索，直到找到一个名字匹配的属性或到达原型链的末尾。
-
-
 
 
 ## 131.用原生 JavaScript 的实现过什么功能吗？
@@ -8376,11 +9466,6 @@ console.log(o1.a) // 3
 答案：轮播图、手风琴、放大镜、3D动画效果等，切记，所答的一定要知道实现原理！，不知道还不如不说！
 
 
-
-
-## 132.javascript 代码中的"use strict";是什么意思 ? 使用它区别是什么？
-
-答案：意思是使用严格模式，使用严格模式，一些不规范的语法将不再支持
 
 
 
