@@ -9276,136 +9276,527 @@ console.log(Foo.prototype.__proto__ === Object.prototype); // true
 
 
 
+## 72. JavaScript 类型转换详解：显式转换与隐式转换
 
-## 109. UIWebView 和 JavaScript 之间是怎么交互的?
+### 一、显式转换（Explicit Conversion）
 
-答案：
+显式转换是开发者**主动调用方法或函数**进行的类型转换。
 
+#### 1. 转换为字符串
 
+```JavaScript
+// 方法1：String() 函数
+String(123);        // "123"
+String(true);       // "true"
+String(null);       // "null"
+String(undefined);  // "undefined"
 
+// 方法2：toString() 方法
+(123).toString();   // "123"
+true.toString();    // "true"
 
-## 111.在 js 中哪些会被隐式转换为 false
-
-答案：Undefined、null、关键字 false、NaN、零、空字符串
-
-
-
-
-## 112.列举浏览器对象模型 BOM 里常用的至少 4 个对象，并列举 window 对象的常用方法至少 5 个？
-
-答案：
-
-对象：Window，document，location，screen，history，navigator。
-方法：Alert()，confirm()，prompt()，open()，close()。
-
-
-
-
-## 113.class.forname 的作用?为什么要用?
-
-答案：
-
-```
-1、获取Class对象的方式：类名.class、对象.getClass()、Class.forName(“类名”);
-2、通过Class对象自审
-3、动态调用方法
+// 注意：null和undefined没有toString()方法
 ```
 
+#### 2. 转换为数字
 
+```JavaScript
+// 方法1：Number() 函数
+Number("123");      // 123
+Number("123abc");   // NaN
+Number(true);       // 1
+Number(false);      // 0
+Number(null);       // 0
+Number(undefined);   // NaN
 
-
-## 114.外部 JS 文件出现中文字符，会出现什么问题，怎么解决？
-
-答案：会出现乱码，加 charset="GB2312";
-
-
-
-
-## 115.定时器 setInterval 有一个有名函数 fn1，setInterval（fn1,500）与 setInterval（fn1(),500）有什么区别？
-
-答案：第一个是重复执行每 500 毫秒执行一次，后面一个只执行一次。
-
-
-
-
-## 116.自动分号
-
-答案：有时 JavaScript 会自动为代码行补上缺失的分号，即自动分号插入（Automatic SemicolonInsertion，ASI）。<br>
-因为如果缺失了必要的 ; ，代码将无法运行，语言的容错性也会降低。ASI 能让我们忽略那些不必要的。<br>
-请注意，ASI 只在换行符处起作用，而不会在代码行的中间插入分号。<br>
-如果 JavaScript 解析器发现代码行可能因为缺失分号而导致错误，那么它就会自动补上分号。并且，只有在代码行末尾与换行符之间除了空格和注释之外没有别的内容时，它才会这样做。
-
-
-
-
-## 117.你用过 require.js 吗？它有什么特性？
-
-答案：
-
-（1）实现 js 文件的异步加载，避免网页失去响应；
-（2）管理模块之间的依赖性，便于代码的编写和维护。
-
-
-
-
-## 118.如何阻止事件冒泡和默认事件？
-
-答案：
-
-阻止浏览器的默认行为
-window.event?window.event.returnValue=false:e.preventDefault();
-
-停止事件冒泡
-window.event?window.event.cancelBubble=true:e.stopPropagation();
-原生 JavaScript 中，return false;只阻止默认行为，不阻止冒泡，jQuery 中的 return false;既阻止默认行为，又阻止冒泡
-
-
-
-
-
-
-## 120.事件、IE 与火狐的事件机制有什么区别？ 如何阻止冒泡？
-
-答案：
-
-1. 我们在网页中的某个操作（有的操作对应多个事件）。例如：当我们点击一个按钮就会产生一个事件。是可以被 JavaScript 侦测到的行为
-2. 事件处理机制：IE 是事件冒泡、firefox 同时支持两种事件模型，也就是：捕获型事件和冒泡型事件
-3. ev.stopPropagation();
-   注意旧 ie 的方法：ev.cancelBubble = true;
-
-
-
-
-## 122.对象浅拷贝和深拷贝有什么区别
-
-答案：在 `JS` 中，除了基本数据类型，还存在对象、数组这种引用类型。
-基本数据类型，拷贝是直接拷贝变量的值，而引用类型拷贝的其实是变量的地址。
-
-```
-let o1 = {a: 1}
-let o2 = o1
+// 方法2：parseInt() 和 parseFloat()
+parseInt("123px");  // 123
+parseFloat("12.3"); // 12.3
 ```
 
-在这种情况下，如果改变 `o1` 或 `o2` 其中一个值的话，另一个也会变，因为它们都指向同一个地址。
+#### 3. 转换为布尔值
 
+```JavaScript
+Boolean(0);         // false
+Boolean("");        // false
+Boolean(null);      // false
+Boolean(undefined); // false
+Boolean(NaN);       // false
+Boolean(1);         // true
+Boolean("hello");   // true
+Boolean([]);        // true
+Boolean({});        // true
 ```
-o2.a = 3
-console.log(o1.a) // 3
+
+### 二、隐式转换（Implicit Conversion）
+
+隐式转换是JavaScript引擎**自动执行**的类型转换，通常发生在操作符或特定上下文中。
+
+#### 1. 算术运算符中的转换
+
+```JavaScript
+"5" - 2;    // 3 (字符串转数字)
+"5" + 2;    // "52" (数字转字符串)
++"5";       // 5 (一元+转换为数字)
+-"5";       // -5 (一元-转换为数字)
 ```
 
-而浅拷贝和深拷贝就是在这个基础之上做的区分，如果在拷贝这个对象的时候，只对基本数据类型进行了拷贝，而对引用数据类型只是进行了引用的传递，而没有重新创建一个新的对象，则认为是浅拷贝。反之，在对引用数据类型进行拷贝的时候，创建了一个新的对象，并且复制其内的成员变量，则认为是深拷贝。
+#### 2. 比较运算符中的转换
+
+```JavaScript
+"5" == 5;   // true (字符串转数字)
+"5" === 5;  // false (严格相等不转换)
+null == undefined;  // true (特殊规则)
+```
+
+#### 3. 逻辑运算符中的转换
+
+```JavaScript
+"hello" && 123;  // 123 (truthy值)
+0 || "default";  // "default" (falsy值转truthy)
+!!"hello";       // true (双重非运算转布尔)
+```
+
+#### 4. 对象到原始值的转换
+
+JavaScript会调用对象的 `valueOf()` 和 `toString()` 方法：
+
+```JavaScript
+const obj = {
+  valueOf() { return 123 },
+  toString() { return "456" }
+};
+
+obj + 1;  // 124 (优先调用valueOf)
+`${obj}`; // "456" (模板字符串调用toString)
+```
+
+### 三、转换规则总结表
+
+| 原始值      | 转换为字符串      | 转换为数字 | 转换为布尔值 |
+| ----------- | ----------------- | ---------- | ------------ |
+| `false`     | "false"           | 0          | false        |
+| `true`      | "true"            | 1          | true         |
+| `0`         | "0"               | 0          | false        |
+| `1`         | "1"               | 1          | true         |
+| `"0"`       | "0"               | 0          | true         |
+| `"1"`       | "1"               | 1          | true         |
+| `""`        | ""                | 0          | false        |
+| `"hello"`   | "hello"           | NaN        | true         |
+| `null`      | "null"            | 0          | false        |
+| `undefined` | "undefined"       | NaN        | false        |
+| `NaN`       | "NaN"             | NaN        | false        |
+| `[]`        | ""                | 0          | true         |
+| ``          | "1"               | 1          | true         |
+| `[1,2]`     | "1,2"             | NaN        | true         |
+| `{}`        | "[object Object]" | NaN        | true         |
+
+### 四、特殊转换案例
+
+#### 1. 加法运算符的特别行为
+
+```JavaScript
+1 + 2 + "3";    // "33" (从左到右计算)
+1 + "2" + 3;    // "123"
+```
+
+#### 2. 对象转原始值的优先级
+
+```JavaScript
+const obj = {
+  valueOf: () => 1,
+  toString: () => "2"
+};
+
+alert(obj);     // "2" (alert优先toString)
+obj + 1;        // 2 (算术运算优先valueOf)
+```
+
+#### 3. 日期对象的转换
+
+```JavaScript
+const now = new Date();
+String(now);    // "Wed Oct 13 2023..."
+now.toString(); // 同上
+now.valueOf();  // 1697184000000 (时间戳)
+```
+
+### 五、最佳实践
+
+1. **优先使用显式转换**：代码更清晰可读
+2. **避免`==`**：使用`===`防止意外类型转换
+3. **转换前检查**：特别是用户输入或API返回数据
+4. **注意对象转换**：必要时重写`valueOf()`/`toString()`
+5. **处理NaN**：使用`isNaN()`或`Number.isNaN()`检查
+
+
+
+## 73. 浏览器对象模型 (BOM) 主要对象及常用方法
+
+BOM (Browser Object Model) 提供了与浏览器窗口交互的对象和方法，以下是核心对象及其常用方法：
+
+### 一、window 对象（顶级对象）
+
+#### 常用方法
+
+```JavaScript
+// 窗口操作
+window.open("https://example.com"); // 打开新窗口
+window.close(); // 关闭当前窗口
+
+// 弹窗
+window.alert("消息"); // 警告框
+window.confirm("确定吗？"); // 确认框
+window.prompt("请输入", "默认值"); // 输入框
+
+// 定时器
+const timerId = setTimeout(callback, delay); // 单次定时
+clearTimeout(timerId); // 清除定时
+
+const intervalId = setInterval(callback, delay); // 循环定时
+clearInterval(intervalId); // 清除循环定时
+
+// 其他
+window.scrollTo(x, y); // 滚动到指定位置
+window.print(); // 打印当前页
+```
+
+#### 常用属性
+
+```JavaScript
+window.innerWidth; // 视口宽度
+window.innerHeight; // 视口高度
+window.outerWidth; // 浏览器窗口宽度
+window.outerHeight; // 浏览器窗口高度
+window.screenX; // 窗口X坐标
+window.screenY; // 窗口Y坐标
+```
+
+### 二、navigator 对象（浏览器信息）
+
+#### 常用方法
+
+```JavaScript
+navigator.geolocation.getCurrentPosition(success, error); // 获取地理位置
+```
+
+#### 常用属性
+
+```JavaScript
+navigator.userAgent; // 浏览器用户代理字符串
+navigator.platform; // 操作系统平台
+navigator.language; // 浏览器首选语言
+navigator.onLine; // 是否联网
+navigator.cookieEnabled; // 是否启用cookie
+navigator.mediaDevices.getUserMedia(); // 访问媒体设备
+```
+
+### 三、screen 对象（屏幕信息）
+
+#### 常用属性
+
+```JavaScript
+screen.width; // 屏幕宽度
+screen.height; // 屏幕高度
+screen.availWidth; // 可用宽度
+screen.availHeight; // 可用高度
+screen.colorDepth; // 颜色深度
+screen.pixelDepth; // 像素深度
+```
+
+### 四、location 对象（URL信息）
+
+#### 常用方法
+
+```JavaScript
+location.assign("https://example.com"); // 加载新文档
+location.replace("https://example.com"); // 替换当前文档(不保留历史记录)
+location.reload(); // 重新加载当前页
+```
+
+#### 常用属性
+
+```JavaScript
+location.href; // 完整URL
+location.protocol; // 协议(http:或https:)
+location.host; // 主机名和端口
+location.hostname; // 主机名
+location.port; // 端口号
+location.pathname; // 路径部分
+location.search; // 查询字符串(?后的内容)
+location.hash; // 锚点部分(#后的内容)
+```
+
+### 五、history 对象（浏览历史）
+
+#### 常用方法
+
+```JavaScript
+history.back(); // 后退
+history.forward(); // 前进
+history.go(-2); // 后退2页
+history.pushState(state, title, url); // 添加历史记录
+history.replaceState(state, title, url); // 修改当前历史记录
+```
+
+#### 常用属性
+
+```JavaScript
+history.length; // 历史记录数量
+```
+
+### 六、document 对象（DOM根节点）
+
+虽然严格来说属于DOM，但也是BOM的一部分：
+
+#### 常用方法
+
+```JavaScript
+document.write("文本"); // 写入文档
+document.getElementById("id"); // 通过ID获取元素
+document.querySelector(".class"); // CSS选择器获取元素
+```
+
+### 七、performance 对象（性能监控）
+
+#### 常用方法
+
+```JavaScript
+performance.now(); // 高精度时间戳
+performance.getEntries(); // 获取性能条目
+performance.mark("start"); // 创建性能标记
+performance.measure("measureName", "start", "end"); // 测量两个标记间的时间
+```
+
+### 八、storage 对象（本地存储）
+
+#### localStorage 方法
+
+```JavaScript
+localStorage.setItem("key", "value"); // 存储数据
+localStorage.getItem("key"); // 获取数据
+localStorage.removeItem("key"); // 删除数据
+localStorage.clear(); // 清空所有
+```
+
+#### sessionStorage 方法
+
+方法与localStorage相同，但会话级存储
+
+### 九、console 对象（调试控制台）
+
+#### 常用方法
+
+```JavaScript
+console.log("消息"); // 普通日志
+console.error("错误"); // 错误信息
+console.warn("警告"); // 警告信息
+console.table(data); // 表格形式显示数据
+console.time("label"); // 开始计时器
+console.timeEnd("label"); // 结束计时器
+console.clear(); // 清空控制台
+```
+
+### 十、BOM 使用注意事项
+
+1. **跨浏览器兼容性**：不同浏览器可能实现不同
+2. **安全限制**：某些方法可能被浏览器阻止（如弹窗）
+3. **现代替代**：部分功能有新的API替代（如Geolocation API替代navigator.geolocation）
+4. **隐私考虑**：谨慎使用用户代理检测(navigator.userAgent)
+
+
+
+## 74. JavaScript 浅拷贝与深拷贝的区别
+
+### 一、核心区别
+
+| 特性         | 浅拷贝 (Shallow Copy)            | 深拷贝 (Deep Copy)               |
+| ------------ | -------------------------------- | -------------------------------- |
+| **拷贝层级** | 只拷贝对象的第一层属性           | 递归拷贝对象的所有层级           |
+| **引用处理** | 嵌套对象保持引用关系（共享内存） | 嵌套对象也创建新实例（完全独立） |
+| **修改影响** | 修改嵌套对象会影响原对象         | 修改任何属性都不会影响原对象     |
+| **性能**     | 较快（只拷贝一层）               | 较慢（需要递归整个对象结构）     |
+| **内存占用** | 较少                             | 较多                             |
+
+### 二、代码示例
+
+#### 1. 浅拷贝示例
+
+```JavaScript
+const original = {
+  name: 'Alice',
+  address: {
+    city: 'Beijing',
+    country: 'China'
+  }
+};
+
+// 浅拷贝方法1：Object.assign
+const shallowCopy1 = Object.assign({}, original);
+
+// 浅拷贝方法2：展开运算符
+const shallowCopy2 = { ...original };
+
+// 修改浅拷贝后的对象
+shallowCopy1.name = 'Bob';          // 不影响原对象
+shallowCopy1.address.city = 'Shanghai'; // 会影响原对象！
+
+console.log(original.address.city); // 'Shanghai'（被修改了）
+```
+
+#### 2. 深拷贝示例
+
+```JavaScript
+const original = {
+  name: 'Alice',
+  address: {
+    city: 'Beijing',
+    country: 'China'
+  }
+};
+
+// 深拷贝方法1：JSON.parse/JSON.stringify（有局限性）
+const deepCopy1 = JSON.parse(JSON.stringify(original));
+
+// 深拷贝方法2：递归函数
+function deepClone(obj) {
+  if (obj === null || typeof obj !== 'object') return obj;
+  const clone = Array.isArray(obj) ? [] : {};
+  for (let key in obj) {
+    clone[key] = deepClone(obj[key]);
+  }
+  return clone;
+}
+const deepCopy2 = deepClone(original);
+
+// 修改深拷贝后的对象
+deepCopy1.name = 'Bob';
+deepCopy1.address.city = 'Shanghai';
+
+console.log(original.address.city); // 'Beijing'（保持不变）
+```
+
+### 三、常用拷贝方法分类
+
+#### 浅拷贝方法
+
+- `Object.assign({}, obj)`
+- 展开运算符 `{ ...obj }`
+- `Array.prototype.slice()`（数组）
+- `Array.prototype.concat()`（数组）
+- `Array.from()`（数组）
+
+#### 深拷贝方法
+
+- `JSON.parse(JSON.stringify(obj))`（不能处理函数、Symbol等）
+- Lodash 的 `_.cloneDeep()`
+- 自定义递归函数
+- HTML5 的 `structuredClone()`（较新API）
+
+#### 自定义深拷贝函数
+
+```js
+function deepClone(obj, hash = new WeakMap()) {
+  // 处理基本数据类型和null/undefined
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  // 处理Date对象
+  if (obj instanceof Date) {
+    return new Date(obj);
+  }
+
+  // 处理RegExp对象
+  if (obj instanceof RegExp) {
+    return new RegExp(obj);
+  }
+
+  // 处理Set对象
+  if (obj instanceof Set) {
+    const cloneSet = new Set();
+    obj.forEach(value => cloneSet.add(deepClone(value, hash)));
+    return cloneSet;
+  }
+
+  // 处理Map对象
+  if (obj instanceof Map) {
+    const cloneMap = new Map();
+    obj.forEach((value, key) => cloneMap.set(key, deepClone(value, hash)));
+    return cloneMap;
+  }
+
+  // 处理数组和普通对象
+  const cloneObj = Array.isArray(obj) ? [] : {};
+
+  // 解决循环引用问题
+  if (hash.has(obj)) {
+    return hash.get(obj);
+  }
+  hash.set(obj, cloneObj);
+
+  // 复制Symbol属性
+  const symKeys = Object.getOwnPropertySymbols(obj);
+  if (symKeys.length > 0) {
+    symKeys.forEach(symKey => {
+      cloneObj[symKey] = deepClone(obj[symKey], hash);
+    });
+  }
+
+  // 复制常规属性
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      cloneObj[key] = deepClone(obj[key], hash);
+    }
+  }
+
+  return cloneObj;
+}
+```
+
+### 四、特殊注意事项
+
+1. **JSON方法的局限性**：
+   - 会忽略 `undefined`、`function` 和 `Symbol` 属性
+   - 不能处理循环引用
+   - Date 对象会转为字符串
+2. **循环引用问题**：
+
+```JavaScript
+const obj = { a: 1 };
+obj.self = obj;
+// JSON.parse(JSON.stringify(obj)) 会报错
+// 需要特殊处理
+```
+
+3. **性能考量**：
+
+   - 对于大型对象，深拷贝可能消耗大量资源
+
+   - 在不需要完全隔离时，优先使用浅拷贝
+
+4. **现代API**：
+
+```JavaScript
+// 全局的深拷贝方法（浏览器环境）
+const copy = structuredClone(original);
+```
+
+### 五、如何选择
+
+1. **使用浅拷贝当**：
+   - 对象没有嵌套或嵌套不需要隔离
+   - 需要高性能拷贝
+   - 明确知道自己在处理什么数据
+2. **使用深拷贝当**：
+   - 需要完全独立的对象副本
+   - 嵌套对象需要被修改而不影响原对象
+   - 不确定对象结构深度时
 
 
 
 
-## 123.JS 怎么实现一个类。怎么实例化这个类
-
-答案：严格来讲 js 中并没有类的概念，不过 js 中的函数可以作为构造函数来使用，通过 new 来实例化，其实函数本身也是一个对象。
-
-
-
-
-## 124.如何编写高性能的 Javascript？
+## 75. 如何编写高性能的 Javascript？
 
 答案：
 
@@ -9424,55 +9815,225 @@ console.log(o1.a) // 3
 
 
 
+## 76. `document.write()`、`innerHTML` 和 `textContent` 的区别
+
+### 核心区别对比
+
+| 特性             | `document.write()`       | `innerHTML`            | `textContent`                |
+| ---------------- | ------------------------ | ---------------------- | ---------------------------- |
+| **作用对象**     | 整个文档                 | 单个DOM元素            | 单个DOM元素                  |
+| **内容类型**     | HTML/文本                | HTML标记               | 纯文本                       |
+| **执行时机**     | 仅页面加载时安全使用     | 随时可用               | 随时可用                     |
+| **覆盖行为**     | 后期调用会覆盖整个文档   | 替换元素内所有内容     | 替换元素内所有文本           |
+| **XSS风险**      | 高危                     | 高危（会解析HTML）     | 安全（不解析HTML）           |
+| **性能影响**     | 重绘整个页面（后期调用） | 局部重绘               | 局部重绘                     |
+| **现代使用建议** | **禁止使用**             | 谨慎使用（需净化HTML） | **推荐使用**（处理纯文本时） |
+
+### 使用示例
+
+```JavaScript
+// document.write（避免使用）
+document.write("<h1>标题</h1>"); 
+
+// innerHTML（需注意安全）
+document.body.innerHTML = "<div>内容</div>"; 
+
+// textContent（安全）
+document.getElementById("elem").textContent = "纯文本内容"; 
+```
+
+### 选择建议
+
+1. **纯文本内容** → 使用 `textContent`（最安全）
+2. **需要插入HTML** → 使用 `innerHTML`（必须净化内容）或 `insertAdjacentHTML()`
+3. **document.write** → 永远不要在现代代码中使用
 
 
 
 
-## 126.documen.write 和 innerHTML 的区别?
+## 77.  RequireJS 核心原理详解
 
-答案：
+RequireJS 是一个基于 AMD (Asynchronous Module Definition) 规范的 JavaScript 模块加载器，其核心原理可以概括为以下几个关键点：
 
-1. document.write 是重写整个 document, 写入内容是字符串的 html
-2. innerHTML 是 HTMLElement 的属性，是一个元素的内部 html 内容
+### 一、模块定义与加载机制
+
+1. 模块定义 (define)
+   - 使用 `define()` 函数定义模块
+   - 支持三种定义方式：
+
+```JavaScript
+ // 具名模块
+ define('moduleName', ['deps'], function(deps) { /* module */ });
+
+ // 匿名模块（推荐）
+ define(['deps'], function(deps) { /* module */ });
+
+ // 无依赖模块
+ define(function() { return { /* module */ } });
+```
+
+2. 依赖加载
+
+- 异步并行加载所有依赖模块
+- 依赖前置声明（与 CommonJS 的运行时加载不同）
+
+### 二、核心实现原理
+
+1. **依赖图管理**
+   - 构建模块依赖关系图
+   - 确保按正确顺序初始化模块
+2. **模块加载流程**
+
+```
+ graph TD
+     A[解析主模块依赖] --> B[创建script标签加载模块]
+     B --> C{所有依赖加载完成?}
+    所有依赖加载完成?}
+     C -->|是| D[执行模块工厂函数]
+     C -->|否| B
+     D --> E[缓存模块实例]
+```
+
+3. 路径解析算法
+
+- 基于 `baseUrl` 和 `paths` 配置解析模块路径
+- 自动添加 `.js` 后缀
+
+### 三、关键技术实现
+
+1. **模块缓存系统**
+
+```JavaScript
+// 伪代码示例
+const moduleCache = {
+ 'moduleA': {
+   exports: {...},
+   loaded: true
+ }
+};
+```
+
+2. **脚本注入技术**
+
+   - 动态创建 `<script>` 标签加载模块
+
+   - 通过 `onload`/`onerror` 回调处理加载结果
+
+3. **循环依赖处理**
+   - 通过未完成模块的临时引用解决
+
+```JavaScript
+// a.js
+define(['b'], function(b) {
+ return {
+   b: b,
+   aMethod: function() {...}
+ };
+});
+
+// b.js
+define(['a'], function(a) {
+ // 此时a是未完成状态
+ return {
+   a: a,
+   bMethod: function() {
+     // 使用时a应该已完成初始化
+     a.aMethod();
+   }
+ };
+});
+```
+
+### 四、与原生 ES 模块的区别
+
+| 特性           | RequireJS          | ES Modules               |
+| -------------- | ------------------ | ------------------------ |
+| **加载方式**   | 动态脚本注入       | `<script type="module">` |
+| **规范**       | AMD                | ECMAScript 标准          |
+| **执行时机**   | 依赖加载完立即执行 | 静态解析，延迟执行       |
+| **循环依赖**   | 支持但需特殊处理   | 静态分析自动解决         |
+| **浏览器支持** | 所有浏览器         | 现代浏览器               |
+
+### 五、设计哲学
+
+1. **异步优先**：所有模块异步加载，不阻塞页面渲染
+2. **依赖前置**：明确声明依赖关系，便于静态分析
+3. **约定优于配置**：基于目录结构的默认模块查找规则
+4. **渐进增强**：支持传统非模块化脚本通过 shim 方式集成
+
+RequireJS 的核心价值在于它解决了前端开发中的几个关键问题：模块化组织、依赖管理和性能优化（并行加载），为现代前端工程体系奠定了基础。虽然现在逐渐被 ES Modules 取代，但其设计思想仍影响着现代打包工具如 Webpack 和 Rollup。
+
+
+
+## 78. JavaScript 中不查找原型的对象属性访问方法
+
+在 JavaScript 中，**`Object.hasOwnProperty()`** 是唯一一个在执行属性查找时**不会**检查原型链的内置函数。
+
+### 核心特性
+
+```JavaScript
+obj.hasOwnProperty(prop)
+```
+
+- **只检查对象自身属性**：不会查找原型链
+- **返回布尔值**：true（对象自身有该属性）/false（没有）
+- **直接访问**：绕过任何原型继承的属性
+
+### 对比示例
+
+```JavaScript
+const parent = { inheritedProp: '来自原型' };
+const child = Object.create(parent);
+child.ownProp = '自有属性';
+
+// 常规属性访问（会查找原型链）
+console.log(child.inheritedProp); // "来自原型"（来自原型链）
+
+// hasOwnProperty 检查
+console.log(child.hasOwnProperty('inheritedProp')); // false
+console.log(child.hasOwnProperty('ownProp'));       // true
+```
+
+### 相关方法对比
+
+| 方法                         | 是否检查原型链 | 返回类型 | 典型用途                   |
+| ---------------------------- | -------------- | -------- | -------------------------- |
+| `obj.hasOwnProperty()`       | ❌ 不检查       | boolean  | 检测自有属性               |
+| `in` 操作符                  | ✅ 检查         | boolean  | 检查属性是否存在（含继承） |
+| `Object.keys()`              | ❌ 不检查       | Array    | 获取所有可枚举自有属性名   |
+| `obj.propertyIsEnumerable()` | ❌ 不检查       | boolean  | 检查是否可枚举的自有属性   |
+
+### 安全用法
+
+由于 `hasOwnProperty` 可能被覆盖，更安全的做法是：
+
+```JavaScript
+// 安全调用方式
+Object.prototype.hasOwnProperty.call(obj, prop);
+
+// 或使用现代API
+Object.hasOwn(obj, prop);  // ES2022新增
+```
+
+### ES2022 的 `Object.hasOwn()`
+
+新增的更简洁的替代方案：
+
+```JavaScript
+const obj = { prop: 'value' };
+Object: 'value' };
+Object.hasOwn(obj, 'prop');    // true
+Object.hasOwn(obj, 'toString'); // false
+```
+
+这个函数专门设计用来替代 `hasOwnProperty`，解决了可能的方法覆盖问题，是当前检查自有属性的推荐方式。
 
 
 
 
-## 127.让你自己设计实现一个 requireJS，你会怎么做？
-
-答案：核心是实现 js 的加载模块，维护 js 的依赖关系，控制好文件加载的先后顺序
 
 
-
-
-## 128.requireJS 的核心原理是什么？（如何动态加载的？如何避免多次加载的？如何缓存的？）
-
-答案：核心是 js 的加载模块，通过正则匹配模块以及模块的依赖关系，保证文件加载的先后顺序，根据文件的路径对加载过的文件做了缓存
-
-
-
-
-## 129.Javascript 中，有一个函数，执行时对象查找时，永远不会去查找原型，这个函数是？
-
-答案：HasOwnProperty
-
-
-
-
-
-
-## 131.用原生 JavaScript 的实现过什么功能吗？
-
-答案：轮播图、手风琴、放大镜、3D动画效果等，切记，所答的一定要知道实现原理！，不知道还不如不说！
-
-
-
-
-
-
-## 133.简述创建函数的几种方式
-
-答案：
+## 79. 简述创建函数的几种方式
 
 ```
 第一种（函数声明）：
@@ -9490,401 +10051,1239 @@ var sum3 = new Function("num1","num2","return num1+num2");
 
 
 
-## 134.window.location.search() 返回的是什么？
-
-答案：查询(参数)部分。除了给动态语言赋值以外，我们同样可以给静态页面,并使用 javascript 来获得相信应的参数值
-返回值：?ver=1.0&id=timlq 也就是问号后面的！
 
 
 
 
-## 135.window.location.hash  返回的是什么？
+## 80. `readonly` 与 `disabled` 的区别
 
-答案：锚点 ，  返回值：#love ；
+### 核心区别对比
 
+| 特性               | `readonly`              | `disabled`               |
+| ------------------ | ----------------------- | ------------------------ |
+| **表单提交**       | 值会随表单提交          | 值不会随表单提交         |
+| **用户交互**       | 可聚焦、可选择文本      | 不可聚焦、不可选择文本   |
+| **视觉样式**       | 通常保持可操作样式      | 默认显示为灰色不可用状态 |
+| **适用元素**       | `<input>`、`<textarea>` | 几乎所有表单控件         |
+| **JavaScript访问** | 可通过JS修改值          | 完全禁用，JS也难修改     |
+| **键盘事件**       | 可触发键盘事件          | 不触发任何键盘事件       |
+| **CSS伪类**        | 无特殊伪类              | `:disabled` 伪类可用     |
 
+### 使用场景
 
+#### `readonly` 适用场景
 
-## 136.window.location.reload() 作用？
+- 展示需要用户看到但不能修改的数据
+- 需要提交但不应被修改的预填值
+- 允许用户选择复制内容的情况
 
-答案：刷新当前页面
-
-
-
-
-## 137.为什么不能定义 1px 左右的 div 容器？
-
-答案：
-IE6 下这个问题是因为默认的行高造成的，解决的方法也有很多，例如：
-overflow:hidden | zoom:0.08 | line-height:1px
-
-
-
-
-## 138.BOM 对象有哪些，列举 window 对象？
-
-答案：
-
-```
- 1、window对象 ，是JS的最顶层对象，其他的BOM对象都是window对象的属性；
- 2、document对象，文档对象；
- 3、location对象，浏览器当前URL信息；
- 4、navigator对象，浏览器本身信息；
- 5、screen对象，客户端屏幕信息；
- 6、history对象，浏览器访问历史信息；
+```HTML
+<input type="text" value="固定内容" readonly>
 ```
 
+#### `disabled` 适用场景
 
+- 条件未满足时禁用操作
+- 防止重复提交按钮
+- 临时不可用的功能项
 
-
-## 139.简述 readonly 与 disabled 的区别
-
-答案：
-
-
-
-
-## 140.为什么扩展 javascript 内置对象不是好的做法？
-
-答案：
-
-
-
-
-## 141.什么是三元表达式？“三元”表示什么意思？
-
-答案：
-
-
-
-
-## 142.我们给一个 dom 同时绑定两个点击事件，一个用捕获，一个用冒泡，你来说下会执行几次事件，然后会先执行冒泡还是捕获
-
-答案：
-
-
-
-
-## 144.简述一下 Handlebars 的基本用法？
-
-答案：没有用过的话说出它是干什么的即可
-
-
-
-
-## 143.简述一下 Handlerbars 的对模板的基本处理流程， 如何编译的？如何缓存的？
-
-答案：
-
-
-
-
-## 145.前端 templating(Mustache, underscore, handlebars)是干嘛的, 怎么用?
-
-答案：
-
-- Web 模板引擎是为了使用户界面与业务数据（内容）分离而产生的，
-- Mustache 是一个 logic-less （轻逻辑）模板解析引擎，它的优势在于可以应用在 Javascript、PHP、Python、Perl 等多种编程语言中。
-- Underscore 封装了常用的 JavaScript 对象操作方法，用于提高开发效率。
-- Handlebars 是 JavaScript 一个语义模板库，通过对 view 和 data 的分离来快速构建 Web 模板。
-
-
-
-
-## 146.知道什么是 webkit 么? 知道怎么用浏览器的各种工具来调试和 debug 代码么?
-
-答案：Webkit 是浏览器引擎，包括 html 渲染和 js 解析功能，手机浏览器的主流内核，与之相对应的引擎有 Gecko（Mozilla Firefox 等使用）和 Trident（也称 MSHTML，IE 使用）。
-对于浏览器的调试工具要熟练使用，主要是页面结构分析，后台请求信息查看，js 调试工具使用，熟练使用这些工具可以快速提高解决问题的效率
-
-
-
-
-## 147.如何测试前端代码? 知道 BDD, TDD, Unit Test 么? 知道怎么测试你的前端工程么(mocha, sinon, jasmin, qUnit..)?
-
-答案：了解 BDD 行为驱动开发与 TDD 测试驱动开发已经单元测试相关概念
-
-
-
-
-## 148.JavaScript 的循环语句有哪些？
-
-答案：while for do while forEach
-
-
-
-
-## 149.作用域-编译期执行期以及全局局部作用域问题
-
-答案：js 执行主要的两个阶段：预解析和执行期
-
-
-
-
-## 150.如何添加 html 元素的事件，有几种方法？请列举
-
-答案：直接在标签里添加；在元素上添加、使用事件注册函数添加
-
-
-
-
-## 151.列举浏览器对象模型 BOM 里常用的至少 4 个对象，并列举 window 对象的常用方法至少 5 个
-
-答案：
-
-对象：Window document location screen history navigator
-
-方法：Alert() confirm() prompt() open() close()
-
-
-
-
-## 152.事件绑定的方式
-
-答案：
-
-- 嵌入 dom
-
-```html
-<button onclick="func()">按钮</button>
+```HTML
+<button type="submit" disabled>提交中...</button>
 ```
 
-- 直接绑定
-
-```js
-btn.onclick = function() {};
-```
-
-- 事件监听
-
-```js
-btn.addEventListener("click", function() {});
-```
-
-
-
-
-## 153.事件循环
-
-答案：事件循环是一个单线程循环，用于监视调用堆栈并检查是否有工作即将在任务队列中完成。如果调用堆栈为空并且任务队列中有回调函数，则将回调函数出队并推送到调用堆栈中执行。
-
-
-
-
-## 154.事件模型
-
-答案：
-
-- DOM0<br>
-  直接绑定
-
-```
-<input onclick="sayHi()"/>
-
-btn.onclick = function() {}
-btn.onclick = null
-```
-
-- DOM2<br>
-  DOM2 级事件可以冒泡和捕获
-  通过 addEventListener 绑定
-  通过 removeEventListener 解绑
-
-```
-// 绑定
-btn.addEventListener('click', sayHi)
-// 解绑
-btn.removeEventListener('click', sayHi)
-```
-
-- DOM3<br>
-  DOM3 具有更多事件类型
-  DOM3 级事件在 DOM2 级事件的基础上添加了更多的事件类型，全部类型如下：
-
-```
-UI事件，当用户与页面上的元素交互时触发，如：load、scroll
-焦点事件，当元素获得或失去焦点时触发，如：blur、focus
-鼠标事件，当用户通过鼠标在页面执行操作时触发如：dbclick、mouseup
-滚轮事件，当使用鼠标滚轮或类似设备时触发，如：mousewheel
-文本事件，当在文档中输入文本时触发，如：textInput
-键盘事件，当用户通过键盘在页面上执行操作时触发，如：keydown、keypress
-合成事件，当为IME（输入法编辑器）输入字符时触发，如：compositionstart
-变动事件，当底层DOM结构发生变化时触发，如：DOMsubtreeModified
-```
-
-解析：[参考](https://www.jianshu.com/p/3acdf5f71d5b)
-
-
-
-
-## 155.如何自定义事件
-
-答案：
-
-1. 原生提供了 3 个方法实现自定义事件
-2. createEvent，设置事件类型，是 html 事件还是 鼠标事件
-3. initEvent 初始化事件，事件名称，是否允许冒泡，是否阻止自定义事件
-4. dispatchEvent 触发事件
-
-[MDN](https://developer.mozilla.org/zh-CN/docs/Web/Guide/Events/Creating_and_triggering_events)
-
-
-
-
-## 156.target 和 currentTarget 区别
-
-答案：
-
-- event.target<br>
-  返回触发事件的元素
-- event.currentTarget<br>
-  返回绑定事件的元素
-
-
-
-
-## 157.prototype 和__proto__的关系是什么
-
-答案：
-
-所有的对象都拥有__proto__属性，它指向对象构造函数的 prototype 属性
-
-```
-let obj = {}
-obj.__proto__ === Object.prototype // true
-
-function Test(){}
-test.__proto__ == Test.prototype // true
-```
-
-所有的函数都同时拥有__proto__和 protytpe 属性
-函数的__proto__指向自己的函数实现 函数的 protytpe 是一个对象 所以函数的 prototype 也有__proto__属性 指向 Object.prototype
-
-```
-function func() {}
-func.prototype.__proto__ === Object.prototype // true
-```
-
-Object.prototype.__proto__指向 null
-
-```
-Object.prototype.__proto__ // null
-```
-
-
-
-
-## 158.什么是原型属性？
-
-答案：从构造函数的prototype属性出发找到原型，这时候就把原型称之为构造函数的原型属性
-
-
-
-
-## 159.什么是原型对象？
-
-答案：从实例的__proto__出发，找到原型，这时候就把原型称之为实例的原型对象。
-
-
-
-
-## 160.使用 let、var 和 const 创建变量有什么区别
-
-答案：
-
-用 var 声明的变量的作用域是它当前的执行上下文，它可以是嵌套的函数，也可以是声明在任何函数外的变量。let 和 const 是块级作用域，意味着它们只能在最近的一组花括号（function、if-else 代码块或 for 循环中）中访问。
-
-```js
-function foo() {
-  // 所有变量在函数中都可访问
-  var bar = "bar";
-  let baz = "baz";
-  const qux = "qux";
-
-  console.log(bar); // bar
-  console.log(baz); // baz
-  console.log(qux); // qux
+### 特殊注意事项
+
+1. **样式覆盖**：
+
+```CSS
+/* 自定义disabled样式 */
+input:disabled {
+ opacity: 0.7;
+ cursor: not-allowed;
 }
 
-console.log(bar); // ReferenceError: bar is not defined
-console.log(baz); // ReferenceError: baz is not defined
-console.log(qux); // ReferenceError: qux is not defined
+/* readonly样式没有专用伪类 */
+input[readonly] {
+ background-color: #f5f5f5;
+}
 ```
 
-```js
-if (true) {
-  var bar = "bar";
-  let baz = "baz";
-  const qux = "qux";
+2. **组合使用**：
+
+```HTML
+<!-- 反模式：同时使用无意义 -->
+<input type="text" readonly disabled>
+```
+
+3. **动态切换**：
+
+```JavaScript
+// 启用/禁用控制
+element.disabled = true/false;
+element.readOnly = true/false; // 注意大小写
+```
+
+4. **React/Vue等框架**：
+
+```Jsx
+// React中属性名有所区别
+<input readOnly={true} disabled={false} />
+```
+
+选择依据：是否需要保留交互性（如选择、聚焦）和提交数据。
+
+
+
+## 81. 为什么扩展 JavaScript 内置对象不是好的做法
+
+### 一、核心问题
+
+扩展 JavaScript 内置对象（如 `Object.prototype`、`Array.prototype` 等）会带来以下严重问题：
+
+### 二、主要风险
+
+1. 命名冲突风险
+   - 未来 JavaScript 版本可能添加同名方法
+
+```JavaScript
+// 危险操作！
+Array.prototype.find = function() { /* 自定义实现 */ }
+// ES6 原生加入了Array.prototype.find，导致冲突
+```
+
+2. 可枚举性污染
+   - 默认添加的属性是可枚举的，会影响 `for...in` 循环
+
+```JavaScript
+Object.prototype.customMethod = function() {};
+const obj = { a: 1, b: 2 };
+
+for (let key in obj) {
+ console.log(key); // 会输出 a, b, customMethod
+}
+```
+
+3. 破坏代码封装性
+   - 所有代码都能访问修改后的原型，难以追踪问题
+
+```JavaScript
+// 某第三方库修改了原生行为
+String.prototype.trim = function() { return this; }
+// 导致所有trim调用失效
+```
+
+4. 性能影响
+
+   - 修改原型链会影响引擎优化
+
+   - V8 等引擎对原生对象有特殊优化，自定义扩展会破坏这些优化
+
+### 三、替代方案
+
+#### 1. 使用工具函数（推荐）
+
+```JavaScript
+// 安全做法
+function arrayFindCustom(arr, callback) {
+  // 实现逻辑
 }
 
-// 用 var 声明的变量在函数作用域上都可访问
-console.log(bar); // bar
-// let 和 const 定义的变量在它们被定义的语句块之外不可访问
-console.log(baz); // ReferenceError: baz is not defined
-console.log(qux); // ReferenceError: qux is not defined
+// 使用
+arrayFindCustom(myArray, item => item.id === 123);
 ```
 
-var 会使变量提升，这意味着变量可以在声明之前使用。let 和 const 不会使变量提升，提前使用会报错。
+#### 2. 使用 ES6+ 的类继承
 
-```js
-console.log(foo); // undefined
+```JavaScript
+class MyArray extends Array {
+  findCustom() {
+    // 自定义实现
+  }
+}
 
-var foo = "foo";
-
-console.log(baz); // ReferenceError: can't access lexical declaration 'baz' before initialization
-
-let baz = "baz";
-
-console.log(bar); // ReferenceError: can't access lexical declaration 'bar' before initialization
-
-const bar = "bar";
+const myArr = new MyArray(1, 2, 3);
+myArr.findCustom();
 ```
 
-用 var 重复声明不会报错，但 let 和 const 会。
+#### 3. 使用模块化封装
 
-```js
-var foo = "foo";
-var foo = "bar";
-console.log(foo); // "bar"
+```JavaScript
+// arrayUtils.js
+export function findCustom(array, predicate) {
+  // 实现逻辑
+}
 
-let baz = "baz";
-let baz = "qux"; // Uncaught SyntaxError: Identifier 'baz' has already been declared
+// 使用
+import { findCustom } from './arrayUtils';
+findCustom(myArray, item => item.isValid);
 ```
 
-let 和 const 的区别在于：let 允许多次赋值，而 const 只允许一次。
+### 四、特殊情况处理
 
-```js
-// 这样不会报错。
-let foo = "foo";
-foo = "bar";
+如果必须扩展（不推荐），应采取安全措施：
 
-// 这样会报错。
-const baz = "baz";
-baz = "qux";
+```JavaScript
+// 1. 使用不可枚举属性
+Object.defineProperty(Array.prototype, 'safeMethod', {
+  value: function() { /* 实现 */ },
+  enumerable: false, // 关键！
+  writable: true,
+  configurable: true
+});
+
+// 2. 检查方法是否存在
+if (!Array.prototype.customMethod) {
+  Array.prototype.customMethod = function() { /* 实现 */ };
+}
 ```
 
-解析：[参考](https://github.com/yangshun/front-end-interview-handbook/blob/master/Translations/Chinese/questions/javascript-questions.md#%E4%BD%BF%E7%94%A8letvar%E5%92%8Cconst%E5%88%9B%E5%BB%BA%E5%8F%98%E9%87%8F%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB)
+### 五、业界实践
+
+1. **ECMAScript 规范**：明确警告不要修改内置对象
+2. **ESLint 规则**：`no-extend-native` 默认禁止此行为
+3. **TypeScript**：类型定义会阻止大部分原型修改尝试
+4. **Babel 转译**：polyfill 使用安全的方式添加新特性
+
+### 六、历史教训
+
+1. **Prototype.js 库**：早期广泛扩展原生对象，导致与后续标准冲突
+2. **MooTools**：同样因扩展原生对象而闻名，现代版本已放弃这种做法
+3. **jQuery**：明智地选择不扩展原生原型，通过包装对象($)提供功能
+
+扩展内置原型就像在公共场所涂鸦 - 看似方便自己，实则影响所有使用者。遵循"最少意外原则"，保持原生行为的可预测性，是专业JavaScript开发的重要准则。
+
+
+
+## 82. 三元表达式详解
+
+### 一、什么是三元表达式
+
+三元表达式是 JavaScript 中的一种**条件运算符**，它是唯一需要**三个操作数**的运算符，语法格式为：
+
+```JavaScript
+条件 ? 表达式1 : 表达式2
+```
+
+### 二、"三元"的含义
+
+"三元"指的是这个运算符由**三部分组成**：
+
+1. **条件部分**（第一个操作数）
+2. **真值部分**（第二个操作数，条件为 true 时执行）
+3. **假值部分**（第三个操作数，条件为 false 时执行）
+
+### 三、工作原理
+
+```JavaScript
+const result = 条件 ? 值1 : 值2;
+```
+
+执行流程：
+
+1. 评估`条件`的真假
+2. 如果`条件`为 `true`，返回`值1`
+3. 如果`条件`为 `false`，返回`值2`
+
+### 四、示例代码
+
+#### 基础用法
+
+```JavaScript
+const age = 20;
+const status = age >= 18 ? '成年人' : '未成年人';
+console.log(status); // "成年人"
+```
+
+#### 嵌套三元表达式
+
+```JavaScript
+const score = 85;
+const grade = score >= 90 ? 'A' :
+              score >= 80 ? 'B' :
+              score >= 70 ? 'C' : 'D';
+console.log(grade); // "B"
+```
+
+#### 函数返回值
+
+```JavaScript
+function getFee(isMember) {
+  return isMember ? '$2.00' : '$10.00';
+}
+console.log(getFee(true));  // "$2.00"
+```
+
+### 五、与 if-else 对比
+
+| 特性         | 三元表达式           | if-else 语句           |
+| ------------ | -------------------- | ---------------------- |
+| **适用场景** | 简单的条件赋值       | 复杂的条件逻辑         |
+| **返回值**   | 总是返回一个值       | 不返回值（需单独赋值） |
+| **可读性**   | 简单情况更简洁       | 复杂逻辑更清晰         |
+| **嵌套**     | 可嵌套但易降低可读性 | 多层嵌套仍相对清晰     |
+
+### 六、最佳实践
+
+1. **保持简单**：避免多层嵌套三元表达式
+2. **适当换行**：复杂时可增加可读性
+
+```JavaScript
+const message = isError
+ ? '操作失败'
+ : isLoading
+   ? '加载中...'
+   : '操作成功';
+```
+
+3. **优先可读性**：当逻辑复杂时，改用 if-else
+
+三元表达式是 JavaScript 中简洁表达条件赋值的有效工具，但应合理使用以避免代码可读性降低。
+
+
+
+## 83. DOM事件同时绑定捕获和冒泡阶段的执行机制
+
+### 执行次数与顺序
+
+当给同一个DOM元素同时绑定捕获阶段和冒泡阶段的点击事件时：
+
+1. **会执行两次事件**（一次捕获阶段，一次冒泡阶段）
+2. **执行顺序**：先执行捕获阶段的事件处理程序，再执行冒泡阶段的事件处理程序
+
+### 完整事件流演示
+
+```HTML
+<div id="outer">
+  <div id="inner">点击我</div>
+</div>
+
+<script>
+  const outer = document.getElementById('outer');
+  const inner = document.getElementById('inner');
+
+  // 为inner元素绑定两个点击事件
+  inner.addEventListener('click', () => {
+    console.log('冒泡阶段触发');
+  }, false); // 默认false，冒泡阶段
+
+  inner.addEventListener('click', () => {
+    console.log('捕获阶段触发');
+  }, true); // true表示捕获阶段
+
+  // 点击inner元素后的输出顺序：
+  // 1. "捕获阶段触发"
+  // 2. "冒泡阶段触发"
+</script>
+```
+
+### 事件传播的三个阶段
+
+1. **捕获阶段 (Capturing Phase)**：
+   - 从window对象向下传播到目标元素
+   - 使用`addEventListener(event, handler, true)`监听
+2. **目标阶段 (Target Phase)**：
+   - 到达实际被点击的元素
+   - 无论设置捕获还是冒泡都会触发
+3. **冒泡阶段 (Bubbling Phase)**：
+   - 从目标元素向上传播回window对象
+   - 使用`addEventListener(event, handler, false)`或省略第三个参数
+
+### 特殊情况说明
+
+1. **事件阻止传播**：
+
+```JavaScript
+// 如果在捕获阶段调用stopPropagation()
+inner.addEventListener('click', (e) => {
+ e.stopPropagation();
+ console.log('捕获阶段触发');
+}, true);
+
+// 冒泡阶段的事件将不会执行
+```
+
+2. **事件执行一次**：
+
+```JavaScript
+// 使用once选项让事件只执行一次
+inner.addEventListener('click', () => {
+ console.log('只执行一次');
+}, { once: true });
+```
+
+3. **事件委托优化**：
+
+```JavaScript
+// 利用捕获阶段实现特殊的事件委托
+document.addEventListener('click', (e) => {
+ if(e.target.matches('.special-button')) {
+   console.log('捕获阶段拦截特殊按钮');
+ }
+}, true);
+```
+
+理解这个机制对于处理复杂的事件交互场景非常重要，特别是在需要精确控制事件触发顺序或实现高级事件模式时。
 
 
 
 
-## 161.JSON 的了解
-
-答案：JSON(JavaScript Object Notation) 是一种轻量级的数据交换格式。它是基于 JavaScript 的一个子集。数据格式简单, 易于读写, 占用带宽小。
 
 
 
+## 84. 前端测试全面指南
 
-## 162.事件代理怎么实现？
+### 一、测试方法论
 
-答案：在元素的父节点注册事件，通过事件冒泡，在父节点捕获事件
+#### 1. TDD (测试驱动开发)
+
+- 红-绿-重构
+
+  循环：
+
+  1. 先写失败测试（红）
+  2. 实现最小化代码使测试通过（绿）
+  3. 优化代码结构（重构）
+
+- **适用场景**：需求明确的核心逻辑开发
+
+#### 2. BDD (行为驱动开发)
+
+- **自然语言描述**：
+
+```JavaScript
+describe('购物车', () => {
+    it('添加商品时应更新总价', () => {
+      // 测试代码
+    });
+});
+```
+
+- **优势**：更贴近业务需求，非技术人员可读
+
+#### 3. 单元测试 (Unit Test)
+
+- **测试范围**：独立测试单个函数/模块
+- **特点**
+  - 运行速度快
+  - 隔离依赖（使用mock/stub）
+  - 覆盖所有边界条件
+
+### 二、测试金字塔模型
+
+```
+         E2E测试(5-10%)
+       /         \
+  集成测试(20%)    UI测试
+     /
+单元测试(70-80%)
+```
+
+### 三、主流测试工具
+
+#### 1. 测试框架对比
+
+| 工具        | 特点                 | 典型使用场景        |
+| ----------- | -------------------- | ------------------- |
+| **Mocha**   | 灵活、需要搭配断言库 | Node/浏览器通用测试 |
+| **Jest**    | 开箱即用、快照测试   | React/Vue项目       |
+| **Jasmine** | 自带断言、无需配置   | Angular项目         |
+| **QUnit**   | 轻量级、jQuery生态   | jQuery插件/传统项目 |
+
+#### 2. 测试辅助工具
+
+- **Sinon**：创建spies/stubs/mocks
+- **Enzyme**：React组件测试
+- **Testing Library**：贴近用户行为的组件测试
+- **Cypress**：E2E测试
+- **Puppeteer**：浏览器自动化测试
+
+### 四、实战测试配置
+
+#### 1. Mocha + Chai + Sinon 配置示例
+
+```bash
+npm install mocha chai sinon @types/mocha @types/chai @types/sinon -D
+```
+
+```JavaScript
+// test/utils.test.js
+const { expect } = require('chai');
+const sinon = require('sinon');
+const utils = require('../src/utils');
+
+describe('工具函数', () => {
+  let sandbox;
+  
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+  });
+  
+  afterEach(() => {
+    sandbox.restore();
+  });
+  
+  it('应正确计算两数之和', () => {
+    expect(utils.add(2, 3)).to.equal(5);
+  });
+  
+  it('应记录函数调用', () => {
+    const spy = sandbox.spy(utils, 'add');
+    utils.add(1, 2);
+    sinon.assert.calledOnce(spy);
+  });
+});
+```
+
+#### 2. React组件测试示例 (Jest + Testing Library)
+
+```JavaScript
+import { render, screen, fireEvent } from '@testing-library/react';
+import Button from './Button';
+
+test('按钮点击应触发回调', () => {
+  const handleClick = jest.fn();
+  render(<Button onClick={handleClick}>点击</Button>);
+  
+  fireEvent.click(screen.getByText(/点击/i));
+  expect(handleClick).toHaveBeenCalledTimes(1);
+});
+```
+
+#### 3. Vue组件测试示例 (Jest)
+
+```JavaScript
+import { mount } from '@vue/test-utils';
+import Counter from './Counter.vue';
+
+test('计数器应增加', async () => {
+  const wrapper = mount(Counter);
+  await wrapper.find('button').trigger('click');
+  expect(wrapper.find('span').text()).toContain('1');
+});
+```
+
+### 五、测试覆盖率
+
+使用Istanbul/NYC生成覆盖率报告：
+
+```
+Bash# 使用Jest
+jest --coverage
+
+# 使用Mocha
+nyc mocha
+```
+
+典型覆盖率指标：
+
+- 行覆盖率 (Line)
+- 分支覆盖率 (Branch)
+- 函数覆盖率 (Function)
+- 语句覆盖率 (Statement)
+
+### 六、现代测试实践
+
+1. **组件契约测试**：使用Storybook + Jest
+2. **可视化回归测试**：Applitools/Percy
+3. **性能基准测试**：
+
+```JavaScript
+test('应满足性能基准', () => {
+ expect(time).toBeLessThan(100); // 执行时间<100ms
+});
+```
+
+4. **Mutation Testing**：Stryker检测测试有效性
+
+### 七、CI/CD集成
+
+`.github/workflows/test.yml` 示例：
+
+```Yaml
+name: Test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm ci
+      - run: npm test
+      - run: npm run coverage
+```
+
+掌握这些测试方法和工具组合，可以构建出可靠的前端测试体系，显著提升代码质量和开发效率。
+
+
+
+## 85. JavaScript 循环语句全解析
+
+JavaScript 提供了多种循环语句来处理重复操作，以下是所有循环方式的详细说明和对比：
+
+### 一、基础循环语句
+
+#### 1. `for` 循环
+
+```JavaScript
+for (初始化; 条件; 表达式) {
+  // 循环体
+}
+
+// 示例：打印0-9
+for (let i = 0; i < 10; i++) {
+  console.log(i);
+}
+```
+
+- **特点**：最常用的循环，精确控制循环次数
+
+#### 2. `while` 循环
+
+```JavaScript
+while (条件) {
+  // 循环体
+}
+
+// 示例：随机数直到大于0.5
+let num;
+while ((num = Math.random()) <= 0.5) {
+  console.log(num);
+}
+```
+
+- **特点**：条件前置，可能一次都不执行
+
+#### 3. `do...while` 循环
+
+```JavaScript
+do {
+  // 循环体
+} while (条件);
+
+// 示例：至少执行一次
+let x = 10;
+do {
+  console.log(x--);
+} while (x > 0);
+```
+
+- **特点**：条件后置，至少执行一次
+
+### 二、迭代循环语句
+
+#### 4. `for...in` 循环
+
+```JavaScript
+for (property in object) {
+  // 循环体
+}
+
+// 示例：遍历对象属性
+const obj = { a: 1, b: 2 };
+for (const key in obj) {
+  console.log(`${key}: ${obj[key]}`);
+}
+```
+
+- 特点
+  - 遍历对象**可枚举属性**（包括原型链上的）
+  - 不保证属性顺序
+  - 数组遍历请使用 `for...of` 或 `forEach`
+
+#### 5. `for...of` 循环 (ES6+)
+
+```JavaScript
+for (element of iterable) {
+  // 循环体
+}
+
+// 示例：遍历数组
+const arr = ['a', 'b'];
+for (const item of arr) {
+  console.log(item);
+}
+
+// 示例：遍历Map
+const map = new Map([[1, 'a'], [2, 'b']]);
+for (const [key, value] of map) {
+  console.log(key, value);
+}
+```
+
+- **特点**
+  - 遍历**可迭代对象**（Array, Map, Set, String等）
+  - 不遍历对象属性
+  - 支持 `break`, `continue` 和 `return`
+
+#### 6. `Array.prototype.forEach()`
+
+```JavaScript
+array.forEach((element, index, array) => {
+  // 循环体
+});
+
+// 示例
+['a', 'b'].forEach((item, i) => {
+  console.log(i, item);
+});
+```
+
+- **特点**
+  - 数组专用方法
+  - **无法中断循环**（不能用 `break`）
+  - 没有返回值（区别于 `map`）
+
+### 三、特殊循环控制
+
+#### 7. 递归循环
+
+```JavaScript
+function countdown(n) {
+  if (n <= 0) return;
+  console.log(n);
+  countdown(n - 1);
+}
+countdown(5);
+```
+
+- **适用场景**：适合处理嵌套数据结构或分治算法
+
+#### 8. 生成器循环 (ES6+)
+
+```JavaScript
+function* generator() {
+  yield
+function* generator() {
+  yield 1;
+  yield 2;
+}
+
+for (const n of generator()) {
+  console.log(n);
+}
+```
+
+- **特点**：惰性求值，可暂停/恢复执行
+
+### 四、循环控制语句
+
+所有循环都支持以下控制语句：
+
+1. `break` - 立即终止循环
+
+```JavaScript
+for (let i = 0; i < 10; i++) {
+ if (i === 5) break;
+ console.log(i); // 0-4
+}
+```
+
+2. `continue` - 跳过当前. `continue` - 跳过当前迭代
+
+```JavaScript
+for (let i = 0; i < 5; i++) {
+ if (i === 2) continue;
+ console.log(i); // 0,1,3,4
+}
+```
+
+3. 标签语句（嵌套循环控制）
+
+```JavaScript
+outer: for (let i = 0; i < 3; i++) {
+ inner: for (let++) {
+ inner: for (let j = 0; j < j = 0; j < 3; j++) {
+   if (i === 1 && j === 1) break outer;
+   console.log(i, j);
+ }
+}
+```
+
+### 五、循环方法对比表
+
+| 循环方式     | 适用场景       | 可中断 | 索引访问 | 原型属性 | 返回值 |
+| ------------ | -------------- | ------ | -------- | -------- | ------ |
+| `for`        | 通用循环       | ✅      | ✅        | -        | -      |
+| `while`      | 条件循环       | ✅      | ❌        | -        | -      |
+| `do...while` | 至少执行一次   | ✅      | ❌        | -        | -      |
+| `for...in`   | 对象属性遍历   | ✅      | ❌        | ✅        | -      |
+| `for...of`   | 可迭代对象遍历 | ✅      | ❌        | ❌        | -      |
+| `forEach`    | 数组遍历       | ❌      | ✅        | ❌        | ❌      |
+
+### 六、最佳实践建议
+
+1. **数组遍历**：优先使用 `for...of` 或 `forEach`
+2. **对象遍历**：使用 `for...in` + `hasOwnProperty` 检查
+3. **性能敏感**：大数据量时 `for` 循环最快
+4. **函数式编程**：考虑 `map`/`filter`/`reduce` 替代循环
+5. **异步循环**：使用 `for await...of` (ES2018)
 
 
 
 
-## 163.什么是属性搜索原则？
+## 86. HTML 元素事件绑定的多种方法
 
-答案：
+### 一、HTML 属性方式 (不推荐)
+
+```HTML
+<!-- 1. 直接属性 -->
+<button onclick="alert('Clicked!')">点击我</button>
+
+<!-- 2. 调用函数 -->
+<button onclick="handleClick()">点击我</button>
+
+<script>
+function handleClick() {
+  console.log('按钮被点击');
+}
+</script>
+```
+
+**缺点**：
+
+- 混合HTML与JavaScript
+- 只能绑定一个事件
+- 全局命名空间污染
+
+### 二、DOM 属性方式
+
+```JavaScript
+// 1. 直接赋值
+const btn = document.getElementById('myBtn');
+btn.onclick = function() {
+  console.log('第一次点击');
+};
+
+// 会覆盖之前的事件
+btn.onclick = function() {
+  console.log('第二次点击'); // 只有这个会执行
+};
+
+// 2. 使用函数引用
+function handleClick() {
+  console.log('处理点击');
+}
+btn.onclick = handleClick;
+```
+
+**缺点**：
+
+- 只能绑定一个处理函数
+- 容易被覆盖
+
+### 三、标准事件监听 (推荐)
+
+```JavaScript
+const btn = document.getElementById('myBtn');
+
+// 1. 基本用法
+btn.addEventListener('click', function() {
+  console.log('点击事件1');
+});
+
+// 2. 添加多个处理程序
+btn.addEventListener('click', function() {
+  console.log('点击事件2'); // 两个都会执行
+});
+
+// 3. 使用命名函数
+function handleClick() {
+  console.log('命名函数处理');
+}
+btn.addEventListener('click', handleClick);
+
+// 4. 带选项的监听
+btn.addEventListener('click', () => {
+  console.log('只触发一次');
+}, { once: true }); // 其他选项: passive, capture
+
+// 5. 移除事件监听
+btn.removeEventListener('click', handleClick); // 必须使用相同函数引用
+```
+
+**优点**：
+
+- 可添加多个事件处理器
+- 更精细的控制（捕获/冒泡阶段）
+- 支持事件委托
+- 可使用 `passive` 优化滚动性能
+
+### 四、事件委托模式
+
+```JavaScript
+// 在父元素上监听子元素事件
+document.getElementById('list').addEventListener('click', function(e) {
+  if (e.target.matches('li.item')) {
+    console.log('点击了项目:', e.target.textContent);
+  }
+});
+```
+
+**优点**：
+
+- 动态元素无需重复绑定
+- 内存占用更少
+- 适合大量同类元素
+
+### 五、现代框架方式
+
+#### React
+
+```Jsx
+function MyComponent() {
+  const handleClick = () => {
+    console.log('React点击事件');
+  };
+
+  return <button onClick={handleClick}>点击</button>;
+}
+```
+
+#### Vue
+
+```HTML
+<template>
+  <button @click="handleClick">点击</button>
+</template>
+
+<script>
+export default {
+  methods: {
+    handleClick() {
+      console.log('Vue点击事件');
+    }
+  }
+}
+</script>
+```
+
+### 六、特殊事件绑定技术
+
+1. **事件处理器对象**：
+
+```JavaScript
+const handler = {
+ handleEvent(e) {
+   console.log('事件类型:', e.type);
+ }
+};
+btn.addEventListener('click', handler);
+```
+
+2. **`EventTarget.dispatchEvent`**：
+
+```JavaScript
+// 编程式触发事件
+const event = new Event('click');
+btn.dispatchEvent(event);
+```
+
+### 七、事件绑定方法对比
+
+| 方法             | 可绑定多个 | 动态元素 | 事件委托 | 框架适用性 |
+| ---------------- | ---------- | -------- | -------- | ---------- |
+| HTML属性         | ❌          | ❌        | ❌        | ❌          |
+| DOM属性          | ❌          | ✅        | ❌        | ❌          |
+| addEventListener | ✅          | ✅        | ✅        | ✅          |
+| 事件委托         | ✅          | ✅        | ✅        | ✅          |
+| 框架事件系统     | ✅          | ✅        | ✅        | ✅          |
+
+### 最佳实践建议
+
+1. **优先使用** `addEventListener`
+2. **大量元素**使用事件委托
+3. **单页应用**使用框架提供的事件系统
+4. **记得移除**不需要的事件监听（特别是SPA）
+5. **移动端**考虑使用 `passive` 改善滚动性能
+6. **避免**直接在HTML中使用事件属性
+
+
+
+
+## 87. target 和 currentTarget 区别详解
+
+>  `event.target` 返回触发事件的元素 
+>
+> `event.currentTarget` 返回绑定事件的元素
+
+### 核心区别对比
+
+| 特性           | `event.target`           | `event.currentTarget`        |
+| -------------- | ------------------------ | ---------------------------- |
+| **指向对象**   | 最初触发事件的元素       | 当前正在处理事件的元素       |
+| **事件流阶段** | 始终保持不变             | 随事件传播阶段变化           |
+| **事件委托**   | 识别实际点击的子元素     | 始终指向绑定事件的父元素     |
+| **使用场景**   | 需要知道事件起源时       | 需要访问事件监听器所属元素时 |
+| **动态性**     | 静态（始终指向原始目标） | 动态（随事件捕获/冒泡变化）  |
+
+### 可视化事件流
+
+```
+ Document
+  ↓ (捕获阶段)
+<div currentTarget=div>  ← 事件监听器绑在这里
+  ↓
+  <button target=button>点击</button>
+  ↑ (冒泡阶段)
+</div>
+```
+
+### 代码示例
+
+```HTML
+<div id="container">
+  <button id="btn">点击我</button>
+</div>
+
+<script>
+  document.getElementById('container').addEventListener('click', function(e) {
+    console.log('target:', e.target.id);        // "btn"
+    console.log('currentTarget:', e.currentTarget.id); // "container"
+  });
+</script>
+```
+
+### 典型应用场景
+
+#### 1. 事件委托实现
+
+```JavaScript
+// 父元素监听子元素事件
+document.querySelector('ul').addEventListener('click', function(e) {
+  if (e.target.tagName === 'LI') {
+    console.log('点击了列表项:', e.target.textContent);
+  }
+  // currentTarget 始终是 ul 元素
+});
+```
+
+#### 2. 嵌套元素处理
+
+```HTML
+<div id="outer">
+  <div id="inner">
+    <button id="btn">按钮</button>
+  </div>
+</div>
+
+<script>
+  document.getElementById('outer').addEventListener('click', function(e) {
+    console.log(e.target.id);      // 可能是 btn/inner/outer
+    console.log(e.currentTarget.id); // 永远是 outer
+  }, true); // 使用捕获阶段演示
+</script>
+```
+
+### 特殊注意事项
+
+1. **相同元素绑定事件时**：
+
+```JavaScript
+btn.addEventListener('click', function(e) {
+ // 当直接点击btn时：
+ e.target === e.currentTarget // true
+});
+```
+
+2. **影子DOM中的表现**：
+
+```JavaScript
+shadowHost.addEventListener('click', e => {
+ e.target; // 可能指向影子DOM内的元素
+ e.currentTarget; // 总是影子宿主
+});
+```
+
+3. **React/Vue中的差异**：
+
+```Jsx
+// React合成事件中表现与原生一致
+function Component() {
+ const handleClick = e => {
+   e.target; // 实际DOM节点
+   e.currentTarget; // 事件绑定的React组件
+ };
+ return <button onClick={handleClick}>点击</button>;
+}
+```
+
+### 记忆技巧
+
+- `target` = **触**发事件的元素（"触"与"target"都有"t"）
+- `currentTarget` = **当**前处理事件的元素（"current"意为"当前"）
+
+
+
+## 88. JSON 全面解析
+
+JSON (JavaScript Object Notation) 是一种轻量级的数据交换格式，已成为现代Web开发中数据交换的事实标准。
+
+### 一、核心特性
+
+1. **数据结构**：
+   - 键值对集合（对象） `{"key": "value"}`
+   - 有序值列表（数组） `["a", 1, true]`
+2. **支持数据类型**：
+   - 字符串（必须双引号）
+   - 数字（整数/浮点数）
+   - 布尔值（`true`/`false`）
+   - 空值（`null`）
+   - 对象和数组（可嵌套）
+   - *不支持的JS类型*：函数、undefined、Symbol、Date等
+3. **语法规则**：
+
+```Json
+{
+ "name": "张三",
+ "age": 30,
+ "isStudent": false,
+ "courses": ["数学", "英语"],
+ "address": {
+   "city": "北京",
+   "postalCode": "100000"
+ }
+}
+```
+
+### 二、JSON 方法
+
+#### 1. 序列化（JS对象 → JSON字符串）
+
+```JavaScript
+const obj = { name: "李四", score: 85 };
+const jsonString = JSON.stringify(obj);
+// 结果：'{"name":"李四","score":85}'
+
+// 高级用法：
+JSON.stringify(obj, (key, value) => {
+  if (typeof value === 'number') return value * 2;
+  return value;
+}, 2); // 缩进2空格格式化
+```
+
+#### 2. 反序列化（JSON字符串 → JS对象）
+
+```JavaScript
+const jsonStr = '{"name":"王五","active":true}';
+const parsedObj = JSON.parse(jsonStr);
+// 结果：{ name: "王五", active: true }
+
+// 安全用法：
+try {
+  const data = JSON.parse(maybeJson);
+} catch (e) {
+  console.error("无效JSON");
+}
+```
+
+### 三、实际应用场景
+
+1. **API通信**：
+
+```JavaScript
+// 发送JSON
+fetch('/api', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ query: 'test' })
+});
+
+// 接收JSON
+const data = await response.json();
+```
+
+2. **本地存储**：
+
+```JavaScript
+// localStorage只能存字符串
+localStorage.setItem('user', JSON.stringify(userData));
+const user = JSON.parse(localStorage.getItem('user'));
+```
+
+3. **配置文件**：
+
+```Json
+// config.json
+{
+ "apiEndpoint": "https://api.example.com",
+ "maxRetries": 3,
+ "featureFlags": {
+   "newUI": true
+ }
+}
+```
+
+### 四、性能与安全
+
+1. **性能优化**：
+   - 大数据量使用流式解析（如 `JSON.parse` 的替代方案）
+   - Web Workers 处理大型JSON
+2. **安全实践**：
+
+```JavaScript
+// 避免直接eval
+const unsafeParse = str => eval(`(${str})`); // 危险！
+
+// 处理敏感数据
+const sanitized = JSON.parse(jsonStr, (k, v) => {
+ return k === 'password' ? undefined : v;
+});
+```
+
+### 五、与其他格式对比
+
+| 特性         | JSON   | XML  | YAML | Protocol Buffers |
+| ------------ | ------ | ---- | ---- | ---------------- |
+| **可读性**   | 高     | 中   | 高   | 低               |
+| **体积**     | 较小   | 较大 | 中等 | 最小             |
+| **解析速度** | 快     | 慢   | 中等 | 最快             |
+| **扩展性**   | 有限   | 强   | 强   | 强               |
+| **注释**     | 不支持 | 支持 | 支持 | 支持             |
+
+### 六、现代扩展
+
+1. **JSON5**：支持注释、尾随逗号等
+
+```Json
+{
+ // 注释
+ name: "JSON5",  // 无引号key
+ features: [
+   "注释",
+   "多行字符串",
+ ],  // 尾随逗号
+}
+```
+
+2. **JSON Schema**：定义JSON结构验证
+
+```Json
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "type": "object",
+ "properties": {
+   "name": { "type": "string" },
+   "age": { "type": "integer", "minimum": 0 }
+ },
+ "required": ["name"]
+}
+```
+
+3. **JSON Patch**：描述JSON文档更改
+
+```Json
+[
+ { "op": "replace", "path": "/name", "value": "新名字" },
+ { "op": "add", "path": "/address", "value": {} }
+]
+```
+
+JSON因其简洁性和广泛的生态支持，仍然是前后端数据传输的首选格式。掌握其高级用法和潜在陷阱，可以显著提升开发效率和系统安全性。
+
+
+
+
+## 89. 什么是属性搜索原则？
 
 1. 首先会去查找对象本身上面有没有这个属性，有的话，就返回这个属性
 2. 如果对象本身上面没有这个属性，就到它的原型上面去查找，如果有，就返回
@@ -9893,84 +11292,186 @@ baz = "qux";
 
 
 
-## 164.如何避免重绘或者重排？
 
-答案：
+## 90. JavaScript 中删除数组元素与 length 属性的关系
 
-1. 分离读写操作
+**结论**
+
+**使用 `delete` 操作符删除数组元素时，数组的 `length` 属性不会自动减 1**。这是因为 `delete` 操作符的工作机制导致的特殊行为。
+
+### 详细解释
+
+#### 1. `delete` 操作符的行为
+
+```JavaScript
+const arr = ['a', 'b', 'c'];
+delete arr[1];
+
+console.log(arr);        // ['a', empty, 'c']
+console.log(arr.length); // 3 (长度不变！)
+console.log(arr[1]);     // undefined
 ```
-var curLeft=div.offsetLeft;
-var curTop=div.offsetTop;
-div.style.left=curLeft+1+'px';
-div.style.top=curTop+1+'px';
+
+- `delete` 只是将指定索引的值设置为 `empty`（不是 `undefined`！）
+- 数组结构本身和 `length` 属性保持不变
+- 被删除的位置会变成"空位"(hole)，不是常规的 `undefined` 值
+
+#### 2. 与 `undefined` 赋值的区别
+
+```JavaScript
+const arr1 = ['a', , 'c'];  // 中间有空位
+const arr2 = ['a', undefined, 'c'];
+
+console.log(1 in arr1); // false (空位不存在)
+console.log(1 in arr2); // true (存在且值为undefined)
 ```
-2. 样式集中改变
+
+#### 3. 正确缩短数组的方法
+
+| 方法                | 示例               | 是否影响 length | 空位处理       |
+| ------------------- | ------------------ | --------------- | -------------- |
+| **length 属性赋值** | `arr.length = 2`   | ✅ 减少          | 截断尾部       |
+| **splice()**        | `arr.splice(1, 1)` | ✅ 减少          | 完全删除元素   |
+| **pop()**           | `arr.pop()`        | ✅ 减少          | 仅删除最后一个 |
+| **shift()**         | `arr.shift()`      | ✅ 减少          | 仅删除第一个   |
+| **delete 操作符**   | `delete arr`       | ❌ 不变          | 创建空位       |
+
+#### 4. 空位数组的特殊行为
+
+```JavaScript
+const sparseArray = [1, , 3]; // 中间有空位
+
+// 注意这些方法的差异
+sparseArray.map(x => x * 2);    // [2, empty, 6] (跳过空位)
+sparseArray.forEach(console.log); // 1, 3 (跳过空位)
+Object.keys(sparseArray);       // ['0', '2'] (跳过空位索引)
+
+// 检测空位的方法
+console.log(sparseArray.hasOwnProperty(1)); // false
 ```
-可以添加一个类，样式都在类中改变
+
+### 最佳实践建议
+
+1. **避免使用 `delete` 删除数组元素**：
+   - 会导致稀疏数组，引发意外行为
+   - 影响 `map`、`forEach` 等数组方法的正确执行
+2. **优先使用 `splice()`**：
+
+```JavaScript
+const arr = ['a', 'b', 'c'];
+arr.splice(1, 1); // 删除索引1的元素
+console.log(arr); // ['a', 'c'] (length变为2)
 ```
-3. 可以使用absolute脱离文档流。
 
-4. 使用 display:none ，不使用 visibility，也不要改变 它的 z-index
+3. **处理可能存在的空位**：
 
-5. 能用css3实现的就用css3实现。
+```JavaScript
+// 使用 filter 清除空位
+const cleanArray = [...arr].filter(() => true);
 
-
-
-## 165.说下函数式编程的理解
-
-答案：
-
-1.什么是函数式编程？
-
-函数式编程是种编程方式，它将电脑运算视为函数的计算。函数编程语言最重要的基础是λ演算（lambda calculus），而且λ演算的函数可以接受函数当作输入（参数）和输出（返回值）。
-
-2.优势特点
-
-代码简洁、开发快速、命令式实现、函数式实现、易于理解，抽象度高、没有副作用，变量无状态
-
-
-
-## 166.forEach，map和filter的区别（哔哩哔哩）
-
-答案：
-
-* filter函数，顾名思义，它是一个用来过滤的函数。他可以通过指定的过滤条件，删选出数组中符合条件的元素，并返回。
-
-* map函数，这个函数与filter函数不同之处在于，filter()把传入的函数依次作用于每个元素，然后根据返回值是true还是false决定保留还是丢弃该元素。而map则会返回传入函数return的值。
-
-* forEach函数，可以实现对数组的遍历，和map函数与filter函数不同的是它没有返回值。
-
-
-
-## 167.delete 数组的 item，数组的 length 是否会 -1
-
-答案：不会
-
-解析：
-
-### delete Array[index]
-
-```js
-const arr = ['a', 'b', 'c', 'd', 'e'];
-let result = delete arr[1];
-console.log(result); // true;
-console.log(arr); // ['a', undefined, 'c', 'd', 'e']
-console.log(arr.length); // 5
-console.log(arr[1]); // undefined
+// 或者使用 ES6 的 fill
+const noHolesArray = Array(3).fill().map((_, i) => i);
 ```
-使用delete删除元素，返回true和false,true表示删除成功，false表示删除失败。使用delete删除数组元素并不会改变原数组的长度，只是把被删除元素的值变为undefined。
+
+3. **性能考虑**
+
+- 大型数组频繁删除时，`splice` 可能较慢（需要重新索引）
+- 考虑使用 `Set` 或 `Map` 等数据结构替代
+
+理解这种差异对于编写可靠的数组操作代码非常重要，特别是在处理算法或数据转换时。
 
 
 
-## 168.给出 ['1', '3', '10'].map(parseInt) 执行结果
+## 91. `['1', '3', '10'].map(parseInt)` 的执行结果解析
 
-答案：[1, NaN, 2]
+### 执行结果
+
+```JavaScript
+['1', '3', '10'].map(parseInt); 
+// 实际输出: [1, NaN, 2]
+```
+
+### 为什么会得到这个结果？
+
+#### 1. `map` 方法的回调参数
+
+`map` 的回调函数会自动传入三个参数：
+
+```JavaScript
+array.map((currentValue, index, array) => {
+  // ...
+});
+```
+
+#### 2. `parseInt` 函数的参数
+
+`parseInt` 接收两个参数：
+
+```JavaScript
+parseInt(string, radix)
+```
+
+- `string`: 要解析的字符串
+- `radix`: 进制基数（2-36），**如果为0或未提供，则可能被当作10进制或自动判断**
+
+#### 3. 实际执行过程
+
+每次迭代相当于：
+
+```JavaScript
+parseInt('1', 0);  // 1 (radix=0视为10进制)
+parseInt('3', 1);  // NaN (radix=1无效)
+parseInt('10', 2); // 2 (二进制"10"=十进制2)
+```
+
+### 分步解析
+
+| 迭代 | 当前值 | 索引 | 相当于调用          | 结果 | 原因                            |
+| ---- | ------ | ---- | ------------------- | ---- | ------------------------------- |
+| 1    | '1'    | 0    | `parseInt('1', 0)`  | 1    | radix=0时默认按10进制处理       |
+| 2    | '3'    | 1    | `parseInt('3', 1)`  | NaN  | radix=1是无效进制（必须是2-36） |
+| 3    | '10'   | 2    | `parseInt('10', 2)` | 2    | 二进制"10"等于十进制2           |
+
+### 如何正确实现预期效果
+
+#### 预期行为（将字符串数组转为数字数组）
+
+```JavaScript
+['1', '3', '10'].map(Number); 
+// 正确输出: [1, 3, 10]
+
+// 或明确指定基数
+['1', '3', '10'].map(str => parseInt(str, 10));
+// 输出: [1, 3, 10]
+```
+
+#### 其他安全转换方式
+
+```JavaScript
+// 使用一元加号运算符
+['1', '3', '10'].map(str => +str); // [1, 3, 10]
+
+// 使用Number构造函数
+['1', '3', '10'].map(Number); // [1, 3, 10]
+
+// 使用parseFloat（适用于带小数点的数字）
+['1.5', '3.2'].map(parseFloat); // [1.5, 3.2]
+```
+
+### 关键知识点总结
+
+1. **`map` 会传递三个参数**给回调函数，而 `parseInt` 恰好接收两个参数
+2. **进制基数规则**
+   - radix=0：通常当作10进制（浏览器实现）
+   - radix<2或>36：返回NaN
+   - 未提供：根据字符串前缀判断（0x=16进制，0=8进制等）
+3. **安全转换**应该明确指定进制或使用更合适的转换方法
+
+这个例子是JavaScript中著名的"陷阱"之一，展示了隐式参数传递可能导致的意外行为。理解这种机制有助于避免在实际开发中出现类似问题。
 
 
 
-## 169.执行上下文
-
-答案：
+## 92. 执行上下文
 
 执行上下文可以简单理解为一个对象:
 
@@ -9996,131 +11497,318 @@ console.log(arr[1]); // undefined
 
 
 
+## 93. JavaScript 数组降维方法大全
 
-## 170.怎样理解setTimeout 执行误差
+数组降维（扁平化）是将多维数组转换为一维数组的过程，以下是各种实现方法的详细说明：
 
-答案：定时器是属于 宏任务(macrotask) 。如果当前 执行栈 所花费的时间大于 定时器 时间，那么定时器的回调在 宏任务(macrotask) 里，来不及去调用，所有这个时间会有误差。
+### 一、ES2019 标准方法：flat()
 
-解析：[参考](https://juejin.im/post/5cfc9d266fb9a07edb3939ea?utm_medium=hao.caibaojian.com&utm_source=hao.caibaojian.com)
+```JavaScript
+const arr = [1, [2, [3, [4]]]];
 
+// 默认只降维1层
+arr.flat(); // [1, 2, [3, [4]]]
 
+// 指定降维层级
+arr.flat(2); // [1, 2, 3, [4]]
 
-## 171.数组降维
-
-答案：
-
-1.数组字符串化
-```js
-let arr = [[222, 333, 444], [55, 66, 77], {a: 1} ]
-  arr += '';
-  arr = arr.split(',');
-
-console.log(arr); // ["222", "333", "444", "55", "66", "77", "[object Object]"]
+// 无限层级降维
+arr.flat(Infinity); // [1, 2, 3, 4]
 ```
-这也是比较简单的一种方式，从以上例子中也能看到问题，所有的元素会转换为字符串，且元素为对象类型会被转换为 "[object Object]" ，对于同一种类型数字或字符串还是可以的。
 
-2.利用apply和concat转换
-```js
-function reduceDimension(arr) {
-    return Array.prototype.concat.apply([], arr);
+### 二、替代方案（兼容旧环境）
+
+#### 1. reduce + concat 递归
+
+```JavaScript
+function flattenDeep(arr) {
+  return arr.reduce((acc, val) => 
+    Array.isArray(val) 
+      ? acc.concat(flattenDeep(val)) 
+      : acc.concat(val), 
+    []);
 }
 
-console.log(reduceDimension([[123], 4, [7, 8],[9, [111]]]));// [123, 4, 7, 8, 9, Array(1)]
+flattenDeep([1, [2, [3]]]); // [1, 2, 3]
 ```
 
-3.递归
-```js
-function reduceDimension(arr){
-    let ret = [];
-    let toArr = function(arr){
-        arr.forEach(function(item){
-            item instanceof Array ? toArr(item) : ret.push(item);
-        });
+#### 2. 迭代展开法
+
+```JavaScript
+function flatten(arr) {
+  while (arr.some(Array.isArray)) {
+    arr = [].concat(...arr);
+  }
+  return arr;
+}
+
+flatten([1, [2, ]]); // [1, 2, 3]
+```
+
+#### 3. toString 方法（仅数字数组）
+
+```JavaScript
+[1, [2, [3]]].toString().split(',').map(Number);
+// [1, 2, 3]
+```
+
+### 三、性能对比
+
+| 方法             | 时间复杂度 | 适用场景               |
+| ---------------- | ---------- | ---------------------- |
+| `flat(Infinity)` | O(n)       | ES6+环境，代码简洁     |
+| reduce递归       | O(n)       | 兼容性好，适合复杂结构 |
+| 迭代展开         | O(n^2)     | 中等深度数组           |
+| toString         | O(n)       | 纯数字/字符串简单数组  |
+
+### 四、特殊需求处理
+
+#### 1. 保留空位
+
+```JavaScript
+[1, , [2, , 3]].flat(); // [1, 2, 3] (自动移除空位)
+
+// 如需保留空位
+function flattenKeepEmpty(arr) {
+  return arr.reduce((acc, val) => {
+    if (Array.isArray(val)) {
+      const flattened = flattenKeepEmpty(val);
+      return acc.length ? acc.concat(flattened) : flattened;
     }
-    toArr(arr);
-    return ret;
+    return acc.concat(val);
+  }, []);
 }
 ```
 
-4.Array​.prototype​.flat()
-```js
-var arr1 = [1, 2, [3, 4]];
-arr1.flat();
-// [1, 2, 3, 4]
+#### 2. 控制降维深度
 
-var arr2 = [1, 2, [3, 4, [5, 6]]];
-arr2.flat();
-// [1, 2, 3, 4, [5, 6]]
-
-var arr3 = [1, 2, [3, 4, [5, 6]]];
-arr3.flat(2);
-// [1, 2, 3, 4, 5, 6]
-
-//使用 Infinity 作为深度，展开任意深度的嵌套数组
-arr3.flat(Infinity);
-// [1, 2, 3, 4, 5, 6]
-```
-
-5.使用 reduce、concat 和递归无限反嵌套多层嵌套的数组
-```js
-var arr1 = [1,2,3,[1,2,3,4, [2,3,4]]];
-
-function flattenDeep(arr1) {
-   return arr1.reduce((acc, val) => Array.isArray(val) ? acc.concat(flattenDeep(val)) : acc.concat(val), []);
+```JavaScript
+function flattenToDepth(arr, depth = 1) {
+  return depth > 0
+    ? arr.reduce((acc, val) => 
+        acc.concat(Array.isArray(val) 
+          ? flattenToDepth(val, depth - 1) 
+          : val), 
+      [])
+    : arr.slice();
 }
-flattenDeep(arr1);
-// [1, 2, 3, 1, 2, 3, 4, 2, 3, 4]
+
+flattenToDepth([1, [2, [3]]], 1); // [1, 2, ]
 ```
 
-解析：[參考](https://blog.csdn.net/xufeiayang/article/details/90111775)
+### 五、现代ES6+方案
+
+#### 1. 生成器实现
+
+```JavaScript
+function* flattenGenerator(arr) {
+  for (const item of arr) {
+    Array.isArray(item) 
+      ? yield* flattenGenerator(item) 
+      : yield item;
+  }
+}
+
+[...flattenGenerator([1, [2, [3]]])]; // [1, 2, 3]
+```
+
+#### 2. 使用 Array.prototype.flatMap
+
+```JavaScript
+// 单层降维
+[1, [2], 3].flatMap(x => x); // [1, 2, 3]
+```
+
+### 六、TypeScript 类型安全版本
+
+```TypeScript
+function flattenDeep<T>(arr: (T | T[])[]): T[] {
+  return arr.reduce<T[]>(
+    (acc, val) => acc.concat(Array.isArray(val) ? flattenDeep(val) : val),
+    []
+  );
+}
+```
+
+### 最佳实践建议
+
+1. **现代项目**：优先使用 `arr.flat(Infinity)`
+2. **旧环境**：使用 reduce 递归方案
+3. **性能敏感**：对超大型数组使用迭代展开法
+4. **特殊需求**：根据需要选择保留空位或控制深度的版本
+
+选择方法时应考虑：浏览器兼容性、数组大小、维度深度和是否需要保留空位等因素。
 
 
 
-## 172.为什么for循环嵌套顺序会影响性能？
+## 94. for循环嵌套顺序对性能的影响
 
-答案：把循环次数大的放在内层，执行时间会比较短
+for循环嵌套顺序之所以会影响性能，主要与计算机的**内存访问模式**和**CPU缓存机制**密切相关。以下是详细分析：
 
-```js
-var t1 = new Date().getTime()
-for (let i = 0; i < 100; i++) {
-  for (let j = 0; j < 1000; j++) {
-    for (let k = 0; k < 10000; k++) {
+### 一、核心原因：缓存局部性（Cache Locality）
+
+#### 1. 内存访问模式差异
+
+```JavaScript
+// 顺序1：外层循环行，内层循环列（性能较好）
+for (let i = 0; i < rows; i++) {
+  for (let j = 0; j < cols; j++) {
+    matrix[i][j] = 0;
+  }
+}
+
+// 顺序2：外层循环列，内层循环行（性能较差）
+for (let j = 0; j < cols; j++) {
+  for (let i = 0; i < rows; i++) {
+    matrix[i][j] = 0;
+  }
+}
+```
+
+- **行优先访问**（顺序1）：
+  - 连续访问内存地址（现代语言多采用行优先存储）
+  - 缓存命中率高（CPU缓存预取有效）
+- **列优先访问**（顺序2）：
+  - 跳跃式访问内存（跨行访问）
+  - 缓存命中率低（频繁缓存未命中）
+
+#### 2. CPU缓存机制
+
+- **缓存行（Cache Line）**：CPU每次从内存加载64字节的连续数据
+- **空间局部性**：访问一个内存位置后，很可能访问附近位置
+- **预取机制**：CPU会预测并预加载后续可能访问的内存
+
+### 二、性能差异量化
+
+假设处理 1024x1024 的二维数组：
+
+| 循环顺序 | 缓存命中率 | 执行时间(示例) | 内存访问模式 |
+| -------- | ---------- | -------------- | ------------ |
+| 行优先   | ~90%       | 50ms           | 连续地址     |
+| 列优先   | ~10%       | 500ms          | 跳跃地址     |
+
+### 三、不同语言中的表现
+
+#### 1. C/C++/Java/JavaScript
+
+- 默认行优先存储
+- 行优先循环快5-10倍
+
+#### 2. Fortran/Matlab
+
+- 默认列优先存储
+- 列优先循环更快
+
+### 四、多维数组的优化原则
+
+#### 1. 基本原则
+
+```JavaScript
+// 好的写法：最右索引变化最快
+for (let i = 0; i < dim1; i++) {
+  for (let j = 0; j < dim2; j++) {
+    for (let k = 0; k < dim3; k++) {
+      arr[i][j][k] = 0;
     }
   }
 }
-var t2 = new Date().getTime()
-console.log('first time', t2 - t1)
 ```
-|   变量   |   实例化(次数)   |   初始化(次数)   |   比较(次数)   |   自增(次数)   |
-| -------- | --------------- | --------------- | ------------- | ------------- |
-|    i     |        1        | 1            | 10               |    10    |
-|    j     |       10        | 10           | 10 * 100         |   10 * 100   |
-|    k     | 	  10 * 100     | 10 * 100     | 10 * 100 * 1000	 |  10 * 100 * 1000   |
-```js
-for (let i = 0; i < 10000; i++) {
-  for (let j = 0; j < 1000; j++) {
-    for (let k = 0; k < 100; k++) {
 
-    }
+#### 2. 特殊数据结构
+
+```JavaScript
+// 扁平化数组手动计算索引
+const matrix = new Float64Array(rows * cols);
+for (let i = 0; i < rows; i++) {
+  for (let j = 0; j < cols; j++) {
+    matrix[i * cols + j] = 0; // 行优先计算
   }
 }
-var t3 = new Date().getTime()
-console.log('two time', t3 - t2)
 ```
-|   变量   |   实例化(次数)   |   初始化(次数)   |   比较(次数)   |   自增(次数)   |
-| -------- | --------------- | --------------- | ------------- | ------------- |
-|    i     |        1        | 1            | 1000               |    1000    |
-|    j     |       1000        | 1000           | 1000 * 100       |   1000 * 100   |
-|    k     | 	  1000 * 100     | 1000 * 100     | 1000 * 100 * 10		 |  1000 * 100 * 10	   |
 
-解析：[參考](https://blog.csdn.net/weixin_42182143/article/details/98682537)
+### 五、现代JavaScript引擎优化
 
+1. **JIT优化**：
+   - V8等引擎会优化连续内存访问
+   - 但对跳跃式访问优化有限
+2. **TypedArray优势**：
 
-
-## 173.轮播图实现原理
-
-答案：
+```JavaScript
+// 使用TypedArray比普通数组性能更好
+const matrix = new Float64Array(rows * cols);
 ```
+
+3. **WebAssembly场景**
+
+- 内存布局更可控
+- 可手动优化循环顺序
+
+### 六、实际应用建议
+
+1. **数据布局设计**：
+   - 优先考虑内存连续访问模式
+   - 多维数据尽量扁平化存储
+2. **性能敏感代码**：
+
+```JavaScript
+// 性能关键代码可测试两种顺序
+function processMatrix(matrix) {
+ const [rows, cols] = [matrix.length, matrix[0].length];
+
+ // 测试哪种顺序更快
+ if (shouldUseRowMajor(rows, cols)) {
+   rowFirstProcess(matrix);
+ } else {
+   colFirstProcess(matrix);
+ }
+}
+```
+
+3. **缓存友好算法**：
+
+```JavaScript
+   // 分块处理大数据集
+   const blockSize = 64; // 匹配缓存行大小
+   for (let bi = 0; bi < rows; bi += blockSize) {
+     for (let bj = 0; bj < cols; bj += blockSize) {
+       // 处理小块数据
+       for (let i = bi; i < Math.min(bi + blockSize, rows); i++) {
+         for (let j = bj; j < Math.min(bj + blockSize, cols); j++) {
+           matrix[i][j] = 0;
+         }
+       }
+     }
+   }
+```
+
+理解循环顺序对性能的影响，对于编写高性能JavaScript代码（如图像处理、矩阵运算、游戏开发等领域）至关重要。在大多数情况下，遵循"最右索引变化最快"的原则能获得最佳性能。
+
+
+
+## 96. 轮播图组件设计与实现原理
+
+### 一、轮播图核心原理
+
+#### 1. 基本工作原理
+
+轮播图(Carousel)的核心是通过定时或用户交互**动态切换显示内容**，主要包含以下技术要点：
+
+- **视觉原理**：利用CSS的`overflow: hidden`创建视窗，内部元素横向/纵向排列
+- **切换机制**：通过改变元素位置（transform/left）或显示状态（display/opacity）实现过渡
+- **控制方式**：定时自动切换 + 用户手动切换（箭头/指示器）
+
+#### 2. 关键实现方案对比
+
+| 方案              | 优点                | 缺点             |
+| ----------------- | ------------------- | ---------------- |
+| **transform位移** | 性能最佳（GPU加速） | 兼容性需考虑前缀 |
+| **absolute定位**  | 兼容性好            | 性能稍差         |
+| **display切换**   | 实现简单            | 无过渡动画效果   |
+| **CSS动画**       | 动画流畅            | 控制复杂度高     |
+
+#### 3. 原理步骤
+
+```js
 1.图片移动实现原理：
 利用浮动将所有所有照片依次排成一行，给这一长串图片添加一个父级的遮罩，每次只显示一张图，其余的都隐藏起来。对图片添加绝对定位，通过控制left属性，实现照片的移动。
 
@@ -10154,82 +11842,703 @@ console.log('two time', t3 - t2)
 10.点击触发跳转的原理：
 类似于左右点击触发，只是这是将全局页面标记，直接修改，后执行动画。需要避免与自动轮播定时器的冲突。
 ```
-解析：[参考](https://blog.csdn.net/konghouy/article/details/81407492)
 
 
 
-## 174.如何设计一个轮播图组件
+### 二、组件设计实现
 
-答案：
+#### 1. HTML结构
 
-1. 轮播图功能实现
-2. 抽出需要传入的变量，如：背景图，文案描述等
-
-
-
-## 175.script 引入方式
-
-答案：
-
-* html 静态`<script>`引入
-* js 动态插入`<script>`
-* `<script defer>`: 延迟加载，元素解析完成后执行
-* `<script async>`: 异步加载，但执行时会阻塞元素渲染
-
-
-
-## 176.数组中的forEach和map的区别
-
-答案：
-
-
-
-## 177.for in和for of的区别
-
-答案：
-
-
-
-## 178.typeof 与 instanceof 区别
-
-答案：
-
-
-
-## 179.微任务和宏任务
-
-答案：
-```js
-/*
-* 宏任务
-*   分类： setTimeout setInterval requrestAnimationFrame
-*   1. 宏任务所处的队列就是宏任务队列
-*   2. 第一个宏任务队列中只有一个任务： 执行主线程的js代码
-*   3. 宏任务队列可以有多个
-*   4. 当宏任务队列的中的任务全部执行完以后会查看是否有微任务队列如果有先执行微任务队列中的所有任务，如果没有就查看是否有宏任务队列
-*
-* 微任务
-*   分类： new Promise().then(回调) process.nextTick
-*   1. 微任务所处的队列就是微任务队列
-*   2. 只有一个微任务队列
-*   3. 在上一个宏任务队列执行完毕后如果有微任务队列就会执行微任务队列中的所有任务
-* */
-
-console.log('----------------- start -----------------');
-
-setTimeout(() => {
-  console.log('setTimeout');
-}, 0)
-
-new Promise((resolve, reject) =>{
-  for (var i = 0; i < 5; i++) {
-    console.log(i);
-  }
-  resolve();  // 修改promise实例对象的状态为成功的状态
-}).then(() => {
-  console.log('promise实例成功回调执行');
-})
-
-console.log('----------------- end -----------------');
+```HTML
+<div class="carousel">
+  <div class="carousel-container">
+    <!-- 实际项目通常用动态生成 -->
+    <div class="carousel-item active"><img src="1.jpg"></div>
+    <div class="carousel-item"><img src="2.jpg"></div>
+    <div class="carousel-item"><img src="3.jpg"></div>
+    
+    <!-- 克隆首尾元素实现无缝轮播 -->
+    <div class="carousel-item clone"><img src="1.jpg"></div>
+  </div>
+  
+  <!-- 导航控件 -->
+  <button class="carousel-prev">‹</button>
+  <button class="carousel-next">›</button>
+  <div class="carousel-dots">
+    <span class="dot active"></span>
+    <span class="dot"></span>
+    <span class="dot"></span>
+  </div>
+</div>
 ```
 
+#### 2. CSS样式核心
+
+```CSS
+.carousel {
+  position: relative;
+  overflow: hidden;
+  width: 800px;
+  height: 400px;
+}
+
+.carousel-container {
+  display: flex;
+  transition: transform 0.5s ease;
+  height: 100%;
+}
+
+.carousel-item {
+  min-width: 100%;
+  height: 100%;
+}
+
+/* 导航按钮样式 */
+.carousel-prev, .carousel-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+.carousel-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+```
+
+#### 3. JavaScript实现（现代ES6+）
+
+```JavaScript
+class Carousel {
+  constructor(selector, options = {}) {
+    this.container = document.querySelector(selector);
+    this.items = Array.from(this.container.querySelectorAll('.carousel-item'));
+    this.dots = Array.from(this.container.querySelectorAll('.dot'));
+    this.currentIndex = 0;
+    this.autoPlayInterval = null;
+    this.config = {
+      interval: 3000,
+      transition: 500,
+      ...options
+    };
+
+    this.init();
+  }
+
+  init() {
+    // 克隆首尾元素实现无缝轮播
+    this.cloneElements();
+    
+    // 事件绑定
+    this.bindEvents();
+    
+    // 自动播放
+    this.startAutoPlay();
+  }
+
+  cloneElements() {
+    const firstClone = this.items[0].cloneNode(true);
+    const lastClone = this.items[this.items.length - 1].cloneNode(true);
+    firstClone.classList.add('clone');
+    lastClone.classList.add('clone');
+    
+    this.container.querySelector('.carousel-container')
+      .appendChild(firstClone);
+    this.container.querySelector('.carousel-container')
+      .insertBefore(lastClone, this.items[0]);
+    
+    this.items = Array.from(this.container.querySelectorAll('.carousel-item'));
+    this.goTo(0); // 重置位置
+  }
+
+  bindEvents() {
+    // 箭头按钮
+    this.container.querySelector('.carousel-prev')
+      .addEventListener('click', () => this.prev());
+    this.container.querySelector('.carousel-next')
+      .addEventListener('click', () => this.next());
+    
+    // 指示器
+    this.dots.forEach((dot, index) => {
+      dot.addEventListener('click', () => this.goTo(index));
+    });
+    
+    // 鼠标悬停暂停
+    this.container.addEventListener('mouseenter', () => this.pause());
+    this.container.addEventListener('mouseleave', () => this.startAutoPlay());
+    
+    // 触摸事件（移动端支持）
+    this.setupTouchEvents();
+  }
+
+  setupTouchEvents() {
+    let startX, moveX;
+    const container = this.container.querySelector('.carousel-container');
+    
+    container.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      this.pause();
+    });
+    
+    container.addEventListener('touchmove', (e) => {
+      moveX = e.touches[0].clientX;
+      const diff = moveX - startX;
+      // 实时跟随手指移动
+      this.setTranslateX(-this.currentIndex * 100 + diff / 10);
+    });
+    
+    container.addEventListener('touchend', (e) => {
+      const diff = moveX - startX;
+      if (Math.abs(diff) > 50) {
+        diff > 0 ? this.prev() : this.next();
+      } else {
+        this.goTo(this.currentIndex);
+      }
+      this.startAutoPlay();
+    });
+  }
+
+  goTo(index) {
+    this.currentIndex = index;
+    this.setTranslateX(-(index + 1) * 100);
+    this.updateDots();
+  }
+
+  next() {
+    if (this.isAnimating) return;
+    this.isAnimating = true;
+    
+    this.currentIndex++;
+    this.setTranslateX(-(this.currentIndex + 1) * 100);
+    this.updateDots();
+    
+    // 检查是否到达克隆项
+    setTimeout(() => {
+      if (this.currentIndex >= this.items.length - 2) {
+        this.currentIndex = 0;
+        this.setTranslateX(-(this.currentIndex + 1) * 100, false);
+      }
+      this.isAnimating = false;
+    }, this.config.transition);
+  }
+
+  prev() {
+    if (this.isAnimating) return;
+    this.isAnimating = true;
+    
+    this.currentIndex--;
+    this.setTranslateX(-(this.currentIndex + 1) * 100);
+    this.updateDots();
+    
+    // 检查是否到达克隆项
+    setTimeout(() => {
+      if (this.currentIndex < 0) {
+        this.currentIndex = this.items.length - 3;
+        this.setTranslateX(-(this.currentIndex + 1) * 100, false);
+      }
+      this.isAnimating = false;
+    }, this.config.transition);
+  }
+
+  setTranslateX(percent, animate = true) {
+    const container = this.container.querySelector('.carousel-container');
+    container.style.transition = animate ? `transform ${this.config.transition}ms ease` : 'none';
+    container.style.transform = `translateX(${percent}%)`;
+  }
+
+  updateDots() {
+    const activeDotIndex = this.currentIndex % (this.items.length - 2);
+    this.dots.forEach((dot, index) => {
+      dot.classList.toggle('active', index === activeDotIndex);
+    });
+  }
+
+  startAutoPlay() {
+    this.pause();
+    this.autoPlayInterval = setInterval(() => this.next(), this.config.interval);
+  }
+
+  pause() {
+    clearInterval(this.autoPlayInterval);
+  }
+}
+
+// 使用示例
+new Carousel('.carousel', {
+  interval: 5000,
+  transition: 600
+});
+```
+
+### 三、高级优化方案
+
+#### 1. 性能优化技巧
+
+- **硬件加速**：使用`will-change: transform`提示浏览器优化
+- **图片懒加载**：只加载当前和相邻的图片
+- **IntersectionObserver**：非激活轮播暂停渲染
+
+#### 2. 无缝轮播实现
+
+```JavaScript
+// 在首尾添加克隆元素
+// 当滚动到克隆元素时无动画跳转到真实元素
+if (this.currentIndex >= this.items.length - 2) {
+  this.currentIndex = 0;
+  this.setTranslateX(-(this.currentIndex + 1) * 100, false);
+}
+```
+
+#### 3. 响应式设计
+
+```CSS
+/* 根据不同屏幕尺寸调整 */
+@media (max-width: 768px) {
+  .carousel {
+    height: 300px;
+  }
+}
+```
+
+#### 4. 可访问性增强
+
+```HTML
+<div role="region" aria-label="图片轮播">
+  <ul aria-live="polite">
+    <!-- 轮播项 -->
+  </ul>
+  <button aria-label="上一张">‹</button>
+  <button aria-label="下一张">›</button>
+</div>
+```
+
+### 四、现代实现方案
+
+#### 1. 使用CSS Scroll Snap
+
+```CSS
+.carousel-container {
+  scroll-snap-type: x mandatory;
+  overflow-x: auto;
+  display: flex;
+}
+
+.carousel-item {
+  scroll-snap-align: start;
+}
+```
+
+#### 2. 基于Web Components
+
+```JavaScript
+class CarouselElement extends HTMLElement {
+  // 实现自定义元素
+}
+customElements.define('web-carousel', CarouselElement);
+```
+
+#### 3. 结合框架实现
+
+**React示例**：
+
+```Jsx
+function Carousel({ children, interval = 3000 }) {
+  const [current, setCurrent] = useState(0);
+  const length = React.Children.count(children);
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent(prev => (prev + 1) % length);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [length, interval]);
+
+  return (
+    <div className="carousel">
+      <div className="carousel-container" style={{
+        transform: `translateX(-${current * 100}%)`,
+        transition: 'transform 0.5s ease'
+      }}>
+        {React.Children.map(children, (child) => (
+          <div className="carousel-item">{child}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+### 五、功能扩展方向
+
+1. **缩略图导航**：显示小图预览并支持点击切换
+2. **视频支持**：轮播项包含视频时自动暂停轮播
+3. **3D效果**：添加透视变换实现立体轮播
+4. **自适应高度**：根据内容动态调整容器高度
+5. **预加载机制**：提前加载后续图片
+
+轮播图实现的关键在于平衡功能丰富性和性能表现，现代浏览器中推荐优先使用CSS transform方案，并考虑添加无缝循环、触摸支持和可访问性等增强特性。
+
+[参考内容](https://blog.csdn.net/konghouy/article/details/81407492)
+
+
+
+## 95. 理解 setTimeout 的执行误差
+
+### 一、setTimeout 的执行误差本质
+
+setTimeout 的延迟执行时间**不是精确保证的**，而是**最小延迟时间**。这是因为 JavaScript 的单线程事件循环机制导致的必然结果。
+
+### 二、误差产生的原因
+
+#### 1. 事件循环机制限制
+
+```JavaScript
+setTimeout(() => console.log('执行'), 1000);
+// 实际执行时间 ≥1000ms
+```
+
+- JavaScript 是单线程语言
+- 定时器回调必须等待调用栈清空才能执行
+- 当前任务阻塞时，定时器回调会被延迟
+
+#### 2. 嵌套定时器的累积误差
+
+```JavaScript
+function recursiveTimer() {
+  setTimeout(() => {
+    console.log(Date.now());
+    recursiveTimer();
+  }, 1000);
+}
+// 每次调用都会有几毫秒的累积延迟
+```
+
+#### 3. 浏览器优化策略
+
+- 后台标签页的定时器会被降频（通常延迟≥1000ms）
+- 移动设备为省电可能延长定时器间隔
+
+### 三、误差量化分析
+
+#### 典型误差范围
+
+| 设定延迟   | 实际平均误差 |
+| ---------- | ------------ |
+| ≤100ms     | ±5-10ms      |
+| 100-1000ms | ±10-30ms     |
+| >1000ms    | ±50ms+       |
+
+#### 测量实际延迟
+
+```JavaScript
+const start = Date.now();
+setTimeout(() => {
+  const delay = Date.now() - start;
+  console.log(`设定: 100ms, 实际: ${delay}ms`);
+}, 100);
+```
+
+### 四、减少误差的方案
+
+#### 1. 性能优化方案
+
+```JavaScript
+// 使用高性能定时器（仅现代浏览器）
+requestAnimationFrame(() => {
+  // 适合动画场景，约16.7ms间隔
+});
+
+// Web Worker 中的定时器更精确
+const worker = new Worker('timer-worker.js');
+```
+
+#### 2. 动态补偿算法
+
+```JavaScript
+let expected = Date.now() + 100;
+const driftCorrection = () => {
+  const drift = Date.now() - expected;
+  console.log(`误差: ${drift}ms`);
+  expected += 100;
+  setTimeout(driftCorrection, Math.max(0, 100 - drift));
+};
+driftCorrection();
+```
+
+#### 3. 精确时间控制方案
+
+```JavaScript
+// 使用 AudioContext 获得高精度时间（±1ms）
+const ctx = new AudioContext();
+ctx.suspend().then(() => {
+  const start = ctx.currentTime;
+  ctx.resume();
+  ctx.onstatechange = () => {
+    if (ctx.currentTime - start >= 1.0) {
+      console.log('精确1秒到达');
+    }
+  };
+});
+```
+
+### 五、特殊场景处理
+
+#### 1. 长延时任务分片
+
+```JavaScript
+function chunkedTask() {
+  const chunk = () => {
+    // 执行部分工作
+    if (moreWork) {
+      setTimeout(chunk, 0); // 让出线程控制权
+    }
+  };
+  setTimeout(chunk, 0);
+}
+```
+
+#### 2. 零延迟定时器
+
+```JavaScript
+setTimeout(() => {
+  // 实际延迟通常为4-5ms（浏览器强制最小值）
+}, 0);
+```
+
+### 六、Node.js 环境差异
+
+```JavaScript
+// Node.js 的定时器精度更高
+const { setTimeout: nodeSetTimeout } = require('timers/promises');
+
+async function preciseTimer() {
+  await nodeSetTimeout(100); // 误差通常<1ms
+}
+```
+
+### 关键结论
+
+1. setTimeout 的延迟是**最小保证时间**而非精确时间
+2. 误差主要来源于**事件循环队列**的执行情况
+3. 对精度要求高的场景应使用：
+   - `requestAnimationFrame`（浏览器动画）
+   - `performance.now()` + 动态补偿
+   - Web Workers 或 WASM 计时器
+4. 长时间定时应定期校正误差
+
+理解这种特性对于开发动画、音视频应用、实时系统等对时间敏感的应用至关重要。
+
+
+
+## 97. 微任务(Microtask)与宏任务(Macrotask)及事件循环(Event Loop)详解
+
+### 一、核心概念关系图
+
+```
+ [调用栈]
+   ↑  
+| 执行上下文 |
+   ↓
+[事件循环] ← [任务队列]
+    ↑        ↖ 宏任务队列 (setTimeout, I/O等)
+    ↖ 微任务队列 (Promise, MutationObserver等)
+```
+
+### 二、任务类型分类
+
+#### 1. 宏任务(Macrotask/Task)
+
+| 类型                    | 浏览器 | Node.js |
+| ----------------------- | ------ | ------- |
+| `setTimeout`            | ✅      | ✅       |
+| `setInterval`           | ✅      | ✅       |
+| `setImmediate`          | ❌      | ✅       |
+| I/O操作                 | ✅      | ✅       |
+| UI渲染                  | ✅      | ❌       |
+| 事件回调                | ✅      | ✅       |
+| `requestAnimationFrame` | ✅      | ❌       |
+
+#### 2. 微任务(Microtask)
+
+| 类型                         | 浏览器 | Node.js |
+| ---------------------------- | ------ | ------- |
+| `Promise.then/catch/finally` | ✅      | ✅       |
+| `MutationObserver`           | ✅      | ❌       |
+| `process.nextTick`           | ❌      | ✅       |
+| `queueMicrotask`             | ✅      | ✅       |
+
+### 三、事件循环完整流程
+
+1. **执行全局同步代码**
+   - 遇到异步API将回调注册到相应队列
+2. **检查调用栈是否为空**
+   - 不为空 → 继续执行
+   - 为空 → 进入事件循环
+3. **事件循环单次Tick流程**：
+
+```
+1. 执行一个宏任务 (从宏任务队列)
+2. 执行所有微任务 (清空微任务队列)
+3. 必要时渲染UI (浏览器)
+4. 检查是否需要处理Web Worker消息
+```
+
+4. **重复循环**
+
+### 四、执行顺序示例分析
+
+```JavaScript
+console.log('1');
+
+setTimeout(() => console.log('2'), 0);
+
+Promise.resolve().then(() => {
+  console.log('3');
+  Promise.resolve().then(() => console.log('4'));
+});
+
+console.log('5');
+
+// 输出顺序: 1 → 5 → 3 → 4 → 2
+```
+
+#### 执行步骤解析：
+
+1. 执行同步代码：`1`, `5`
+2. 执行微任务队列：
+   - 第一个Promise回调：`3`
+   - 嵌套Promise回调：`4`
+3. 执行宏任务队列：`2`
+
+### 五、Node.js与浏览器差异
+
+#### 1. Node.js事件循环阶段
+
+```
+    ┌───────────────────────┐
+┌─>│        timers         │ (setTimeout/setInterval)
+│  └──────────┬────────────┘
+│  ┌──────────┴────────────┐
+│  │   pending callbacks   │ (I/O回调)
+│  └──────────┬────────────┘
+│  ┌──────────┴────────────┐
+│  │     idle, prepare     │ (内部使用)
+│  └──────────┬────────────┘
+│  ┌──────────┴────────────┐
+│  │        poll           │ (检索新I/O事件)
+│  └──────────┬────────────┘
+│  ┌──────────┴────────────┐
+│  │        check          │ (setImmediate)
+│  └──────────┬────────────┘
+│  ┌──────────┴────────────┐
+└──┤    close callbacks    │ (关闭事件回调)
+   └───────────────────────┘
+```
+
+#### 2. 关键差异点
+
+| 特性               | 浏览器         | Node.js          |
+| ------------------ | -------------- | ---------------- |
+| `process.nextTick` | ❌              | 最高优先级微任务 |
+| `setImmediate`     | ❌              | check阶段执行    |
+| UI渲染             | 有             | 无               |
+| 微任务执行时机     | 每个宏任务之后 | 各阶段之间       |
+
+### 六、优先级规则
+
+1. **同一队列内**：
+   - 宏任务：按入队顺序
+   - 微任务：按入队顺序
+2. **跨队列优先级**：
+
+```
+process.nextTick > Promise > setImmediate > setTimeout(0)
+```
+
+3. **混合场景示例**：
+
+```JavaScript
+setTimeout(() => console.log('timeout'), 0);
+setImmediate(() => console.log('immediate'));
+Promise.resolve().then(() => console.log('promise'));
+process.nextTick(() => console.log('nextTick'));
+
+// Node.js输出: nextTick → promise → timeout → immediate
+// 浏览器输出: promise → timeout (无immediate/nextTick)
+```
+
+### 七、常见面试题分析
+
+#### 题目1：
+
+```JavaScript
+console.log('1');
+
+setTimeout(() => {
+  console.log('2');
+  Promise.resolve().then(() => console.log('3'));
+}, 0);
+
+setTimeout(() => {
+  console.log('4');
+  Promise.resolve().then(() => console.log('5'));
+}, 0);
+
+Promise.resolve().then(() => console.log('6'));
+
+// 输出顺序？
+```
+
+**答案**：`1 → 6 → 2 → 3 → 4 → 5`
+
+#### 题目2：
+
+```JavaScript
+document.addEventListener('click', () => {
+  Promise.resolve().then(() => console.log('1'));
+  console.log('2');
+});
+
+document.addEventListener('click', () => {
+  Promise.resolve().then(() => console.log('3'));
+  console.log('4');
+});
+
+// 点击文档后的输出？
+```
+
+**答案**：`2 → 4 → 1 → 3` （每个事件回调是一个独立的宏任务）
+
+### 八、实践应用
+
+#### 1. 性能优化
+
+```JavaScript
+// 将耗时任务分解为微任务
+function processLargeTask() {
+  const chunk = data.shift();
+  processChunk(chunk);
+  
+  if (data.length > 0) {
+    // 使用微任务避免阻塞
+    Promise.resolve().then(processLargeTask);
+    // 比setTimeout(0)优先级更高
+  }
+}
+```
+
+#### 2. 控制执行顺序
+
+```JavaScript
+// 确保代码在渲染后执行
+function afterRender(callback) {
+  Promise.resolve().then(() => {
+    requestAnimationFrame(callback);
+  });
+}
+```
+
+理解微任务和宏任务的执行机制，对于编写高性能、无阻塞的JavaScript代码至关重要，特别是在处理异步流程控制和优化渲染性能方面。
