@@ -39,9 +39,28 @@ export default defineConfig({
         collapsed: false,
         base: '/pages/advanced/',
         items: [
-          { text: 'HTML进阶问题', link: 'html' },
-          { text: 'CSS进阶问题', link: 'css' },
-          { text: 'JavaScript进阶问题', link: 'javascript' },
+          { text: 'HTML进阶', link: 'html' },
+          { text: 'CSS进阶', link: 'css' },
+          { 
+            text: 'JavaScript进阶', 
+            link: 'index',
+            base: '/pages/advanced/javascript/',
+            collapsed: true,
+            items: [
+              { text: '闭包', link: 'closure' },
+              { text: 'Promise实现', link: 'promise' },
+            ]
+          },
+
+        ]
+      },
+
+      {
+        text: '经验篇',
+        collapsed: false,
+        base: '/pages/experience/',
+        items: [
+          { text: '虚拟滚动探索与封装', link: 'virtual-scroll' },
         ]
       }
     ],

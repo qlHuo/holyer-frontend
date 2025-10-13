@@ -1269,7 +1269,7 @@ div {
 
 Sass (Syntactically Awesome Style Sheets) 和 LESS (Leaner Style Sheets) 都是 **CSS 预处理器**，它们是 CSS 的超集，在 CSS 基础上增加了变量、嵌套、混合(mixin)、函数等编程特性，最终会编译成标准 CSS。
 
-```base
+```bash
 开发者编写 Sass/LESS → 预处理器编译 → 生成浏览器可读的 CSS
 ```
 
@@ -8272,8 +8272,8 @@ overflow: hidden;
 
 #### 1. 滚动事件处理
 
-```JavaScriptlet
-currentSlide = 0;
+```JavaScript
+let currentSlide = 0;
 const sections = document.querySelectorAll('.section');
 const totalSlides = sections.length;
 
