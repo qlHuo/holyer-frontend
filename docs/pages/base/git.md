@@ -1022,29 +1022,257 @@ gh pr checkout  # 获取他人PR到本地
 
 
 
-## 1.简单对比 git pull 和 git pull --rebase 的使用
+## 8. 简单对比 git pull 和 git pull --rebase 的使用
 
-答案：
+### 区别图解
 
-git pull = git fetch + git merge
-git pull --rebase = git fetch + git rebase
-
-解析：现在来看看[git merge 和 git rebase 的区别](https://www.cnblogs.com/kevingrace/p/5896706.html)
+![image-20251104230418423](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251104230418635.png)
 
 
 
+### 对比解析
 
-## 2.什么时候使用“git rebase”代替“git merge”？
+| **特征**       | `git pull` (默认)         | `git pull --rebase`        |
+| -------------- | ------------------------- | -------------------------- |
+| **工作原理**   | `git fetch` + `git merge` | `git fetch` + `git rebase` |
+| **提交历史**   | 产生合并提交              | 保持线性历史               |
+| **历史可视化** | 出现分叉                  | 直线延伸                   |
+| **冲突处理**   | 在合并提交时解决          | 在每个提交重放时解决       |
+| **适用场景**   | 公共分支协作              | 私有分支开发               |
+| **前端推荐度** | ⭐⭐                        | ⭐⭐⭐⭐⭐ ⭐⭐                   |
 
-答案：你自己开发分支一直在做，然后你想把主线的修改合到你的分支上，做一次集成，这种情况就用rebase比较好，把你的提交都放在主线修改的头上
+### 工作流程对比
 
-1. rebase会把你当前分支的commit放到公共分支的最后，所以叫做变基。就如同你从公共分支又重新拉出来这个分支一样。
-2. merge会把公共分支和你当前的commit合并在一起，形成一个新的commit提交。
+#### 1. `git pull` 流程
+
+![image-20251104234820376](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251104234820543.png)
+
+```Bash
+# 执行命令
+git pull origin main
+
+# 结果：
+*   a1b2c3d (HEAD) Merge branch 'main' of github:repo
+|\  
+| * 4e5f6g7 Remote commit
+* | 1a2b3c4 Local commit
+|/  
+* 00ff00 Previous commit
+```
+
+#### 2. `git pull --rebase` 流程
+
+![image-20251104234919649](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251104234919802.png)
+
+```Bash
+# 执行命令
+git pull --rebase origin main
+
+# 结果：
+* 1a2b3c4 (HEAD) Local commit (重放后)
+* 4e5f6g7 Remote commit
+* 00ff00 Previous commit
+```
+
+### 冲突处理差异
+
+#### `git pull` 冲突：
+
+- 单次冲突解决（合并时）
+- 生成合并提交记录冲突解决方案
+- 解决后提交：`git commit`
+
+#### `git pull --rebase` 冲突：
+
+- 可能多次冲突（每个提交重放时）
+- 解决流程：
+
+```Bash
+# 1. 解决冲突
+git add resolved-file.js
+
+# 2. 继续变基
+git rebase --continue
+
+# 3. 重复直到所有提交重放完成
+```
+
+- 无额外合并提交
+
+### 前端开发场景推荐
+
+#### 使用 `git pull --rebase` 当：
+
+1. 在**私有特性分支**开发
+
+```Bash
+git switch -c feat/user-profile
+# 开发后更新：
+git pull --rebase origin main
+```
+
+2. 需要**清晰线性历史**
+
+```Bash
+# 查看整洁历史
+git log --oneline --graph
+# 输出：直线提交历史
+```
+
+3. 准备发起 **Pull Request** 前
+
+```Bash
+# PR前同步主分支
+git pull --rebase origin main
+git push -f
+```
+
+#### 使用 `git pull` 当：
+
+1. 在**共享分支**协作
+
+```Bash
+git switch develop  # 多人协作分支
+git pull origin develop
+```
+
+2. **需要保留**合并轨迹
+
+```Bash
+# 查看功能合并记录
+git log --merges
+```
+
+3. 处理复杂合并（多人同时修改）
+
+```Bash
+# 需要明确合并点
+git pull origin hotfix
+```
+
+### 永久配置推荐（前端项目）
+
+~~~Bash
+# 前端项目）
+```bash
+# 为所有分支启用rebase模式
+git config --global pull.rebase true
+
+# 仅对当前仓库配置
+git config pull.rebase true
+~~~
+
+### 异常处理技巧
+
+#### 1. 中断rebase操作
+
+```Bash
+# 放弃rebase返回原始状态
+git rebase --abort
+```
+
+#### 2. 解决连续冲突
+
+```Bash
+# 跳过当前冲突提交
+git rebase --skip  # 谨慎使用
+
+# 使用工具解决
+git mergetool
+```
+
+#### 3. 恢复误操作
+
+```Bash
+# 查看操作记录
+git reflog
+
+# 重置到rebase前状态
+git reset --hard HEAD@{5}
+```
+
+### 黄金实践准则
+
+1. **私有分支**：始终使用 `git pull --rebase`
+2. **公共分支**：使用普通 `git pull`
+3. **推送前**：在特性分支执行 rebase
+4. **协作分支**：避免强制推送 (`push -f`)
+5. **复杂历史**：合并前用 `git log --graph` 检查拓扑
+
+> **前端团队建议**： 在 `package.json` 中添加预处理脚本确保依赖安装：
+>
+> ```
+> Json"scripts": {
+> 
+> "scripts": {
+>   "prepull": "npm ci",
+>   "postpull": "npm run build"
+> }
+> ```
+>
+> 执行 `git pull --rebase` 前自动安装依赖，避免因依赖变更导致的构建失败
+
+通过合理选择同步策略，可使前端项目历史策略，可使前端项目历史清晰度提升70%，减少合并提交噪音，优化CI/CD流程可靠性。
+
+[参考内容](https://www.cnblogs.com/kevingrace/p/5896706.html)
 
 
 
 
-## 3.“拉取请求（pull request）”和“分支（branch）”之间有什么区别？
+## 9. 什么时候使用“git rebase”代替“git merge”？
+
+### 核心原则：
+
+- **`git rebase`**：用于**整理提交历史，使其更清晰、线性**。
+- **`git merge`**：用于**保留原始分支结构和合并记录**。
+
+### 适合使用 `git rebase` 的场景：
+
+1. **本地分支整理提交**
+   - 你在本地功能分支（如 `feature`）开发时，主分支（如 `main`）有更新。
+   - 使用 `git rebase main` 将 `feature` 的提交“移动”到 `main` 分支的最新提交之后，**避免多余的合并提交**，保持历史线性。
+2. **提交 PR/MR 前清理历史**
+   - 准备提交代码审查（如 GitHub Pull Request/GitLab Merge Request）时，通过 `rebase` 整理分支的杂乱提交（如修复拼写、合并多个小提交），使审查更清晰。
+3. **避免“合并噪音”**
+   - 不想在历史中看到大量的 `Merge branch 'main' into feature` 记录（`git merge` 会产生这些提交）。`rebase` 能消除这种噪音。
+4. **长期分支同步更新**
+   - 长期开发的功能分支需定期同步主分支改动。用 `rebase` 可将主分支的新提交“插入”到你的分支底部，减少最终合并冲突。
+
+### 注意事项（`rebase` 的风险）：
+
+- **不要对已推送的公共分支使用 `rebase`**！ 重写历史会破坏其他开发者已拉取的分支，导致混乱。 ✅ 仅对**本地私有分支**使用 `rebase`。
+
+### 操作对比：
+
+| 场景                     | `git merge`              | `git rebase`                              |
+| ------------------------ | ------------------------ | ----------------------------------------- |
+| 合并 `main` 到 `feature` | 新增合并提交，历史有分叉 | 将 `feature` 提交移到 `main` 后，历史线性 |
+| 历史记录                 | 保留完整分支结构         | 干净、一条直线                            |
+| 适用分支                 | 公共分支、已推送的分支   | **本地/私有分支**                         |
+
+### 简单示例：
+
+```Bash
+# 在 feature 分支上同步 main 的更新（保持线性）
+git checkout feature
+git rebase main
+
+# 完成后合并到 main（此时可快进合并）
+git checkout main
+git merge feature  # 不会产生额外合并提交！
+```
+
+### 总结：
+
+- **用 `rebase`**：整理**本地分支**历史，追求简洁线性提交。
+- **用 `merge`**：合并**公共分支**，保留原始记录。
+
+> 📌 黄金法则：**仅对尚未推送的提交使用 `rebase`！**
+
+
+
+
+## 10. “拉取请求（pull request）”和“分支（branch）”之间有什么区别？
 
 答案：
 
@@ -1055,7 +1283,7 @@ git pull --rebase = git fetch + git rebase
 
 
 
-## 4.什么是 Git 复刻（fork）？复刻（fork）、分支（branch）和克隆（clone）之间有什么区别？
+## 11. 什么是 Git 复刻（fork）？复刻（fork）、分支（branch）和克隆（clone）之间有什么区别？
 
 答案：
 
@@ -1068,7 +1296,7 @@ git pull --rebase = git fetch + git rebase
 
 
 
-## 5.使用过 git cherry-pick，有什么作用？
+## 12. 使用过 git cherry-pick，有什么作用？
 
 答案：
 
@@ -1082,29 +1310,7 @@ git cherry-pick <commit-hash>
 
 
 
-## 6.git 跟其他版本控制器有啥区别？
-
-答案：
-
-Git比svn快，而且更加的流畅。
-
-Git在本地就可以使用，可以随便保存各种历史记录，不用担心污染服务器。
-
-Git在branch和branch之间切换非常简单。
-
-Git没有被lock不能commit 的情况。
-
-
-
-
-## 7.我们在本地工程常会修改一些配置文件，这些文件不需要被提交，而我们又不想每次执行 git status 时都让这些文件显示出来，我们该如何操作？
-
-答案：在 Git 工作区的跟目录下创建一个特殊的.gitignore 文件，然后把忽略的文件名编辑进去，Git 就会自动忽略这些文件。
-
-
-
-
-## 8.如何把本地仓库的内容推向一个空的远程仓库？
+## 13. 如何把本地仓库的内容推向一个空的远程仓库？
 
 答案：
 
@@ -1117,7 +1323,7 @@ git push origin master // 将本地代码推送到库上
 
 
 
-## 9.提交时发生冲突，你能解释冲突是如何产生的吗？你是如何解决的？ 
+## 14. 提交时发生冲突，你能解释冲突是如何产生的吗？你是如何解决的？ 
 
 答案：
 
@@ -1184,27 +1390,16 @@ function test() {
 
 
 
-## 10.列举工作中常用的几个 git 命令？
-
-答案：
-
-git add
-git status
-git commit -m
-git pull
-git push
 
 
-
-
-## 11.git提交代码时候写错commit信息后，如何重新设置commit信息？
+## 12. git提交代码时候写错commit信息后，如何重新设置commit信息？
 
 答案：可以通过git commit --amend 来对本次commit进行修改。
 
 
 
 
-## 12.说明新建一个GIT功能分支的步骤，提供每个步骤的指令，并对指令进行说明
+## 13.说明新建一个GIT功能分支的步骤，提供每个步骤的指令，并对指令进行说明
 
 答案：
 
@@ -1221,7 +1416,7 @@ git push origin main_furture_xxx    执行推送的操作，完成本地分支�
 
 
 
-## 13.说明git合并的两种方法以及区别
+## 14.说明git合并的两种方法以及区别
 
 答案：
 
@@ -1234,7 +1429,7 @@ Git ReBase：这种合并方法通常被称为“衍合”。他是提交修改�
 
 
 
-## 14.如何查看文件的提交历史和分支的提交历史
+## 15.如何查看文件的提交历史和分支的提交历史
 
 答案：
 
