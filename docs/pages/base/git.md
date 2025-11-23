@@ -2151,7 +2151,191 @@ git checkout <commit-hash>  # HEAD 直接指向提交（非分支）
 
 
 
-## 20. github actions 详解
+
+
+## 20. GitHub Actions 与 Workflows 详解及前端应用
+
+
+
+### 一、GitHub Actions 基础概念
+
+#### 1.1 什么是 GitHub Actions
+
+GitHub Actions 是 GitHub 提供的持续集成和持续交付（CI/CD）平台，允许开发者直接在 GitHub 仓库中创建、自定义和执行自动化工作流程。通过编写简单的配置文件，可实现诸如代码测试、构建、部署等任务的自动化。
+
+#### 1.2 名词解释
+
+- **Workflow（工作流）**：是一个可定制的自动化流程，由一个或多个按顺序执行的 jobs 组成。每个 workflow 由一个`.yaml`文件定义，存储在仓库的`.github/workflows`目录下。
+- **Job（作业）**：是 workflow 中的一个独立任务，在同一个运行器（runner）上执行一系列步骤（steps）。例如，一个作业可以是运行测试，另一个作业可以是构建前端项目。
+- **Step（步骤）**：是 job 中的单个操作，通常调用一个 action。
+- **Action（动作）**：是执行特定任务的最小单位，比如检出代码、设置 Node.js 环境、运行测试脚本等。GitHub Marketplace 上有大量公开的 actions 可供复用。
+
+## 二、Workflows 配置文件详解
+
+### 2.1 文件结构与语法
+
+Workflows 配置文件采用 YAML 语法。以下是一个简单的示例结构：
+
+```yaml
+name: My Frontend Workflow # 工作流名称
+on:
+  push:
+    branches:
+      - main # 监听main分支的推送事件
+jobs:
+  build-and-test: # 作业名称
+    runs-on: ubuntu-latest # 使用最新的Ubuntu运行器
+    steps:
+      - name: Checkout code # 步骤名称
+        uses: actions/checkout@v3 # 使用官方的检出代码action
+      - name: Setup Node.js
+        uses: actions/setup - node@v3
+        with:
+          node-version: '14' # 设置Node.js版本为14
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm test
+```
+
+### 2.2 on 字段 - 触发条件
+
+`on`字段定义了 workflow 何时触发。常见的触发事件包括`push`（推送代码时）、`pull_request`（创建或更新拉取请求时）、`schedule`（按计划定时触发）等。例如：
+
+```yaml
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    types: [opened, synchronize, reopened]
+  schedule:
+    - cron: '0 2 * * *' # 每天凌晨2点触发
+```
+
+### 2.3 jobs 字段 - 作业定义
+
+每个 job 包含以下关键部分：
+
+- **runs-on**：指定运行作业的环境，如`ubuntu-latest`、`windows-latest`、`macos-latest`等。
+- **steps**：定义作业执行的具体步骤，每个步骤可以是使用一个 action 或运行自定义脚本。
+
+## 三、前端开发中的应用场景
+
+### 3.1 代码测试自动化
+
+在前端项目中，自动化测试至关重要。通过 GitHub Actions 可在每次代码推送或拉取请求时自动运行测试。例如，对于一个使用 Jest 进行单元测试的 React 项目：
+
+```yaml
+name: React Unit Tests
+on:
+  push:
+    branches:
+      - main
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+      - name: Install dependencies
+        run: npm install
+      - name: Run Jest tests
+        run: npm test -- --coverage
+```
+
+### 3.2 项目构建与打包
+
+前端项目通常需要构建和打包。以 Vue 项目为例，可配置如下：
+
+```yaml
+name: Vue Build
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node - version: '14'
+      - name: Install dependencies
+        run: npm install
+      - name: Build Vue project
+        run: npm run build
+```
+
+### 3.3 部署到静态服务器（如 GitHub Pages）
+
+GitHub Pages 是托管静态网站的便捷方式。对于一个纯 HTML/CSS/JavaScript 项目，可这样配置部署到 GitHub Pages：
+
+```yaml
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-github-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir:./dist # 假设构建输出目录为dist
+```
+
+这里使用了`peaceiris/actions - github - pages`这个 action，它会将指定目录（`publish_dir`）的内容部署到 GitHub Pages。
+
+### 3.4 代码质量检查
+
+可集成 ESLint、Prettier 等工具进行代码质量检查。例如：
+
+```yaml
+name: Code Quality Check
+on:
+  push:
+    branches:
+      - main
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+      - name: Install dependencies
+        run: npm install
+      - name: Run ESLint
+        run: npm run lint
+      - name: Run Prettier
+        run: npm run prettier -- --check
+```
+
+## 四、注意事项
+
+- **环境一致性**：确保在 GitHub Actions 运行器上的环境与本地开发环境一致，特别是 Node.js 版本、依赖包版本等。可通过`actions/setup - node`等 actions 精确控制环境版本。
+- **安全与密钥管理**：涉及到部署密钥、API 密钥等敏感信息，应使用 GitHub 的 Secrets 功能进行安全存储，并在 workflow 中通过`${{ secrets.SECRET_NAME }}`引用，避免将密钥直接暴露在配置文件中。
+- **调试与日志查看**：GitHub Actions 提供详细的日志输出，可在仓库的 “Actions” 标签页中查看每个工作流、作业和步骤的执行日志，帮助排查问题。如果在运行自定义脚本时遇到问题，可通过添加`set -x`命令在脚本中开启调试模式，输出详细的执行信息。
+
+参考：
 
 [GitHub Actions 快速入门 - GitHub 文档](https://docs.github.com/zh/actions/get-started/quickstart)
 
+[Github Actions 超详细教程，看这一篇就够了！ - 知行小屋](https://blog.natuie.net/posts/2025/02/06/055518/)
