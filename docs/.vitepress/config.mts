@@ -51,6 +51,15 @@ export default defineConfig({
               { text: 'Promise实现', link: 'promise' },
             ]
           },
+          { 
+            text: 'Vuejs相关', 
+            base: '/pages/advanced/vue/',
+            collapsed: true,
+            items: [
+              { text: 'vue2', link: 'vue2' },
+              { text: 'vue3', link: 'vue3' },
+            ]
+          },
 
         ]
       },
