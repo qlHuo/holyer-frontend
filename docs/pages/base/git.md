@@ -2331,7 +2331,7 @@ jobs:
 ## 四、注意事项
 
 - **环境一致性**：确保在 GitHub Actions 运行器上的环境与本地开发环境一致，特别是 Node.js 版本、依赖包版本等。可通过`actions/setup - node`等 actions 精确控制环境版本。
-- **安全与密钥管理**：涉及到部署密钥、API 密钥等敏感信息，应使用 GitHub 的 Secrets 功能进行安全存储，并在 workflow 中通过`${{ secrets.SECRET_NAME }}`引用，避免将密钥直接暴露在配置文件中。
+- **安全与密钥管理**：涉及到部署密钥、API 密钥等敏感信息，应使用 GitHub 的 Secrets 功能进行安全存储，并在 workflow 中通过`secrets.SECRET_NAME`引用，避免将密钥直接暴露在配置文件中。
 - **调试与日志查看**：GitHub Actions 提供详细的日志输出，可在仓库的 “Actions” 标签页中查看每个工作流、作业和步骤的执行日志，帮助排查问题。如果在运行自定义脚本时遇到问题，可通过添加`set -x`命令在脚本中开启调试模式，输出详细的执行信息。
 
 参考：
