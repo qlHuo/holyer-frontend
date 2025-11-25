@@ -1,26 +1,89 @@
+
+
 # Vue2相关知识
 
 ## 1. Vue 的实例生命周期
 
-vue 的生命周期就是 vue 实例从创建到销毁的过程
+在Vuejs中，一个组件从创建到销毁会经历一系列的过程，这些过程可以分为创建、挂载、更新和销毁四个阶段，每个阶段都有对应的生命周期钩子。
 
 ![vue_002](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251123174549568.jpg)
 
-（1） beforeCreate 初始化实例后 数据观测和事件配置之前调用
+### 一、生命周期详解
 
-（2） created 实例创建完成后调用
+1. **创建阶段**
+   - **beforeCreate**：在实例初始化之后，数据观测（`data`、`props` 等）和事件配置之前被调用。此时，`this` 指向组件实例，但组件的 `data`、`props` 等都还未初始化，所以无法访问它们。
+   - **created**：在实例创建完成后被立即调用。此时，`data` 和 `props` 已被初始化，可访问和操作它们，但 DOM 还未被挂载，即 `$el` 还不存在。如果需要进行一些数据请求、初始化操作等，可在此钩子函数中进行。
+   - **beforeMount**：在挂载开始之前被调用，此时模板已经编译完成，但尚未挂载到真实 DOM 上。可以在这个阶段对模板进行最后的修改。
+   - **mounted**：在组件挂载到真实 DOM 后被调用。此时，`$el` 已存在，可以操作 DOM 元素，比如初始化第三方插件、获取 DOM 元素的尺寸等。同时，子组件也已挂载完成。
+2. **更新阶段**
+   - **beforeUpdate**：在数据更新时调用，发生在虚拟 DOM 重新渲染和打补丁之前。此时，数据已经更新，但 DOM 还未更新，可在这个钩子函数中访问更新前的 DOM 状态。
+   - **updated**：在由于数据更改导致的虚拟 DOM 重新渲染和打补丁之后调用。此时，DOM 已经更新完成，可以访问更新后的 DOM 状态。但要注意，在此处进行 DOM 操作可能会陷入死循环，因为 `updated` 钩子函数在数据更新时会反复调用。
+3. **销毁阶段**
+   - **beforeDestroy**：在实例销毁之前调用。此时，实例仍然完全可用，可以在这个阶段进行一些清理工作，比如清除定时器、解绑事件监听器等。
+   - **destroyed**：在实例销毁之后调用。此时，所有的指令都已解绑，所有的事件监听器都已移除，子实例也已被销毁。
+4. **`props`、`data()`、`watch`、`computed`、`methods` 的执行时机**
+   - **`props`**：在 `beforeCreate` 之前，Vue 会解析父组件传递过来的 `props`，并将其添加到组件实例中。在 `created` 钩子函数中，`props` 已可正常访问。
+   - **`data()`**：在 `beforeCreate` 之后，`created` 之前，Vue 会调用 `data()` 函数，将返回的对象作为组件的初始数据，并进行响应式处理。在 `created` 钩子函数中，`data` 已可正常访问。
+   - **`computed`**：在 `created` 钩子函数之前，Vue 会初始化 `computed` 属性。计算属性会在其依赖的数据发生变化时重新计算，并且具有缓存机制，只有在依赖数据变化时才会重新求值。
+   - **`watch`**：在 `created` 钩子函数之后，Vue 会初始化 `watch` 监听器。`watch` 用于监听数据的变化，当监听的数据发生变化时，会执行相应的回调函数。
+   - **`methods`**：在组件实例创建过程中，`methods` 中的方法会被定义为组件的实例方法。在任何钩子函数或模板中都可以调用这些方法。
 
-（3） beforeMount 挂载开始前被用
+### 二、特殊组件的生命周期
 
-（4） mounted el 被新建 vm.\$el 替换并挂在到实例上之后调用
+#### 1. keep-alive 组件
 
-（5） beforeUpdate 数据更新时调用
+- **activated()**：缓存组件激活时
+- **deactivated()**：缓存组件停用时
 
-（6） updated 数据更改导致的 DOM 重新渲染后调用
+```JavaScript
+activated() {
+  // 恢复组件状态
+  this.startDataPolling();
+},
+deactivated() {
+  // 暂停后台任务
+  this.stopDataPolling();
+}
+```
 
-（7） beforeDestory 实例被销毁前调用
+#### 2. 错误处理
 
-（8） destroyed 实例销毁后调用
+- **errorCaptured()**：捕获子孙组件错误
+
+```JavaScript
+errorCaptured(err, vm, info) {
+  console.error(`Error in ${info}:`, err);
+  this.logErrorToService(err); // 上报错误
+  return false; // 阻止错误继续向上传播
+}
+```
+
+### 三、父子组件的生命周期执行顺序
+
+1. **加载渲染过程**
+   - **父组件 beforeCreate**：父组件实例刚被创建，此时还未进行数据观测以及事件和方法的初始化，`this` 已指向组件实例，但数据和方法都不可用。
+   - **父组件 created**：父组件数据观测和初始化已完成，可访问 `data`、`props` 等数据，但此时 DOM 还未挂载，不能操作 DOM。
+   - **父组件 beforeMount**：模板已编译完成，但还未挂载到真实 DOM，可对模板做最后的修改。
+   - **子组件 beforeCreate**：子组件实例开始创建，和父组件 `beforeCreate` 类似，此时子组件还未进行数据观测以及事件和方法的初始化。
+   - **子组件 created**：子组件数据观测和初始化已完成，可访问子组件的 `data`、`props` 等数据。
+   - **子组件 beforeMount**：子组件模板已编译完成，但还未挂载到真实 DOM。
+   - **子组件 mounted**：子组件成功挂载到真实 DOM，此时可以操作子组件的 DOM 元素。
+   - **父组件 mounted**：父组件挂载到真实 DOM，此时父组件和子组件都已挂载完成，可操作父组件 DOM 元素。
+   - 总结加载渲染过程顺序为：父组件 `beforeCreate` -> 父组件 `created` -> 父组件 `beforeMount` -> 子组件 `beforeCreate` -> 子组件 `created` -> 子组件 `beforeMount` -> 子组件 `mounted` -> 父组件 `mounted`。
+2. **更新过程**
+   - **父组件 beforeUpdate**：父组件数据发生变化，在虚拟 DOM 重新渲染和打补丁之前调用。此时，父组件数据已更新，但 DOM 还未更新。
+   - **子组件 beforeUpdate**：父组件数据变化可能影响到子组件，子组件在虚拟 DOM 重新渲染和打补丁之前调用。此时子组件数据也准备更新，DOM 同样未更新。
+   - **子组件 updated**：子组件虚拟 DOM 重新渲染和打补丁完成，DOM 更新完毕。
+   - **父组件 updated**：父组件虚拟 DOM 重新渲染和打补丁完成，DOM 更新完毕。
+   - 总结更新过程顺序为：父组件 `beforeUpdate` -> 子组件 `beforeUpdate` -> 子组件 `updated` -> 父组件 `updated`。
+3. **销毁过程**
+   - **父组件 beforeDestroy**：父组件实例即将销毁，此时实例仍然完全可用，可进行一些清理工作，如清除定时器、解绑事件监听器等。
+   - **子组件 beforeDestroy**：父组件销毁过程中，子组件也即将销毁，同样可进行清理工作。
+   - **子组件 destroyed**：子组件已销毁，所有指令解绑，事件监听器移除，子组件实例不可用。
+   - **父组件 destroyed**：父组件已销毁，所有指令解绑，事件监听器移除，父组件实例不可用。
+   - 总结销毁过程顺序为：父组件 `beforeDestroy` -> 子组件 `beforeDestroy` -> 子组件 `destroyed` -> 父组件 `destroyed`。
+
+![wenxiaobai_mermaid_1764084856667](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251125233453981.png)
 
 
 
@@ -148,43 +211,6 @@ p 设置属性值时，实际上执行的是 handler.set() ：在控制台输出
 
 
 
-## 9. 对于 Vue 是一套渐进式框架的理解
-
-答案：
-
-每个框架都不可避免会有自己的一些特点，从而会对使用者有一定的要求，这些要求就是主张，主张有强有弱，它的强势程度会影响在业务开发中的使用方式。
-
-1、使用 vue，你可以在原有大系统的上面，把一两个组件改用它实现，当 jQuery 用；
-
-2、也可以整个用它全家桶开发，当 Angular 用；
-
-3、还可以用它的视图，搭配你自己设计的整个下层用。你可以在底层数据逻辑的地方用 OO(Object–Oriented )面向对象和设计模式的那套理念。
-也可以函数式，都可以。
-
-它只是个轻量视图而已，只做了自己该做的事，没有做不该做的事，仅此而已。
-
-你不必一开始就用 Vue 所有的全家桶，根据场景，官方提供了方便的框架供你使用。
-
-场景联想
-场景 1：
-维护一个老项目管理后台，日常就是提交各种表单了，这时候你可以把 vue 当成一个 js 库来使用，就用来收集 form 表单，和表单验证。
-
-场景 2：
-得到 boss 认可， 后面整个页面的 dom 用 Vue 来管理，抽组件，列表用 v-for 来循环，用数据驱动 DOM 的变化
-
-场景 3:
-越来越受大家信赖，领导又找你了，让你去做一个移动端 webapp，直接上了 vue 全家桶！
-
-场景 1-3 从最初的只因多看你一眼而用了前端 js 库，一直到最后的大型项目解决方案。
-
-
-
-## 10. vue.js 的两个核心是什么？
-
-答案：数据驱动和组件化思想
-
-
-
 ## 11. 请问 v-if 和 v-show 有什么区别
 
 答案：
@@ -197,7 +223,7 @@ v-if 指令是直接销毁和重建 DOM 达到让元素显示和隐藏的效果
 
 ## 12. vue 常用的修饰符
 
-26. vue 如何监听键盘事件中的按键？
+**vue 如何监听键盘事件中的按键？**
 
 答案：
 
@@ -1094,8 +1120,6 @@ export default [
 
 答案：总结组件的职能，什么需要外部控制（即 props 传啥），组件需要控制外部吗（\$emit）,是否需要插槽（slot）
 
-[参与互动](https://github.com/yisainan/web-interview/issues/414)
-
 
 
 
@@ -1628,23 +1652,7 @@ Action 类似于 mutation，不同在于：Action 提交的是 mutation，而不
 
 
 
-### 84.什么是 MVVM？
-
-答案：1.拆分说明（M，V，VM 都是干啥的） 2.之间联系（Model 和 ViewModel 的双向数据绑定）
-
-解析：
-
-MVVM 是 Model-View-ViewModel 的缩写。MVVM 是一种设计思想。Model 层代表数据模型，也可以在 Model 中定义数据修改和操作的业务逻辑；View 代表 UI 组件，它负责将数据模型转化成 UI 展现出来，ViewModel 是一个同步 View 和 Model 的对象（桥梁）。
-
-在 MVVM 架构下，View 和 Model 之间并没有直接的联系，而是通过 ViewModel 进行交互，Model 和 ViewModel 之间的交互是双向的， 因此 View 数据的变化会同步到 Model 中，而 Model 数据的变化也会立即反应到 View 上。
-
-ViewModel 通过双向数据绑定把 View 层和 Model 层连接了起来，而 View 和 Model 之间的同步工作完全是自动的，无需人为干涉，因此开发者只需关注业务逻辑，不需要手动操作 DOM, 不需要关注数据状态的同步问题，复杂的数据状态维护完全由 MVVM 来统一管理。
-
-
-
-
-
-## 85.MVC、MVP 与 MVVM 模式
+## 85. MVC、MVP 与 MVVM 模式
 
 答案：
 

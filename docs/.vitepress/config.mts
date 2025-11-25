@@ -53,6 +53,7 @@ export default defineConfig({
           },
           { 
             text: 'Vuejs相关', 
+            link: 'index',
             base: '/pages/advanced/vue/',
             collapsed: true,
             items: [
