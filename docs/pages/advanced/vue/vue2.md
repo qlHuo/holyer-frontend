@@ -406,14 +406,14 @@ Vue 还对应 addEventListener 中的 passive 选项提供了 .passive 修饰符
 
 ```vue
 <!-- 只有在 `keyCode` 是 13 时调用 `vm.submit()` -->
-<input @keyup.13="submit">
+<input @keyup.13="submit" />
 ```
 
 记住所有的 keyCode 比较困难，所以 Vue 为最常用的按键提供了别名：
 
 ```vue
 <!-- 同上 -->
-<input @keyup.enter="submit">
+<input @keyup.enter="submit" />
 ```
 
 可以通过全局 config.keyCodes 对象自定义按键修饰符别名：
@@ -439,7 +439,7 @@ Vue.config.keyCodes ={
 
 ```vue
 <!-- Alt + C -->
-<input @keyup.alt.67="clear">
+<input @keyup.alt.67="clear" />
 <!-- Ctrl + Click -->
 <div @click.ctrl="doSomething">Do something</div>
 ```
@@ -564,7 +564,7 @@ key 的作用主要体现在以下几个方面：
 
 为了给Vue一个提示，以便它能跟踪每个节点的身份，从而重用和重新排序现有元素，你需要为每项提供一个唯一key属性。
 
-```vue
+```html
 <ul>
   <li v-for="item in items" :key="item.id">
     {{ item.name }}
@@ -586,11 +586,11 @@ key 的作用主要体现在以下几个方面：
 ```vue
 <template v-if="loginType === 'username'">
   <label>用户名</label>
-  <input placeholder="请输入用户名" key="username-input">
+  <input placeholder="请输入用户名" key="username-input" />
 </template>
 <template v-else>
   <label>邮箱</label>
-  <input placeholder="请输入邮箱" key="email-input">
+  <input placeholder="请输入邮箱" key="email-input" />
 </template>
 ```
 
@@ -598,7 +598,7 @@ key 的作用主要体现在以下几个方面：
 
 ### 三、动态组件中的key
 
-在动态组件中，我们可能会使用<component :is="currentComponent">来切换组件。默认情况下，当切换组件时，Vue会复用同一个组件实例，而不是销毁再创建。这可能会导致组件的生命周期钩子不会重新调用，或者组件的状态被保留。如果我们希望每次切换都重新渲染组件，可以给动态组件添加key属性。
+在动态组件中，我们可能会使用`<component :is="currentComponent" />`来切换组件。默认情况下，当切换组件时，Vue会复用同一个组件实例，而不是销毁再创建。这可能会导致组件的生命周期钩子不会重新调用，或者组件的状态被保留。如果我们希望每次切换都重新渲染组件，可以给动态组件添加key属性。
 
 ```vue
 <component :is="currentComponent" :key="currentComponent"></component>
