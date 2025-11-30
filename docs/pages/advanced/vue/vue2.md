@@ -1105,217 +1105,416 @@ data() {
 
 
 
-## vue 父子组件通信
+## 10. vue2 组件通信全解
 
-## vue 中子组件调用父组件的方法
+在Vue.js 2中，组件通信是构建应用的关键部分。根据组件之间的关系（父子、兄弟、跨级等），我们可以采用不同的通信方式。下面将详细解释各种场景下的通信方法。
 
-答案：
+### 一、父子组件通信
 
-- 第一种方法是直接在子组件中通过 this.\$parent.event 来调用父组件的方法
-- 第二种方法是在子组件里用\$emit 向父组件触发一个事件，父组件监听这个事件就行了
-- 第三种是父组件把方法传入子组件中，在子组件里直接调用这个方法
+#### 1. 父组件向子组件传递数据（Props）
 
-解析：
+- 父组件通过`props`向子组件传递数据。
+- 子组件中通过`props`选项声明接收的数据。
 
-第一种方法是直接在子组件中通过 this.\$parent.event 来调用父组件的方法
+**父组件：**
 
-父组件
+```Vue
+<template>
+  <ChildComponent :message="parentMessage" />
+</template>
+<script>
+import ChildComponent from './ChildComponent.vue';、
+export default {
+  components: { ChildComponent },
+  data() {
+    return {
+      parentMessage: 'Hello from parent'
+    };
+  }
+};
+</script>
+```
+
+**子组件：**
+
+```Vue
+<template>
+  <div>{{ message }}</div>
+</template>
+<script>
+export default {
+  props: ['message'] // 或者使用对象形式指定类型和默认值
+};
+</script>
+```
+
+#### 2. 子组件向父组件传递数据（自定义事件）
+
+- 子组件通过`$emit`触发一个自定义事件，并传递数据。
+- 父组件通过`v-on`监听该事件并处理数据。
+
+**子组件：**
+
+```Vue
+<template>
+  <button @click="sendMessage">Send to Parent</button>
+</template>
+
+<script>
+export default {
+  methods: {
+    sendMessage() {
+      this.$emit('message-from-child', 'Hello from child');
+    }
+  }
+};
+</script>
+```
+
+**父组件：**
+
+```Vue
+<template>
+  <ChildComponent @message-from-child="handleMessage" />
+</template>
+<script>
+import ChildComponent from './ChildComponent.vue';
+export default {
+  components: { ChildComponent },
+  methods: {
+    handleMessage(message) {
+      console.log(message); // 输出: Hello from child
+    }
+  }
+};
+</script>
+```
+
+#### 3. 使用 `.sync` 修饰符（Vue 2.3+）
+
+- 用于双向绑定某个prop（实际上是一种语法糖）。
+
+**父组件：**
+
+```Vue
+<template>
+  <ChildComponent :title.sync="pageTitle" />
+</template>
+```
+
+**子组件：**
+
+```Vue
+<script>
+export default {
+  methods: {
+    updateTitle() {
+      this.$emit('update:title', 'New Title');
+    }
+  }
+};
+</script>
+```
+
+#### 4. v-model 双向绑定
+
+默认情况下，`v-model`相当于`:value="value" @input="value = $event"`。
+
+```vue
+<!-- 父组件 -->
+<child-component v-model="inputValue"></child-component>
+
+<!-- 子组件 -->
+<input :value="value" @input="$emit('input', $event.target.value)">
+```
+
+也可以自定义`model`选项：
+
+```Js
+// 子组件
+export default {
+  model: {
+    prop: 'checked', // 将value改为checked
+    event: 'change' // 将input事件改为change事件
+  },
+  props: ['checked'],
+  methods: {
+    changeValue() {
+      this.$emit('change', newValue)
+    }
+  }
+}
+```
+
+#### 5. 作用域插槽
+
+子组件通过插槽暴露数据：
+
+```Vue
+<!-- 子组件 -->
+<template>
+  <div>
+    <slot :user="user"></slot>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      user: { name: 'John' }
+    }
+  }
+}
+</script>
+```
+
+父组件使用`slot-scope`（Vue2）或`v-slot`（Vue2.6+）接收数据：
+
+```Vue
+<!-- 父组件 -->
+<child-component>
+  <template slot-scope="props">
+    {{ props.user.name }}
+  </template>
+</child-component>
+
+<!-- 或使用v-slot（推荐） -->
+<child-component>
+  <template v-slot:default="props">
+    {{ props.user.name }}
+  </template>
+</child-component>
+```
+
+### 二、兄弟组件通信
+
+兄弟组件之间可以通过共同的父组件作为桥梁进行通信。
+
+#### 1. 通过共同的父组件传递
+
+- 子组件A通过事件将数据传递给父组件，父组件再通过props传递给子组件B。![image-20251130224452076](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251130224452235.png)
+
+### 三、跨级组件通信
+
+#### 1. `$attrs` 和 `$listeners`
+
+- 当需要向深层嵌套的组件传递数据或事件时，可以使用`$attrs`（包含父作用域中不作为prop被识别的特性）和`$listeners`（包含父作用域中的事件监听器）。
+
+**祖先组件：**
+
+```Vue
+<template>
+  <ChildComponent :message="msg" @custom-event="handleEvent" />
+</template>
+```
+
+**中间组件（如果不处理，则继续向下传递）：**
+
+```Vue
+<template>
+  <GrandChildComponent v-bind="$attrs" v-on="$listeners" />
+</template>
+```
+
+#### 2. Provide / Inject
+
+> 如果希望 `provide` 和 `inject` 是响应式的，可以传递一个对象，或者使用 Vue.observable（Vue2.6+）来创建一个响应式对象。
+
+- 祖先组件通过`provide`提供数据，后代组件通过`inject`注入数据。
+- 注意：不是响应式的（除非传递的是响应式对象，如父组件的data属性）。
+
+**祖先组件：**
+
+```Vue
+<script>
+export default {
+  provide() {
+    return {
+      providedMessage: this.message // 如果message是响应式的，后代组件也会响应变化
+    };
+  },
+  data() {
+    return {
+      message: 'Hello from ancestor'
+    };
+  }
+};
+</script>
+```
+
+**后代组件：**
+
+```Vue
+<script>
+export default {
+  inject: ['providedMessage'],
+  mounted() {
+    console.log(this.providedMessage); // 输出: Hello from ancestor
+  }
+};
+</script>
+```
+
+### 四、任意组件通信
+
+#### 1. 事件总线（Event Bus）
+
+- 创建一个中央事件总线（通常是一个新的Vue实例），然后在任何组件中触发事件和监听事件。
+
+**创建事件总线（event-bus.js）：**
+
+```JavaScript
+import Vue from 'vue';
+export const EventBus = new Vue();
+```
+
+**组件A（触发事件）：**
+
+```JavaScript
+import { EventBus } from './event-bus.js';
+
+EventBus.$emit('custom-event', 'some data');
+```
+
+**组件B（监听事件）：**
+
+```JavaScript
+import { EventBus } from './event-bus.js';
+
+EventBus.$on('custom-event', (data) => {
+  console.log(data); // 输出: some data
+});
+```
+
+注意：在组件销毁前，使用`EventBus.$off`移除事件监听，避免内存泄漏。
+
+#### 2. Vuex 状态管理
+
+Vuex是专为Vue.js应用程序开发的状态管理模式。它采用集中式存储管理应用的所有组件的状态。
+
+基本结构：
+
+- `state`: 存储状态数据。
+- `mutations`: 同步修改状态（通过`commit`触发）。
+- `actions`: 处理异步操作，提交`mutations`（通过`dispatch`触发）。
+- `getters`: 计算属性，用于从`state`中派生出一些状态。
+
+基础示例：
 
 ```js
-<template>
-  <div>
-    <child></child>
-  </div>
-</template>
-<script>
-  import child from '~/components/dam/child';
-  export default {
-    components: {
-      child
-    },
-    methods: {
-      fatherMethod() {
-        console.log('测试');
-      }
+// store.js
+import Vue from 'vue'
+import Vuex from 'vuex'
+
+Vue.use(Vuex)
+
+export default new Vuex.Store({
+  state: {
+    count: 0
+  },
+  mutations: {
+    increment(state) {
+      state.count++
     }
-  };
-</script>
+  },
+  actions: {
+    increment({ commit }) {
+      commit('increment')
+    }
+  }
+})
 ```
 
-子组件
+组件中：
 
-```html
+```vue
 <template>
   <div>
-    <button @click="childMethod()">点击</button>
-  </div>
-</template>
-<script>
-  export default {
-    methods: {
-      childMethod() {
-        this.$parent.fatherMethod();
-      }
-    }
-  };
-</script>
-```
-
-第二种方法是在子组件里用\$emit 向父组件触发一个事件，父组件监听这个事件就行了
-
-父组件
-
-```html
-<template>
-  <div>
-    <child @fatherMethod="fatherMethod"></child>
-  </div>
-</template>
-<script>
-  import child from "~/components/dam/child";
-  export default {
-    components: {
-      child
-    },
-    methods: {
-      fatherMethod() {
-        console.log("测试");
-      }
-    }
-  };
-</script>
-```
-
-子组件
-
-```html
-<template>
-  <div>
-    <button @click="childMethod()">点击</button>
-  </div>
-</template>
-<script>
-  export default {
-    methods: {
-      childMethod() {
-        this.$emit("fatherMethod");
-      }
-    }
-  };
-</script>
-```
-
-第三种是父组件把方法传入子组件中，在子组件里直接调用这个方法
-
-父组件
-
-```html
-<template>
-  <div>
-    <child :fatherMethod="fatherMethod"></child>
-  </div>
-</template>
-<script>
-  import child from "~/components/dam/child";
-  export default {
-    components: {
-      child
-    },
-    methods: {
-      fatherMethod() {
-        console.log("测试");
-      }
-    }
-  };
-</script>
-```
-
-子组件
-
-```html
-<template>
-  <div>
-    <button @click="childMethod()">点击</button>
-  </div>
-</template>
-<script>
-  export default {
-    props: {
-      fatherMethod: {
-        type: Function,
-        default: null
-      }
-    },
-    methods: {
-      childMethod() {
-        if (this.fatherMethod) {
-          this.fatherMethod();
-        }
-      }
-    }
-  };
-</script>
-```
-
-[参与互动](https://github.com/yisainan/web-interview/issues/411)
-
-
-
-## vue 中父组件调用子组件的方法
-
-答案：使用\$refs
-
-解析：
-
-父组件
-
-```html
-<template>
-  <div>
-    <button @click="clickParent">点击</button>
-    <child ref="mychild"></child>
+    <div>{{ count }}</div>
+    <button @click="increment">Increment</button>
   </div>
 </template>
 
 <script>
-  import Child from "./child";
-  export default {
-    name: "parent",
-    components: {
-      child: Child
-    },
-    methods: {
-      clickParent() {
-        this.$refs.mychild.parentHandleclick("嘿嘿嘿"); // 划重点！！！！
-      }
-    }
-  };
+import { mapState, mapActions } from 'vuex'
+
+export default {
+  computed: {
+    ...mapState(['count'])
+  },
+  methods: {
+    ...mapActions(['increment'])
+  }
+}
 </script>
 ```
 
-子组件
+### 五、其他方式
 
-```html
+#### 1. `$parent` 和 `$children`
+
+- 通过`$parent`访问父组件实例，`$children`访问子组件实例（不保证顺序，也不是响应式）。
+- 不推荐，因为增加了耦合度。
+
+#### 2. `$refs`
+
+- 在父组件中通过`ref`属性给子组件标记，然后通过`this.$refs`访问。
+- 主要用于直接操作子组件或访问子组件的方法。
+
+父组件：
+
+```Vue
 <template>
-  <div>
-    child
-  </div>
+  <ChildComponent ref="childRef" />
 </template>
 
 <script>
-  export default {
-    name: "child",
-    props: "someprops",
-    methods: {
-      parentHandleclick(e) {
-        console.log(e);
-      }
-    }
-  };
+import ChildComponent from './ChildComponent.vue';
+
+export default {
+  components: { ChildComponent },
+  mounted() {
+    this.$refs.childRef.someMethod(); // 调用子组件的方法
+  }
+};
 </script>
 ```
 
-[参与互动](https://github.com/yisainan/web-interview/issues/412)
+#### 3. 本地存储
+
+通过`localStorage`或`sessionStorage`存储数据，并在不同组件间共享。
+
+```Js
+// 存储数据
+localStorage.setItem('key', 'value')
+
+// 获取数据
+localStorage.getItem('key')
+```
+
+注意：存储事件（`storage`事件）可以监听存储的变化（仅在同源的不同标签页间触发）：
+
+```Js
+window.addEventListener('storage', (event) => {
+  console.log(event.key, event.newValue)
+})
+```
+
+### 总结
+
+> 使用原则：**能用 props 解决的不用 Vuex，能组件内解决的问题不提升到全局**。
+
+- 父子通信：props / events, `.sync`, `$refs`
+- 兄弟通信：通过共同的父组件、事件总线、Vuex
+- 跨级通信：`$attrs/$listeners`、provide/inject、事件总线、Vuex
+- 任意组件：事件总线、Vuex、本地存储
+
+
+
+## vue 中央事件总线的使用
+
+
 
 
 
@@ -1418,10 +1617,6 @@ export default [
 [参与互动](https://github.com/yisainan/web-interview/issues/413)
 
 
-
-## vue 中如何编写可复用的组件？
-
-答案：总结组件的职能，什么需要外部控制（即 props 传啥），组件需要控制外部吗（\$emit）,是否需要插槽（slot）
 
 
 
@@ -1571,7 +1766,7 @@ reverse()
 
 
 
-### 计算属性的缓存和方法调用的区别
+## 计算属性的缓存和方法调用的区别
 
 答案：
 
@@ -1682,8 +1877,6 @@ proxyTable: {
 
 
 
-
-## vue 中央事件总线的使用
 
 
 
