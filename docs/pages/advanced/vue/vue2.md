@@ -1512,125 +1512,252 @@ window.addEventListener('storage', (event) => {
 
 
 
-## vue 中央事件总线的使用
 
 
+## 11. vue 中 keep-alive 组件的作用
 
+在 Vue 2 中，`<keep-alive>` 是一个内置的抽象组件，用于缓存不活动的组件实例，而不是销毁它们。当组件在 `<keep-alive>` 内切换时（例如使用 `v-if` 或动态组件），它的状态将被保留，避免重新渲染，从而提高性能。
 
+![image-20251201231439668](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251201231439851.png)
 
-## vue 中 keep-alive 组件的作用
+### 一、`<keep-alive>` 的作用
 
-答案：keep-alive 是 Vue 内置的一个组件，可以使被包含的组件保留状态，或避免重新渲染。
+1. **缓存组件状态**：当组件在 `<keep-alive>` 内切换时，它的状态（如数据、计算属性等）会被保留，避免重复渲染。
+2. **避免重新渲染**：组件不会被销毁，因此不会触发 `created`、`mounted` 等生命周期钩子，而是使用 `activated `和 `deactivated` 钩子。
+3. **提高性能**：在需要频繁切换但不需要重复渲染的场景中（如Tab切换、路由切换），使用`<keep-alive>` 可以显著提高性能。
 
-解析：
+### 二、基本用法
 
-用法也很简单：
+#### 1. 包裹动态组件
 
-```html
-<keep-alive>
-  <component>
-    <!-- 该组件将被缓存！ -->
-  </component>
-</keep-alive>
-```
+```vue
+<template>
+  <div>
+    <button @click="currentTab = 'Tab1'">Tab1</button>
+    <button @click="currentTab = 'Tab2'">Tab2</button>
+    
+    <keep-alive>
+      <component :is="currentTab"></component>
+    </keep-alive>
+  </div>
+</template>
 
-props
-_ include - 字符串或正则表达，只有匹配的组件会被缓存
-_ exclude - 字符串或正则表达式，任何匹配的组件都不会被缓存
+<script>
+import Tab1 from './Tab1.vue'
+import Tab2 from './Tab2.vue'
 
-```js
-// 组件 a
 export default {
-  name: "a",
+  components: { Tab1, Tab2 },
   data() {
-    return {};
+    return {
+      currentTab: 'Tab1'
+    }
   }
-};
+}
+</script>
 ```
 
-```html
-<keep-alive include="a">
-  <component>
-    <!-- name 为 a 的组件将被缓存！ -->
-  </component> </keep-alive
->可以保留它的状态或避免重新渲染
+#### 2. 包裹路由视图
+
+```vue
+<template>
+  <keep-alive>
+    <router-view></router-view>
+  </keep-alive>
+</template>
 ```
 
-```html
-<keep-alive exclude="a">
-  <component>
-    <!-- 除了 name 为 a 的组件都将被缓存！ -->
-  </component> </keep-alive
->可以保留它的状态或避免重新渲染
+### 三、生命周期钩子
+
+被`<keep-alive>`包裹的组件会多出两个生命周期钩子：
+
+1. **activated**：组件被激活时调用（首次进入也会调用）
+2. **deactivated**：组件被停用时调用
+
+```vue
+<script>
+export default {
+  activated() {
+    console.log('组件被激活，可以执行一些恢复操作，比如重新获取数据')
+  },
+  deactivated() {
+    console.log('组件被停用，可以执行一些清理操作，比如清除定时器')
+  }
+}
+</script>
 ```
 
-但实际项目中,需要配合 vue-router 共同使用.
+### 四、条件缓存
 
-router-view 也是一个组件，如果直接被包在 keep-alive 里面，所有路径匹配到的视图组件都会被缓存：
+`<keep-alive>` 提供了`include`、`exclude`和`max`属性，用于控制哪些组件被缓存。
 
-```html
-<keep-alive>
-  <router-view>
-    <!-- 所有路径匹配到的视图组件都会被缓存！ -->
-  </router-view>
+#### 1. include
+
+只有名称匹配的组件会被缓存。
+
+```vue
+<keep-alive :include="['Tab1', 'Tab2']">
+  <component :is="currentTab"></component>
 </keep-alive>
 ```
 
-如果只想 router-view 里面某个组件被缓存，怎么办？
+#### 2. exclude
 
-增加 router.meta 属性
+任何名称匹配的组件都不会被缓存。
 
-```js
-// routes 配置
-export default [
+```vue
+<keep-alive exclude="Tab3">
+  <component :is="currentTab"></component>
+</keep-alive>
+```
+
+#### 3. max（LRU缓存控制）
+
+最多可以缓存多少组件实例， 超出时自动销毁最久未使用的实例
+
+```vue
+<keep-alive :max="10">
+  <router-view></router-view>
+</keep-alive>
+```
+
+#### 4. 注意事项
+
+1. **组件命名**：使用`include`和`exclude`时，要求组件必须有`name`选项。
+2. **匹配规则**：`include`和`exclude`属性可以是字符串（逗号分隔）、正则表达式或数组。
+3. **缓存策略**：当缓存的实例数量超过`max`时，最久没有被访问的实例会被销毁。
+
+### 五、与路由结合使用
+
+在Vue Router中，我们可以针对路由进行缓存设置。
+
+#### 1. 缓存指定路由
+
+```vue
+<template>
+  <div>
+    <keep-alive>
+      <router-view v-if="$route.meta.keepAlive"></router-view>
+    </keep-alive>
+    <router-view v-if="!$route.meta.keepAlive"></router-view>
+  </div>
+</template>
+```
+
+在路由配置中：
+
+```javascript
+const routes = [
   {
-    path: "/",
-    name: "home",
-    component: Home,
-    meta: {
-      keepAlive: true // 需要被缓存
-    }
+    path: '/tab1',
+    component: Tab1,
+    meta: { keepAlive: true }
   },
   {
-    path: "/:id",
-    name: "edit",
-    component: Edit,
-    meta: {
-      keepAlive: false // 不需要被缓存
-    }
+    path: '/tab2',
+    component: Tab2,
+    meta: { keepAlive: false }
   }
-];
+]
 ```
 
+#### 2. 动态决定是否缓存
+
+有时我们需要根据条件动态决定是否缓存，可以在路由守卫中处理。
+
+### 六、实现原理深度解析
+
+#### 源码核心逻辑（简化版）
+
+```JavaScript
+export default {
+  name: 'keep-alive',
+  abstract: true, // 抽象组件，不会出现在DOM树中
+  
+  props: {
+    include: [String, RegExp, Array],
+    exclude: [String, RegExp, Array],
+    max: [Number]
+  },
+
+  created() {
+    this.cache = Object.create(null) // 缓存对象
+    this.keys = [] // 缓存键名（实现LRU）
+  },
+
+  destroyed() {
+    // 组件销毁时清空缓存
+    for (const key in this.cache) {
+      pruneCacheEntry(this.cache, key, this.keys)
+    }
+  },
+
+  render() {
+    const slot = this.$slots.default
+    const vnode = getFirstComponentChild(slot) // 获取第一个子组件
+    
+    // 获取组件名称（用于include/exclude匹配）
+    const name = getComponentName(vnode.componentOptions)
+    
+    // 检查是否需要缓存
+    if (
+      (this.include && (!name || !matches(this.include, name))) ||
+      (this.exclude && name && matches(this.exclude, name))
+    ) {
+      return vnode
+    }
+    
+    // 缓存管理逻辑
+    const key = vnode.key ?? `${vnode.tag}${vnode.componentOptions.Ctor.cid}`
+    if (this.cache[key]) {
+      // 命中缓存
+      vnode.componentInstance = this.cache[key].componentInstance
+    } else {
+      // 添加新缓存
+      this.cache[key] = vnode
+      this.keys.push(key)
+      // 检查max限制
+      if (this.max && this.keys.length > parseInt(this.max)) {
+        pruneCacheEntry(this.cache, this.keys[0], this.keys)
+      }
+    }
+    
+    vnode.data.keepAlive = true // 标记为keep-alive组件
+    return vnode
+  }
+}
 ```
-<keep-alive>
-    <router-view v-if="$route.meta.keepAlive">
-        <!-- 这里是会被缓存的视图组件，比如 Home！ -->
-    </router-view>
-</keep-alive>
 
-<router-view v-if="!$route.meta.keepAlive">
-    <!-- 这里是不被缓存的视图组件，比如 Edit！ -->
-</router-view>
-```
+#### LRU缓存机制
 
-[参与互动](https://github.com/yisainan/web-interview/issues/413)
+![image-20251201234333255](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251201234333428.png)
+
+### 七、总结
+
+`<keep-alive>` 是Vue中一个非常实用的功能，它通过缓存组件实例来提高应用性能。但是，**如果不合理使用，可能会导致内存占用过多**。因此，需要根据实际场景选择合适的缓存策略。
+
+`keep-alive` 是 Vue 中非常重要的性能优化工具，特别适合以下场景：
+
+- Tab 页切换
+- 列表页-详情页导航
+- 需要保持表单数据的页面
+- 频繁切换但不需要重新渲染的组件
+
+使用时需要注意：
+
+1. 合理设置 `include/exclude`
+2. 及时清理资源，避免内存泄漏
+3. 结合业务场景选择合适的缓存策略
+4. 注意组件命名的规范性
 
 
 
+## 12. vue 更新数组时触发视图更新的方法
 
+1. Vue.set 可以设置对象或数组的值，通过 key 或数组索引，可以触发视图更新
 
-
-
-## vue 更新数组时触发视图更新的方法
-
-答案：
-
-1.Vue.set 可以设置对象或数组的值，通过 key 或数组索引，可以触发视图更新
-
-```
-数组修改
-
+```js
+// 数组修改
 Vue.set(array, indexOfItem, newValue)
 this.array.$set(indexOfItem, newValue)
 对象修改
@@ -1639,11 +1766,10 @@ Vue.set(obj, keyOfItem, newValue)
 this.obj.$set(keyOfItem, newValue)
 ```
 
-2.Vue.delete 删除对象或数组中元素，通过 key 或数组索引，可以触发视图更新
+2. Vue.delete 删除对象或数组中元素，通过 key 或数组索引，可以触发视图更新
 
-```
-数组修改
-
+```js
+//数组修改
 Vue.delete(array, indexOfItem)
 this.array.$delete(indexOfItem)
 对象修改
@@ -1652,32 +1778,32 @@ Vue.delete(obj, keyOfItem)
 this.obj.$delete(keyOfItem)
 ```
 
-3.数组对象直接修改属性，可以触发视图更新
+3. 数组对象直接修改属性，可以触发视图更新
 
-```
+```js
 this.array[0].show = true;
 this.array.forEach(function(item){
     item.show = true;
 });
 ```
 
-4.splice 方法修改数组，可以触发视图更新
+4. splice 方法修改数组，可以触发视图更新
 
-```
+```js
 this.array.splice(indexOfItem, 1, newElement)
 ```
 
-5.数组整体修改，可以触发视图更新
+5. 数组整体修改，可以触发视图更新
 
-```
+```js
 var tempArray = this.array;
 tempArray[0].show = true;
 this.array = tempArray;
 ```
 
-6.用 Object.assign 或 lodash.assign 可以为对象添加响应式属性，可以触发视图更新
+6. 用 Object.assign 或 lodash.assign 可以为对象添加响应式属性，可以触发视图更新
 
-```
+```js
 //Object.assign的单层的覆盖前面的属性，不会递归的合并属性
 this.obj = Object.assign({},this.obj,{a:1, b:2})
 
@@ -1688,23 +1814,140 @@ this.obj = _.assign({},this.obj,{a:1, b:2})
 this.obj = _.merge({},this.obj,{a:1, b:2})
 ```
 
-7.Vue 提供了如下的数组的变异方法，可以触发视图更新
+7. Vue 提供了如下的数组的变异方法，可以触发视图更新
 
+```js
+// 会触发视图更新
+this.items.push(newItem)
+this.items.pop()
+this.items.shift()
+this.items.unshift(newItem)
+this.items.splice(startIndex, deleteCount, ...items)
+this.items.sort()
+this.items.reverse()
 ```
-push()
-pop()
-shift()
-unshift()
-splice()
-sort()
-reverse()
+
+
+
+## 13. Vue2 计算属性computed详解
+
+在 Vue.js 中，计算属性（computed properties）是一种非常重要的特性，它用于声明式地定义依赖于其他属性的值。计算属性会基于它们的依赖进行缓存，只有当依赖发生变化时，才会重新计算。这使得计算属性在处理复杂逻辑和性能优化方面非常有用。
+
+### 一、基本用法
+
+计算属性定义在 Vue 实例的 `computed` 选项中。每个计算属性可以是一个函数，也可以是一个包含 `get` 和 `set` 方法的对象（用于实现可写的计算属性，但通常我们只使用默认的 getter）。
+
+示例1：基本使用
+
+```JavaScript
+new Vue({
+  el: '#app',
+  data: {
+    firstName: '张',
+    lastName: '三'
+  },
+  computed: {
+    fullName: function() {
+      return this.firstName + ' ' + this.lastName;
+    }
+  }
+});
 ```
+
+在模板中，你可以像使用普通属性一样使用计算属性：
+
+```vue
+<div id="app">
+  全名: {{ fullName }}
+</div>
+```
+
+### 二、计算属性的 setter
+
+计算属性默认只有 getter，但也可以提供一个 setter：
+
+```JavaScript
+computed: {
+  fullName: {
+    get: function() {
+      return this.firstName + ' ' + this.lastName;
+    },
+    set: function(newValue) {
+      var names = newValue.split(' ');
+      this.firstName = names;
+      this.lastName = names[names.length - 1];
+    }
+  }
+}
+```
+
+现在当运行 `this.fullName = '李 四'` 时，setter 会被调用，从而更新 `firstName` 和 `lastName`。
+
+### 三、计算属性的特点
+
+1. **响应式依赖追踪**：
+
+   计算属性在第一次执行时会收集依赖，只有当依赖发生变化时，才会重新计算。如果依赖没有变化，即使重新渲染，计算属性也不会重新计算。
+
+   注意：如果计算属性依赖的数据不是响应式的（比如不是由 Vue 的 `data` 对象定义的），那么计算属性不会更新。
+
+2. **缓存机制**：
+
+   计算属性是基于它们的响应式依赖进行缓存的。如果依赖没有变化，多次访问计算属性会立即返回之前的计算结果，而不必再次执行函数。
+
+3. **声明式编程**：
+
+   只需声明依赖关系，无需手动管理更新
+
+4. **可组合性**：
+
+   计算属性可以依赖其他计算属性
+
+
+
+### 四、计算属性 vs 方法(methods)
+
+| 特性     | 计算属性               | 方法           |
+| -------- | ---------------------- | -------------- |
+| 缓存     | ✅ 有缓存               | ❌ 无缓存       |
+| 依赖追踪 | ✅ 自动                 | ❌ 需手动       |
+| 调用方式 | 作为属性访问           | 需要函数调用   |
+| 性能     | 高效，依赖不变时不计算 | 每次渲染都调用 |
+
+### 五、计算属性 vs 侦听器(watch)
+
+| 特性     | 计算属性   | 侦听器               |
+| -------- | ---------- | -------------------- |
+| 用途     | 派生数据   | 响应数据变化执行操作 |
+| 异步     | ❌ 不支持   | ✅ 支持               |
+| 返回值   | ✅ 有返回值 | ❌ 无返回值           |
+| 代码组织 | 声明式     | 命令式               |
+
+### 六、最佳实践
+
+1. **用于复杂逻辑**：当模板中有复杂逻辑时，应使用计算属性
+2. **避免副作用**：计算属性的 getter 函数应该是纯函数，没有副作用
+3. **性能优化**：利用缓存特性避免重复计算
+4. **命名清晰**：使用描述性名称提高代码可读性
+5. **避免直接修改计算属性**：除非定义了 setter
+
+### 注意事项
+
+- 计算属性不应该使用箭头函数，因为箭头函数不会绑定 `this`，所以 `this` 不会指向 Vue 实例。
+- 计算属性可以依赖其他计算属性。
+- 避免在计算属性中做异步操作或改变 DOM，计算属性应该是同步的、纯的（不产生副作用）。
+
+
+
+## 13. Vue2 侦听属性watch详解
 
 
 
 ## vue 中对象更改检测的注意事项
 
 
+
+## Vue2中的全局方法介绍
 
 
 
@@ -1722,23 +1965,11 @@ reverse()
 
 
 
-## vue 等单页面应用及其优缺点
 
 
 
-优点：
-1、用户体验好、快，内容的改变不需要重新加载整个页面，避免了不必要的跳转和重复渲染。
-2、前后端职责业分离（前端负责view，后端负责model），架构清晰
-3、减轻服务器的压力
 
-缺点：
-1、SEO（搜索引擎优化）难度高
-2、初次加载页面更耗时
-3、前进、后退、地址栏等，需要程序进行管理，所以会大大提高页面的复杂性和逻辑的难度
-
-
-
-## 什么是 vue 的计算属性？
+## 
 
 答案：先来看一下计算属性的定义：
 当其依赖的属性的值发生变化的时，计算属性会重新计算。反之则使用缓存中的属性值。
@@ -1751,30 +1982,6 @@ reverse()
 答案：$route 是路由信息对象，包括path，params，hash，query，fullPath，matched，name 等路由信息参数。
 
 而 $router 是路由实例对象，包括了路由的跳转方法，钩子函数等
-
-
-
-
-
-## 39.watch的作用是什么
-
-答案：watch 主要作用是监听某个数据值的变化。和计算属性相比除了没有缓存，作用是一样的。
-
-借助 watch 还可以做一些特别的事情，例如监听页面路由，当页面跳转时，我们可以做相应的权限控制，拒绝没有权限的用户访问页面。
-
-
-
-
-
-## 计算属性的缓存和方法调用的区别
-
-答案：
-
-计算属性是基于数据的依赖缓存，数据发生变化，缓存才会发生变化，如果数据没有发生变化，调用计算属性直接调用的是存储的缓存值；
-
-而方法每次调用都会重新计算；所以可以根据实际需要选择使用，如果需要计算大量数据，性能开销比较大，可以选用计算属性，如果不能使用缓存可以使用方法；
-
-其实这两个区别还应加一个watch，watch是用来监测数据的变化，和计算属性相比，是watch没有缓存，但是一般想要在数据变化时响应时，或者执行异步操作时，可以选择watch
 
 
 
@@ -1794,7 +2001,7 @@ reverse()
 
 
 
-### 如何配置 vue 打包生成文件的路径？
+## 如何配置 vue 打包生成文件的路径？
 
 
 
@@ -1802,7 +2009,7 @@ reverse()
 
 
 
-### vue 开发命令 npm run dev 输入后的执行过程
+## vue 开发命令 npm run dev 输入后的执行过程
 
 
 
