@@ -1941,61 +1941,1079 @@ computed: {
 
 ## 13. Vue2 侦听属性watch详解
 
+在 Vue 2 中，`watch` 是一个非常重要的侦听属性机制，用于**监听响应式数据的变化并执行相应的操作**。它适用于那些需要在数据变化时执行异步或开销较大的操作的场景。
+
+### 一、watch 基本概念与用途
+
+#### 1.1 什么是 watch
+
+watch 是 Vue.js 中用于监听数据变化并执行相应操作的侦听器。当被监听的数据发生变化时，会触发预先定义的回调函数，从而执行特定的业务逻辑。
+
+#### 1.2 为什么需要 watch
+
+虽然 computed 可以处理基于数据的计算，但 watch 更适合以下场景：
+
+- 需要执行副作用操作（如异步请求、手动修改其他数据）
+- 需要监听多个数据属性或嵌套对象的变化
+- 需要控制回调的触发时机（如立即执行或防抖）
+- 需要获取数据变化前后的值进行比较
+
+### 二、watch 的基本语法与格式
+
+#### 2.1 两种定义格式
+
+2.1.1 方法格式的侦听器
+
+```js
+new Vue({
+  el: '#app',
+  data: {
+    message: 'Hello Vue'
+  },
+  watch: {
+    // 监听 message 属性
+    message(newVal, oldVal) {
+      console.log(`message 从 ${oldVal} 变为 ${newVal}`);
+    }
+  }
+});
+```
+
+2.1.2 对象格式的侦听器
+
+```js
+new Vue({
+  el: '#app',
+  data: {
+    msg: '测试数据',
+    obj: { a: 1 }
+  },
+  watch: {
+    msg: {
+      handler(newVal, oldVal) {
+        console.log(newVal, oldVal);
+      },
+      immediate: true // 立即执行
+    },
+    obj: {
+      handler(newVal, oldVal) {
+        console.log(newVal, oldVal);
+      },
+      immediate: true,
+      deep: true // 深度监听
+    }
+  }
+});
+```
+
+#### 2.2 两种格式的对比
+
+| 特性     | 方法格式                   | 对象格式                              |
+| :------- | :------------------------- | :------------------------------------ |
+| 初始执行 | 无法在刚进入页面时自动触发 | 可通过 `immediate: true` 设置初始执行 |
+| 深度监听 | 无法监听对象内部属性变化   | 可通过 `deep: true` 深度监听对象      |
+| 配置选项 | 无额外配置选项             | 支持 handler, immediate, deep 等选项  |
+
+### 三、watch 的核心选项
+
+#### 3.1 handler
+
+回调函数，当被监听的数据发生变化时触发，接收两个参数：
+
+- `newVal`：变化后的新值
+- `oldVal`：变化前的旧值
+
+#### 3.2 immediate
+
+- 类型：`boolean`
+- 默认值：`false`
+- 作用：设置为 `true` 时，组件初始化时会立即执行一次侦听器
+
+```js
+watch: {
+  username: {
+    handler(newVal, oldVal) {
+      console.log('当前值:', newVal);
+    },
+    immediate: true // 页面加载时立即执行
+  }
+}
+```
+
+#### 3.3 deep
+
+- 类型：`boolean`
+- 默认值：`false`
+- 作用：设置为 `true` 时，会深度监听对象所有嵌套属性的变化
+
+```js
+data() {
+  return {
+    user: {
+      profile: {
+        name: '张三',
+        age: 20
+      }
+    }
+  }
+},
+watch: {
+  user: {
+    handler(newVal) {
+      console.log('user 发生变化', newVal);
+    },
+    deep: true // 深度监听，user.profile.name 变化也会触发
+  }
+}
+```
+
+#### 3.4 监听对象中的单个属性
+
+如果只想监听对象中某个特定属性的变化，可以这样定义：
+
+```js
+watch: {
+  'user.profile.name'(newVal, oldVal) {
+    console.log('用户名变化:', newVal);
+  }
+}
+```
+
+### 四、不同类型数据的监听技巧
+
+#### 4.1 监听简单数据类型
+
+```js
+data() {
+  return {
+    username: 'admin'
+  }
+},
+watch: {
+  username(newVal, oldVal) {
+    console.log('用户名变化:', newVal);
+    // 可以在这里发起Ajax请求验证用户名是否可用
+    // axios.get(`/api/check-username?name=${newVal}`)
+  }
+}
+```
+
+#### 4.2 监听对象
+
+```js
+data() {
+  return {
+    info: {
+      username: 'admin',
+      email: 'admin@example.com'
+    }
+  }
+},
+watch: {
+  info: {
+    handler(newVal) {
+      console.log('info 对象变化:', newVal);
+    },
+    deep: true // 必须开启深度监听
+  }
+}
+```
+
+#### 4.3 监听数组
+
+```js
+data() {
+  return {
+    items: []
+  }
+},
+watch: {
+  items: {
+    handler(newItems, oldItems) {
+      console.log('数组变化:', newItems);
+      // 注意：某些数组方法（如 push, pop, splice 等）会触发变化
+      // 但直接通过索引设置元素（items[0] = newValue）或修改数组长度（items.length = newLength）不会触发
+    },
+    deep: true
+  }
+}
+```
+
+### 五、常见问题与陷阱
+
+#### 5.1 对象属性变化不触发监听
+
+**问题**：默认情况下，watch 无法监听对象内部属性的变化 
+
+**解决方案**：使用 `deep: true` 开启深度监听
+
+#### 5.2 数组变更不触发监听
+
+**问题**：某些数组操作（如通过索引直接设置元素、修改数组长度）不会触发监听 
+
+**解决方案**
+
+```js
+// 错误方式
+this.items[0] = newValue;
+this.items.length = 2;
+
+// 正确方式
+this.$set(this.items, 0, newValue);
+this.items.splice(2);
+```
+
+#### 5.3 性能问题
+
+**问题**：深度监听大型对象可能导致性能问题
+
+**解决方案**：
+
+- 仅当必要时使用 deep 监听
+- 考虑监听特定属性而非整个对象
+- 对于复杂场景，考虑使用 computed 属性
+
+#### 5.4 使用过期数据
+
+**问题**：在异步操作中可能使用过期的数据 
+
+**解决方案**：在发起新的请求前取消之前的请求或使用唯一标识符
+
+### 六、最佳实践建议
+
+1. **优先使用 computed**：如果只是需要基于数据的计算，优先使用 computed 而非 watch
+2. **避免过度使用 deep**：深度监听会带来性能开销，尽量监听特定属性
+3. **合理使用 immediate**：需要初始执行时才设置 immediate: true
+4. **处理异步操作**：在处理异步请求时，考虑添加加载状态和错误处理
+5. **避免无限循环**：在 watch 回调中修改被监听的数据可能导致无限循环
+6. **考虑使用防抖**：对于频繁触发的监听（如输入框），可以使用防抖技术优化性能
+
+### 总结
+
+Vue2 的 watch 侦听器是一个强大的工具，可以让我们在数据变化时执行自定义逻辑。理解其工作原理、正确使用各种选项、避免常见陷阱，能够帮助我们构建更加健壮和高效的 Vue 应用程序。在实际开发中，应根据具体场景选择合适的侦听方式，并注意性能优化。
 
 
-## vue 中对象更改检测的注意事项
 
 
 
-## Vue2中的全局方法介绍
+## 14. Vue2 混入 mixins 详解
+
+Mixins（混入）是 Vue2 中用于**组件代码复用**的重要特性，它允许你将可复用的功能分发到多个组件中。简单说，就是把组件中共同的配置提取出来，单独保存，然后在需要的组件中引入使用。
+
+### 一、基本用法
+
+#### 1. 创建混入对象
+
+在 `src/mixins` 文件夹下创建一个混入文件，比如 `commonMixin.js`：
+
+```js
+// commonMixin.js
+export default {
+  data() {
+    return {
+      commonData: '这是混入的数据'
+    }
+  },
+  created() {
+    console.log('混入的created钩子被调用')
+  },
+  methods: {
+    commonMethod() {
+      console.log('这是混入的方法')
+    }
+  }
+}
+```
+
+#### 2. 局部混入使用
+
+在需要的组件中引入并使用：
+
+```vue
+<template>
+  <div>
+    <p>{{ commonData }}</p>
+    <button @click="commonMethod">点击调用混入方法</button>
+  </div>
+</template>
+
+<script>
+import commonMixin from '@/mixins/commonMixin'
+
+export default {
+  mixins: [commonMixin],
+  data() {
+    return {
+      // 组件自己的数据
+      componentData: '组件自己的数据'
+    }
+  },
+  created() {
+    console.log('组件的created钩子被调用')
+    this.commonMethod() // 调用混入的方法
+    console.log(this.commonData) // 访问混入的数据
+  }
+}
+</script>
+```
+
+#### 3. 全局混入
+
+> ⚠️ 警告：全局混入要谨慎使用，它会影响所有后续创建的 Vue 实例，容易导致意外行为。
+
+在 `main.js` 中全局注册，影响所有 Vue 实例：
+
+```js
+// main.js
+import Vue from 'vue'
+import commonMixin from './mixins/commonMixin'
+
+Vue.mixin(commonMixin)
+```
+
+### 二、选项合并策略
+
+#### 1. 基础合并
+
+| **选项类型**    | **合并策略**                                               |
+| --------------- | ---------------------------------------------------------- |
+| 数据对象 (data) | 递归合并，**组件数据优先**（冲突时覆盖mixin数据）          |
+| 生命周期钩子    | 合并为数组，**mixin钩子先执行**（beforeCreate, created等） |
+| 方法/计算属性   | **组件选项优先**（同名方法覆盖mixin方法）                  |
+| 组件/指令       | 组件选项优先                                               |
+| 自定义选项      | 默认覆盖策略，可通过`optionMergeStrategies`自定义          |
+
+1. **数据对象（data）**
+   data 会进行递归合并，并在发生冲突时以**组件的数据优先**。
+
+```JavaScript
+mixin data: { message: 'mixin', count: 1 }
+组件 data: { message: 'component' }
+合并后: { message: 'component', count: 1 }
+```
+
+2. **生命周期钩子函数**
+   同名钩子函数将合并为一个数组，因此都将被调用。**mixin 的钩子将在组件自身钩子之前调用**。
+
+```JavaScript
+// 输出顺序：
+// 'Mixin created hook'
+// 'Component created hook'
+```
+
+3. **值为对象的选项（如 methods、components、directives）**
+   这些选项将被合并为同一个对象。如果键名冲突，则**组件的键值优先**。
+
+```JavaScript
+mixin methods: { foo: function() { console.log('mixin foo') } }
+组件 methods: { foo: function() { console.log('component foo') } }
+调用 this.foo() 将输出 'component foo'
+```
+
+#### 2. 高级合并策略控制
+
+**自定义合并策略**：
+
+```JavaScript
+// main.js 自定义合并策略
+Vue.config.optionMergeStrategies.customOption = function (parentVal, childVal) {
+  // parentVal: 父选项（mixin 的值）
+  // childVal: 子选项（组件的值）
+  return childVal || parentVal; // 简单合并：优先使用组件选项
+};
+
+// Mixin
+export default {
+  customOption: 'Mixin值'
+}
+
+// 组件
+export default {
+  mixins: [myMixin],
+  customOption: '组件值' // 根据策略决定最终值
+}
+```
+
+### 三、注意事项和最佳实践
+
+1. **命名冲突**：由于混入的属性会合并到组件中，因此需要避免命名冲突。建议在 mixin 中使用特定的前缀来避免冲突。
+
+```JavaScript
+const myMixin = {
+ methods: {
+   $_mixin_uniqueName_method() {
+     // ...
+   }
+ }
+};
+```
+
+2. **全局混入谨慎使用**：全局混入会影响所有组件，可能导致不可预期的行为，通常只在开发插件时使用。
+3. **优先使用组件选项**：当组件和 mixin 有同名选项时，组件的选项会覆盖 mixin 的选项（除了生命周期钩子，它们是合并执行）。
+4. **替代方案**：在大型项目中，mixins 可能会导致代码难以维护，因为它的来源不明确。Vue3 的 Composition API 提供了更好的代码复用机制
+5. **数据独立性**：不同组件中的 Mixin 实例是**独立**的，不会相互影响
+
+### 四、与 Vue3 的对比
+
+> **重要提示**：在 Vue3 中，官方不再推荐使用 Mixins！Vue3 更推荐使用组合式 API 的组合式函数（Composition API）来实现逻辑复用。
+
+Vue3 的组合式函数（Composition API）相比 Mixins 有以下优势：
+
+- 数据来源清晰，通过解构可以明确知道数据来自哪里
+- 避免命名空间冲突
+- 通过参数传递实现组件间通信，而不是隐式依赖
+
+```js
+// useCounter.js
+import { ref } from '@vue/composition-api'
+export function useCounter(initial = 0) {
+  const count = ref(initial)
+  const increment = () => count.value++
+
+  return { count, increment }
+}
+
+// 组件使用
+export default {
+  setup() {
+    const { count, increment } = useCounter(10)
+    return { count, increment }
+  }
+}
+```
+
+### 总结
+
+Vue2 的 mixins 是一种有效的代码复用方式，但在复杂项目中可能会引起命名冲突和逻辑分散的问题。在使用时，建议明确 mixin 的功能，并做好文档说明。对于新项目，如果使用 Vue 3，则推荐使用 Composition API 来替代 mixins。
+
+
+
+## 15. Vue2 过滤器 filter 详解
+
+在 Vue 2 中，过滤器（Filter）是一种用于文本格式化处理的机制。它们通常用于在**模板中对表达式的值进行格式化**，然后再将其渲染到页面上。过滤器可以用在两个地方：双花括号插值和 v-bind 表达式（后者在 2.1.0+ 版本支持）。过滤器应该被添加在 JavaScript 表达式的尾部，由“管道”符号（|）指示。
+
+### 基本使用
+
+1. **在双花括号插值中使用过滤器**：
+
+```vue
+<template>
+{{ message | capitalize }}
+</template>
+```
+
+1. **在 v-bind 中使用过滤器**：
+
+```vue
+<div v-bind:id="rawId | formatId"></div>
+```
+
+### 定义过滤器
+
+过滤器可以在组件的选项中局部定义，也可以在创建 Vue 实例之前全局定义。
+
+#### 全局过滤器
+
+通过 `Vue.filter` 方法定义全局过滤器：
+
+```JavaScript
+Vue.filter('capitalize', function (value) {
+  if (!value) return ''
+  value = value.toString()
+  return value.charAt(0).toUpperCase() + value.slice(1)
+})
+```
+
+#### 局部过滤器
+
+在组件的选项中定义：
+
+```JavaScript
+new Vue({
+  // ...
+  filters: {
+    capitalize: function (value) {
+      if (!value) return ''
+      value = value.toString()
+      return value.charAt(0).toUpperCase() + value.slice(1)
+    }
+  }
+})
+```
+
+### 过滤器串联
+
+过滤器可以串联使用：
+
+```vue
+<template>{{ message | filterA | filterB }}</template>
+```
+
+在这个例子中，`message` 的值将作为参数传递给 `filterA` 函数，然后 `filterA` 的返回值又作为参数传递给 `filterB` 函数。
+
+### 过滤器参数
+
+过滤器是 JavaScript 函数，因此可以接收参数：
+
+```vue
+<div>{{ message | filterA('arg1', arg2) }}</div>
+```
+
+这里，`filterA` 被定义为接收三个参数：第一个参数是 `message` 的值，第二个参数是字符串 `'arg1'`，第三个参数是表达式 `arg2` 的值。
+
+### 注意事项
+
+1. **过滤器函数总接收表达式的值作为第一个参数**。
+2. **过滤器应当是无副作用的纯函数**，即不改变原始数据，只是返回一个新的值。
+3. **在 Vue 3 中，过滤器已被移除**，官方推荐使用计算属性或方法代替。因此，在 Vue 2 项目中虽然可以使用，但考虑到未来的升级，建议谨慎使用。
+
+### 常用过滤器示例
+
+#### 日期格式化
+
+```vue
+<template>
+<p>{{ new Date() | formatDate }}</p> 
+<!-- 输出：2024-12-07 -->
+</template>
+
+<script>
+import moment from 'moment';
+
+Vue.filter('formatDate', function(value, format = 'YYYY-MM-DD') {
+  return moment(value).format(format);
+});
+</script>
+```
+
+#### 首字母大写
+
+```vue
+<p>{{ 'hello world' | capitalize }}</p> 
+<!-- 输出 "Hello world" -->
+
+<script>
+// 全局过滤器
+Vue.filter('capitalize', function (value) {
+  if (!value) return '';
+  return value.charAt(0).toUpperCase() + value.slice(1);
+});
+</script>
+```
+
+#### 货币格式化
+
+```html
+<p>{{ price | currency('$') }}</p> 
+<!-- 输出 "$99.80" -->
+
+<script>
+// 局部过滤器：
+new Vue({
+  data: { price: 99.8 },
+  filters: {
+    currency(value, symbol = '¥') {
+      return symbol + value.toFixed(2);
+    }
+  }
+});
+</script>
+```
+
+### 替代方案
+
+由于 Vue 3 不再支持过滤器，考虑以下替代方案：
+
+- **计算属性**：对于需要响应式更新的复杂数据转换，使用计算属性。
+- **方法**：在模板中调用方法，例如：`formatCurrency(price)`。
+
+
+
+## 16. Vue2 指令 directives 详解
+
+Vue.js 2 的**指令 (Directives)** 是带有 `v-` 前缀的特殊属性，用于在 DOM 元素上应用响应式行为。它们提供了一种声明式的方式操作 DOM，是 Vue 模板系统的核心功能之一。以下从使用方式和实现原理两方面详细解析：
+
+### 一、指令的使用
+
+**常用内置指令**
+
+- **数据绑定指令**：`v-bind`, `v-model`, `v-text`, `v-html`
+- **条件渲染指令**：`v-if`, `v-else-if`, `v-else`, `v-show`
+- **循环渲染指令**：`v-for`
+- **事件处理指令**：`v-on`
+- **特殊指令**：`v-cloak`, `v-once`, `v-pre`
+
+#### 1. v-bind：动态绑定一个或多个属性，或一个组件prop到表达式。
+
+```vue
+<!-- 绑定属性 -->
+<img v-bind:src="imageSrc">
+<!-- 简写 -->
+<img :src="imageSrc">
+
+<!-- 绑定对象 -->
+<div v-bind="{ id: 'container', class: 'wrapper' }"></div>
+```
+
+#### 2. v-model：双向数据绑定
+
+```vue
+<!-- 文本输入 -->
+<input v-model="message" placeholder="edit me">
+
+<!-- 修饰符 -->
+<input v-model.lazy="msg">    <!-- 在change时而非input时更新 -->
+<input v-model.number="age">  <!-- 自动转为数字 -->
+<input v-model.trim="msg">    <!-- 自动过滤首尾空格 -->
+```
+
+#### 3. v-if 和 v-show 条件渲染。
+
+* v-if：真正的条件渲染，切换时销毁/重建元素
+
+* v-show：只是切换display属性
+
+   使用建议：
+
+  - 频繁切换用 v-show
+  - 运行时条件很少改变用 v-if
+
+```vue
+<!-- v-if：条件性地渲染一块内容 -->
+<div v-if="type === 'A'">A</div>
+<div v-else-if="type === 'B'">B</div>
+<div v-else>C</div>
+
+<!-- v-show：基于CSS的显示隐藏 -->
+<h1 v-show="ok">Hello!</h1>
+```
+
+#### 4. v-for：基于源数据多次渲染元素或模板块。
+
+```vue
+<!-- 遍历数组 -->
+<li v-for="(item, index) in items" :key="item.id">
+  {{ index }} - {{ item.text }}
+</li>
+
+```
+
+#### 5. v-on：事件处理
+
+```vue
+<!-- 方法处理器 -->
+<button v-on:click="greet">Greet</button>
+<!-- 简写 -->
+<button @click="doSomething">点击</button>
+
+<!-- 事件修饰符 -->
+<form @submit.prevent="onSubmit"></form>      <!-- 阻止默认行为 -->
+<a @click.stop="doThis"></a>                  <!-- 阻止冒泡 -->
+<a @click.stop.prevent="doThat"></a>          <!-- 链式调用 -->
+
+<!-- 按键修饰符 -->
+<input @keyup.enter="submit">                 <!-- Enter键 -->
+<input @keyup.13="submit">                    <!-- 键码 -->
+<input @keyup.ctrl.enter="clear">             <!-- 组合键 -->
+```
+
+#### 6. 其他内置指令
+
+```vue
+<!-- v-text：更新元素的textContent -->
+<span v-text="msg"></span>
+<!-- 等价于 -->
+<span>{{msg}}</span>
+
+<!-- v-html：更新元素的innerHTML -->
+<div v-html="htmlContent"></div>
+<!-- 注意：容易导致XSS攻击，只对可信内容使用 -->
+
+<!-- v-pre：跳过编译 -->
+<span v-pre>{{ 这里不会被编译 }}</span>
+
+<!-- v-cloak：这个指令保持在元素上直到关联实例结束编译。和CSS规则如[v-cloak] { display: none }一起用时，这个指令可以隐藏未编译的Mustache标签直到实例准备完毕。 -->
+<div v-cloak>
+  {{ message }}
+</div>
+<style>
+  [v-cloak] { display: none; }
+</style>
+
+<!-- v-once：只渲染元素和组件一次。随后的重新渲染，元素/组件及其所有的子节点将被视为静态内容并跳过。 -->
+<span v-once>这个将不会改变: {{msg}}</span>
+```
+
+### 二、自定义指令
+
+除了内置指令，Vue也允许注册自定义指令。自定义指令主要用于对普通DOM元素进行底层操作。
+
+#### 注册自定义指令
+
+**全局注册**：
+
+```javascript
+Vue.directive('focus', {
+  // 当被绑定的元素插入到 DOM 中时……
+  inserted: function (el) {
+    // 聚焦元素
+    el.focus()
+  }
+})
+```
+
+**局部注册**：
+在组件选项中定义：
+
+```javascript
+directives: {
+  focus: {
+    inserted: function (el) {
+      el.focus()
+    }
+  }
+}
+```
+
+然后可以在模板中任何元素上使用新的`v-focus`指令：
+
+```vue
+<input v-focus />
+```
+
+#### 钩子函数
+
+一个指令定义对象可以提供如下几个钩子函数（均为可选）：
+
+- `bind`：只调用一次，指令第一次绑定到元素时调用。在这里可以进行一次性的初始化设置。
+- `inserted`：被绑定元素插入父节点时调用（仅保证父节点存在，但不一定已被插入文档中）。
+- `update`：所在组件的VNode更新时调用，但是可能发生在其子VNode更新之前。指令的值可能发生了改变，也可能没有。
+- `componentUpdated`：指令所在组件的VNode及其子VNode全部更新后调用。
+- `unbind`：只调用一次，指令与元素解绑时调用。
+
+#### 钩子函数参数
+
+每个钩子函数都有以下参数：
+
+- `el`：指令所绑定的元素，可以用来直接操作DOM。
+- `binding`：一个对象，包含以下属性：
+  - `name`：指令名，不包括`v-`前缀。
+  - `value`：指令的绑定值，例如：`v-my-directive="1 + 1"`中，绑定值为`2`。
+  - `oldValue`：指令绑定的前一个值，仅在`update`和`componentUpdated`钩子中可用。无论值是否改变都可用。
+  - `expression`：字符串形式的指令表达式。例如`v-my-directive="1 + 1"`中，表达式为`"1 + 1"`。
+  - `arg`：传给指令的参数，可选。例如`v-my-directive:foo`中，参数为`"foo"`。
+  - `modifiers`：一个包含修饰符的对象。例如：`v-my-directive.foo.bar`中，修饰符对象为`{ foo: true, bar: true }`。
+- `vnode`：Vue编译生成的虚拟节点。
+- `oldVnode`：上一个虚拟节点，仅在`update`和`componentUpdated`钩子中可用。
+
+#### 动态指令参数
+
+指令的参数可以是动态的。例如，在`v-mydirective:[argument]="value"`中，`argument`参数可以根据组件实例数据进行更新。
+
+#### 函数简写
+
+在很多时候，你可能想在`bind`和`update`时触发相同行为，而不关心其它的钩子。比如这样写：
+
+```javascript
+Vue.directive('color-swatch', function (el, binding) {
+  el.style.backgroundColor = binding.value
+})
+```
+
+#### 对象字面量
+
+如果指令需要多个值，可以传入一个JavaScript对象字面量。**指令函数能够接受所有合法的JavaScript表达式。**
+
+```vue
+<div v-demo="{ color: 'white', text: 'hello!' }"></div>
+```
+
+```javascript
+Vue.directive('demo', function (el, binding) {
+  console.log(binding.value.color) // => "white"
+  console.log(binding.value.text)  // => "hello!"
+})
+```
+
+### 三、指令的原理
+
+#### 1. 指令的编译
+
+`Vue` 的指令是作为模板编译的一部分。`Vue`的模板编译过程将模板字符串转换成渲染函数。在这个过程中，指令会被解析并转换成相应的代码，这些代码会在渲染函数中创建虚拟节点（VNode）时被执行。
+
+具体步骤如下：
+
+1. **解析**：将模板字符串解析成抽象语法树（AST）。在解析过程中，会识别出所有指令，并将其作为节点的属性记录。
+2. **优化**：遍历AST，标记静态节点，这样在重新渲染时可以跳过这些静态节点。
+3. **生成代码**：将AST转换成可执行的渲染函数代码字符串。在这个阶段，指令会被转换成对应的代码，比如对于`v-if`，会生成条件判断代码；对于`v-for`，会生成循环代码。
+
+#### 2. 指令的钩子如何被调用
+
+在渲染函数执行时，会创建VNode。在创建VNode的过程中，如果节点有指令，会在VNode的数据对象中记录这些指令。然后，在patch过程中，当创建真实DOM时，会调用指令的钩子函数。
+
+具体来说，在patch阶段，当创建一个元素节点时，会调用`createElm`函数，这个函数会调用`invokeCreateHooks`，进而调用每个模块的create钩子。其中，`updateDirectives`就是一个模块，它负责处理指令。在创建元素时，会调用指令的`bind`和`inserted`钩子。在更新节点时，会调用`updateDirectives`模块的update钩子，进而调用指令的`update`和`componentUpdated`钩子。
+
+#### 3. 自定义指令的底层实现
+
+自定义指令的底层实现依赖于Vue的模块系统。在Vue的源码中，有一个`modules`目录，其中包含了各种模块，比如`directives`模块。这个模块定义了指令的create、update、destroy钩子。在patch过程中，这些钩子会被调用，从而执行指令的定义对象中对应的钩子函数。
+
+#### 4. 指令与生命周期
+
+指令的钩子函数与Vue实例的生命周期钩子类似，但是指令的钩子函数是在指令的生命周期中被调用的。指令的生命周期与它所绑定的元素的生命周期相关。
+
+### 四、总结
+
+Vue2的指令是一个非常强大的工具，它允许开发者直接操作DOM，同时也提供了一种机制来扩展Vue的功能。通过理解指令的使用方法和原理，我们可以更好地使用Vue，并且在需要的时候创建自己的自定义指令来满足特定的需求。
+
+注意：Vue3中指令的API有所变化，但基本概念类似。在Vue3中，自定义指令的钩子函数名称和参数有所调整，但核心思想保持一致。
+
+
+
+## 17. Vue2 中的全局API和属性
+
+Vue2 的**全局 API**和**全局属性**是框架的核心配置机制，它们从不同维度扩展了 Vue 的功能。简单来说：
+* **全局API**：挂载在 `Vue` 构造函数上的静态方法，用于全局配置或工具。
+* **全局属性**：通过 `Vue.prototype` 添加的属性/方法，在每个组件实例中可用。
+
+下表清晰地展示了两者的关键区别与联系：
+
+| 特性         | 全局 API (Vue.*)                                             | 全局属性/方法 (Vue.prototype.*)                 |
+| :----------- | :----------------------------------------------------------- | :---------------------------------------------- |
+| **本质**     | **Vue 构造函数自身的静态方法**                               | **添加到 Vue 原型链上的属性/方法**              |
+| **调用方式** | `Vue.directive(‘focus’, { … })`                              | 在组件实例中通过 `this.$methodName()` 调用      |
+| **主要作用** | **全局配置**、定义全局行为（指令/组件/混入）、工具函数       | **为每个 Vue 实例添加共享属性或方法**           |
+| **影响范围** | 影响整个 Vue 应用，作用于全局                                | 影响所有通过 `new Vue()` 或组件创建的**实例**   |
+| **常见例子** | `Vue.use()`, `Vue.mixin()`, `Vue.directive()`, `Vue.filter()`, `Vue.nextTick()` | `this.$http`, `this.$formatDate`, `this.$store` |
+
+### **一、全局 API（Vue.xxx）**
+
+1. `Vue.extend(options)`：创建可复用的组件构造器（返回构造函数）
+
+```JavaScript
+ const MyComponent = Vue.extend({ template: '<div>自定义组件</div>' });
+ new MyComponent().$mount('#app');
+```
+
+2. `Vue.nextTick([callback, context])`：DOM 更新后执行回调（解决异步更新问题）
+
+```JavaScript
+Vue.nextTick(() => {
+  console.log('DOM 已更新');
+});
+```
+
+3. `Vue.set(target, key, value)`：**响应式添加属性**（解决 Vue 无法检测新增属性的限制）
+
+```JavaScript
+Vue.set(vm.someObject, 'newKey', 'value');
+```
+
+4. `Vue.delete(target, key)`： 响应式删除属性（确保触发视图更新）
+
+```JavaScript
+Vue.delete(vm.someObject, 'oldKey');
+```
+
+5. `Vue.directive(id, [definition])`：注册/获取全局自定义指令
+
+```JavaScript
+Vue.directive('focus', {
+ inserted: el => el.focus()
+});
+```
+
+6. `Vue.filter(id, [definition])`: 注册/获取全局过滤器
+
+```JavaScript
+Vue.filter('currency', value => `¥${value}`);
+```
+
+7. `Vue.component(id, [definition])`: 注册/获取全局组件
+
+```JavaScript
+Vue.component('my-button', { template: '<button>按钮</button>' });
+```
+
+8. `Vue.use(plugin, [options])`: 安装插件（如 Vuex、Vue Router）
+
+```JavaScript
+Vue.use(VueRouter);
+```
+
+9. `Vue.mixin(mixin)`: 全局混入（影响所有组件，慎用）
+
+```JavaScript
+Vue.mixin({ created() { console.log('全局混入'); } });
+```
+
+10. `Vue.observable(object)`: 创建响应式对象（类似 `data`）
+
+```JavaScript
+const state = Vue.observable({ count: 0 });
+```
+
+11. `Vue.version`: 获取 Vue 版本号（字符串）
+
+
+
+### **二、实例属性（this.xxx）**
+
+1. **`vm.$data`**: 组件的数据对象（同 `data` 选项）
+2. **`vm.$props`**: 接收的 props 对象
+3. **`vm.$el`**: 组件根 DOM 元素（挂载后可用）
+4. **`vm.$options`**: 组件初始化选项（含自定义属性）
+
+```JavaScript
+ mounted() {
+   console.log(this.$options.customOption); // 访问自定义选项
+ }
+```
+
+5. **`vm.$parent` / `vm.$root`**: 父实例 / 根实例
+
+6. **`vm.$children`**: 当前实例的直接子组件（数组）
+
+7. **`vm.$slots` / `vm.$scopedSlots`**: 插槽内容（`$scopedSlots` 用于作用域插槽）
+
+8. **`vm.$refs`**: 持有注册过 `ref` 的 DOM/组件
+
+- 示例：
+
+```html
+<div ref="myDiv"></div>
+<child-component ref="child"></child-component>
+
+this.$refs.myDiv;      // DOM 元素
+this.$refs.child;      // 子组件实例
+```
+
+9. `vm.$isServer`：是否运行在服务端（SSR 使用）
+
+### **三、实例方法（this.xxx()）**
+
+1. `vm.$watch(expOrFn, callback, [options])`：监听数据变化
+
+```JavaScript
+this.$watch('count', (newVal, oldVal) => {
+  console.log(`值变化：${oldVal} → ${newVal}`);
+});
+```
+
+2. `vm.$on(event, callback)`：监听自定义事件
+
+```JavaScript
+this.$on('custom-event', data => console.log(data));
+```
+
+3. `vm.$emit(event, [...args])`：触发自定义事件
+
+```JavaScript
+this.$emit('custom-event', { msg: 'Hello!' });
+```
+
+4. **`vm.$once(event, callback)`**：监听一次性事件
+
+5. **`vm.$off([event, callback])`**：移除事件监听器
+
+6. **`vm.$forceUpdate()`**：强制组件重新渲染（非响应式数据变更时使用）
+
+7. **`vm.$nextTick(callback)`**：组件 DOM 更新后执行回调
+
+```JavaScript
+this.message = '更新';
+this.$nextTick(() => {
+  console.log('DOM 已更新');
+});
+```
+
+8. `vm.$mount([elementOrSelector])`
+
+- 手动挂载未挂载的实例
+- 示例：
+
+```JavaScript
+const vm = new Vue({ template: '<div>内容</div>' });
+vm.$mount('#app'); // 等同于 el: '#app'
+```
+
+9. `vm.$destroy()`：完全销毁实例（清理事件监听、子组件等）
+
+### 四、Vue.prototype.*：全局实例
+这是向**所有 Vue 实例**添加共享功能的主要方式。其原理基于 JavaScript 的**原型继承**：当访问一个实例的属性（如 `this.$xxx`）时，如果在实例自身没找到，就会沿着原型链（`__proto__`）向上查找。`Vue.prototype` 是所有 Vue 实例的原型，因此添加到它上面的属性或方法能被所有实例访问。
+
+**实现方式与最佳实践**
+```javascript
+// 在入口文件（如 main.js）中添加
+import Vue from 'vue';
+import axios from 'axios';
+
+// 1. 添加一个全局属性（通常用于常量）
+Vue.prototype.$appName = 'My Awesome App';
+
+// 2. 添加一个全局方法（建议以 $ 开头，避免命名冲突）
+Vue.prototype.$formatDate = function (date, format = 'YYYY-MM-DD') {
+  // 日期格式化逻辑...
+  return formattedDate;
+};
+
+// 3. 集成第三方库的常用模式
+Vue.prototype.$http = axios;
+
+new Vue({
+  created() {
+    console.log(this.$appName); // 访问全局属性
+    console.log(this.$formatDate(new Date())); // 调用全局方法
+    this.$http.get('/api/user'); // 使用挂载的库
+  }
+});
+```
+
+**⚡ 关键注意事项**
+
+1. **`this` 的上下文**：通过 `Vue.prototype` 添加的方法，其内部的 `this` 将指向调用它的 Vue 组件实例。避免使用箭头函数定义方法，否则 `this` 不会按预期绑定。
+2. **命名冲突**：强烈建议为自定义的全局属性添加 **`$`** 前缀。这个约定清晰地将其与组件自身的 `data`、`methods` 区分开，并避免与未来 Vue 的内置 API 冲突。
+3. **与全局混入（Mixin）的选择**：对于简单的工具函数或库的引用，使用 `Vue.prototype` 更直观轻量。如果需要为每个组件注入一组包含**生命周期钩子、数据、方法**的复杂选项，才考虑使用 `Vue.mixin`，但需格外谨慎。
+
+### 五、Vue.use()：插件的全局安装
+`Vue.use(plugin)` 是使用第三方插件或封装自定义插件的标准方式。插件本质上就是一个暴露了 `install` 方法的对象，`Vue.use` 会自动调用该 `install` 方法，并将 Vue 构造函数作为参数传入。
+```javascript
+// 1. 定义一个插件
+const MyPlugin = {
+  install(Vue) {
+    // 在插件内部可以随意使用全局API和全局属性
+    Vue.component('MyComponent', { /* ... */ });
+    Vue.directive('my-directive', { /* ... */ });
+    Vue.prototype.$myMethod = function () { /* ... */ };
+  }
+};
+// 2. 使用插件（必须在 new Vue() 之前调用）
+Vue.use(MyPlugin);
+// 现在，插件中定义的所有功能都全局可用
+```
+像 Vue Router、Vuex 等官方库都是通过 `Vue.use()` 来安装的。
+
+### ✅ 总结与最佳实践
+| 场景                           | 推荐方式                              | 说明                                                     |
+| :----------------------------- | :------------------------------------ | :------------------------------------------------------- |
+| **注册可复用的组件/指令**      | `Vue.component()` / `Vue.directive()` | 适用于基础组件、业务通用组件。                           |
+| **添加简单的工具函数**         | `Vue.prototype.$xxx`                  | 遵循 `$` 前缀约定，避免冲突。                            |
+| **封装或使用功能复杂的库**     | 开发为**插件**，通过 `Vue.use()` 安装 | 结构清晰，可维护性强。                                   |
+| **需要影响每个组件生命周期**   | **慎用** `Vue.mixin()`                | 容易造成代码难以追踪，仅在开发插件或特定基础框架时使用。 |
+| **需要处理响应式数据特殊情况** | `Vue.set()` / `Vue.delete()`          | 确保数据变化能被 Vue 侦测到。                            |
+
+**🚀 Vue2 与 Vue3 的对比**
+了解 Vue2 的全局 API/属性后，需要注意在 Vue3 中，为了更好的**Tree-Shaking**支持和模块化，这些 API 的设计发生了重大变化：
+
+* **Vue2 的全局 API (Vue.)** 在 Vue3 中多数改为**按需导入**的 ES 模块，例如 `import { createApp, nextTick } from 'vue'`。
+* **Vue2 的全局属性 (Vue.prototype)** 在 Vue3 中被 **`app.config.globalProperties`** 所替代。
 
 
 
 
 
-## v-model 语法糖的组件中的使用
+​	
 
 
-
-
-
-## 十个常用的自定义过滤器
-
-
-
-
-
-
-
-
-
-## 
-
-答案：先来看一下计算属性的定义：
-当其依赖的属性的值发生变化的时，计算属性会重新计算。反之则使用缓存中的属性值。
-计算属性和vue中的其它数据一样，都是响应式的，只不过它必须依赖某一个数据实现，并且只有它依赖的数据的值改变了，它才会更新
-
-
-
-## 38.$route和$router的区别
-
-答案：$route 是路由信息对象，包括path，params，hash，query，fullPath，matched，name 等路由信息参数。
-
-而 $router 是路由实例对象，包括了路由的跳转方法，钩子函数等
-
-
-
-
-
-
-
-## vue 如何优化首屏加载速度？
-
-
-
-
-
-## vue 打包后会生成哪些文件？
 
 
 
@@ -2039,11 +3057,11 @@ vue响应式的原理，首先对象传入vue实例作为data对象时，首先�
 
 
 
+## 十个常用的自定义过滤器
+
 
 
 ## 如何编译 template 模板？
-
-答案：[参考](http://www.itcast.cn/news/20190110/15320198690.shtml)
 
 
 
@@ -2051,21 +3069,7 @@ vue响应式的原理，首先对象传入vue实例作为data对象时，首先�
 
 
 
-
-
-
-
-### 批量异步更新策略及 nextTick 原理？
-
-
-
-
-
-
-
 ## Vue 中如何实现 proxy 代理？
-
-
 
 webpack 自带的 devServer 中集成了 http-proxy-middleware。配置 devServer 的 proxy 选项即可
 
@@ -2083,15 +3087,7 @@ proxyTable: {
 
 
 
-
-
-
-
-
-
 ## vue 的渲染机制
-
-答案：
 
 
 
@@ -2104,27 +3100,7 @@ vm.arr.length = newLength 也是无法检测的到的
 
 
 
-
-
-## 61.vue 的优点是什么？
-
-答案：
-
-低耦合。视图（View）可以独立于 Model 变化和修改，一个 ViewModel 可以绑定到不同的"View"上，当 View 变化的时候 Model 可以不变，当 Model 变化的时候 View 也可以不变。
-
-可重用性。你可以把一些视图逻辑放在一个 ViewModel 里面，让很多 view 重用这段视图逻辑。
-
-独立开发。开发人员可以专注于业务逻辑和数据的开发（ViewModel），设计人员可以专注于页面设计。
-
-可测试。界面素来是比较难于测试的，而现在测试可以针对 ViewModel 来写。
-
-
-
-
-
 ## 62.vue 如何实现按需加载配合 webpack 设置
-
-答案：
 
 ```
 webpack 中提供了 require.ensure()来实现按需加载。以前引入路由是通过 import 这样的方式引入，改为 const 定义的方式进行引入。
@@ -2150,13 +3126,9 @@ const Singer = (resolve) => {
 
 
 
-
-
 ## 63.如何让 CSS 只在当前组件中起作用
 
 答案：将当前组件的`<style>`修改为`<style scoped>`
-
-
 
 
 
@@ -2166,11 +3138,7 @@ const Singer = (resolve) => {
 
 
 
-
-
 ## 65.vue-loader 是什么？使用它的用途有哪些？
-
-答案：
 
 vue-loader 是解析 .vue 文件的一个加载器，将 template/js/style 转换成 js 模块。
 
@@ -2178,19 +3146,11 @@ vue-loader 是解析 .vue 文件的一个加载器，将 template/js/style 转�
 
 
 
-
-
-
-
 ## 67.你们vue项目是打包了一个js文件，一个css文件，还是有多个文件？
 
 
 
-
-
 ## 68.vue遇到的坑，如何解决的？
-
-答案：
 
 
 
@@ -2206,53 +3166,6 @@ store实例上有数据，有方法，方法改变的都是store实例上的数�
 
 
 
-## 70.vuex 是什么？怎么使用？哪种功能场景使用它？
-
-答案：
-
-vue 框架中状态管理。在 main.js 引入 store，注入。新建一个目录 store，….. export 。场景有：单页应用中，组件之间的状态。音乐播放、登录状态、加入购物车
-
-main.js:
-
-```
-import store from './store'
-
-
-new Vue({
-el:'#app',
-store
-})
-```
-
-
-
-
-
-## 71.vuex 有哪几种属性？
-
-答案：
-
-有五种，分别是 State、 Getter、Mutation 、Action、 Module
-
-```
-vuex的State特性
-A、Vuex就是一个仓库，仓库里面放了很多对象。其中state就是数据源存放地，对应于一般Vue对象里面的data
-B、state里面存放的数据是响应式的，Vue组件从store中读取数据，若是store中的数据发生改变，依赖这个数据的组件也会发生更新
-C、它通过mapState把全局的 state 和 getters 映射到当前组件的 computed 计算属性中
-
-· vuex的Getter特性
-A、getters 可以对State进行计算操作，它就是Store的计算属性
-B、 虽然在组件内也可以做计算属性，但是getters 可以在多组件之间复用
-C、 如果一个状态只在一个组件内使用，是可以不用getters
-
-·  vuex的Mutation特性
-Action 类似于 mutation，不同在于：Action 提交的是 mutation，而不是直接变更状态；Action 可以包含任意异步操作。
-```
-
-
-
-
-
 ## 72.不用 Vuex 会带来什么问题？
 
 答案：
@@ -2265,21 +3178,15 @@ Action 类似于 mutation，不同在于：Action 提交的是 mutation，而不
 
 
 
+## 38.$route和$router的区别
+
 
 
 ## 73.vue-router 如何响应 路由参数 的变化？
 
-答案：
-
-
-
 
 
 ## 74.完整的 vue-router 导航解析流程
-
-答案：
-
-
 
 
 
@@ -2293,11 +3200,7 @@ Action 类似于 mutation，不同在于：Action 提交的是 mutation，而不
 
 
 
-
-
 ## 76.vue-router 的几种实例方法以及参数传递
-
-答案：
 
 
 
@@ -2305,27 +3208,15 @@ Action 类似于 mutation，不同在于：Action 提交的是 mutation，而不
 
 答案：在 router 目录下的 index.js 文件中，对 path 属性加上/:id。 使用 router 对象的 params.id
 
-
-
 ## 78.vue-router 如何定义嵌套路由？
-
-答案：
-
-
 
 
 
 ## 79.`<router-link></router-link>`组件及其属性
 
-答案：
-
-
-
 
 
 ## 80.vue-router 实现路由懒加载（ 动态加载路由 ）
-
-答案：[参考](https://segmentfault.com/a/1190000011519350)
 
 
 
@@ -2335,11 +3226,7 @@ Action 类似于 mutation，不同在于：Action 提交的是 mutation，而不
 
 
 
-
-
 ## 82.history 路由模式与后台的配合
-
-
 
 
 
@@ -2352,50 +3239,6 @@ Action 类似于 mutation，不同在于：Action 提交的是 mutation，而不
 如果想了解得详细点，建议百度或者阅读源码。
 
 
-
-
-
-## 85. MVC、MVP 与 MVVM 模式
-
-答案：
-
-一、MVC
-
-通信方式如下
-
-1. 视图（View）：用户界面。 传送指令到 Controller
-
-2. 控制器（Controller）：业务逻辑 完成业务逻辑后，要求 Model 改变状态
-
-3. 模型（Model）：数据保存 将新的数据发送到 View，用户得到反馈
-
-二、MVP
-
-通信方式如下
-
-
-
-1. 各部分之间的通信，都是双向的。
-
-2. View 与 Model 不发生联系，都通过 Presenter 传递。
-
-3. View 非常薄，不部署任何业务逻辑，称为"被动视图"（Passive View），即没有任何主动性，而 Presenter 非常厚，所有逻辑都部署在那里。
-
-五、MVVM
-
-MVVM 模式将 Presenter 改名为 ViewModel，基本上与 MVP 模式完全一致。通信方式如下
-
-
-
-唯一的区别是，它采用双向绑定（data-binding）：View 的变动，自动反映在 ViewModel，反之亦然。
-
-
-
-
-
-## 86.常见的实现 MVVM 几种方式
-
-答案：
 
 
 
@@ -2541,12 +3384,6 @@ console.log(a.b); //打印 你取我的值
 
 
 
-## 88.实现一个自己的 MVVM（原理剖析）
-
-答案：
-
-
-
 
 
 ## 89.递归组件的使用
@@ -2565,7 +3402,7 @@ console.log(a.b); //打印 你取我的值
 
 
 
-### 91.发布-订阅模式
+## 91.发布-订阅模式
 
 答案：
 
@@ -2573,7 +3410,7 @@ console.log(a.b); //打印 你取我的值
 
 
 
-### 构建的 vue-cli 工程都到了哪些技术，它们的作用分别是什么？
+## 构建的 vue-cli 工程都到了哪些技术，它们的作用分别是什么？
 
 答案：
 
@@ -2590,31 +3427,6 @@ console.log(a.b); //打印 你取我的值
 6、创建一个 emit.js 文件，用于 vue 事件机制的管理。
 
 7、webpack：模块加载和 vue-cli 工程打包器。
-
-
-
-
-
-## vue-cli 工程常用的 npm 命令有哪些？
-
-答案：npm install、npm run dev、npm run build --report 等
-
-解析：
-
-下载 node_modules 资源包的命令：npm install
-
-启动 vue-cli 开发环境的 npm 命令：npm run dev
-
-vue-cli 生成 生产环境部署资源 的 npm 命令：npm run build
-
-用于查看 vue-cli 生产环境部署资源文件大小的 npm 命令：npm run build --report，此命令必答
-
-命令效果：
-![vue_001](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251123183016388.jpg)
-
-在浏览器上自动弹出一个 展示 vue-cli 工程打包后 app.js、manifest.js、vendor.js 文件里面所包含代码的页面。可以具此优化 vue-cli 生产环境部署的静态资源，提升 页面 的加载速度。
-
-
 
 
 
@@ -2683,123 +3495,29 @@ devDependencies：开发环境依赖包的名称和版本号，即这些 依赖�
 
 
 
+## Vue CLI 项目使用全局常量指南
 
 
-## vue-cli 中常用到的加载器
 
-答案：
+## vue 是如何对数组方法进行变异的？例如 push、pop、splice 等方
 
-1.安装 sass:
 
-2.安装 axios:
 
-3.安装 mock:
+## vue 如何优化首屏加载速度？
 
-4.安装 lib-flexible: --实现移动端自适应
 
-5.安装 sass-resourses-loader
 
+## vue 打包后会生成哪些文件？
 
 
 
-
-## 100.vue.cli 中怎样使用自定义的组件？有遇到过哪些问题吗？
-
-答案：
-
-第一步：在 components 目录新建你的组件文件（如：indexPage.vue），script 一定要 export default {}
-
-第二步：在需要用的页面（组件）中导入：import indexPage from '@/components/indexPage.vue'
-
-第三步：注入到 vue 的子组件的 components 属性上面,components:{indexPage}
-
-第四步：在 template 视图 view 中使用
-
-遇到的问题：
-例如有 indexPage 命名，使用的时候则 index-page
-
-
-
-
-
-## vue-cli 提供的几种脚手架模板
-
-答案：
-
-
-
-
-
-## vue-cli 开发环境使用全局常量
-
-答案：
-
-
-
-
-
-## vue-cli 生产环境使用全局常量
-
-答案：
-
-
-
-
-
-## vue-cli 中自定义指令的使用
-
-答案：
-
-
-
-
-
-## vue 是如何对数组方法进行变异的？例如 push、pop、splice 等方法
-
-答案：
-
-
-
-## vue 组件之间的通信种类
-
-答案：
-
-1)	父组件向子组件通信
-2)	子组件向父组件通信
-3)	隔代组件间通信
-4)	兄弟组件间通信
-
-
-
-## vue 是如何对数组方法进行变异的？例如 push、pop、splice 等方法
-
-答案：
-
-
-
-108. ## 谈一谈 nextTick 的原理
-
-答案：
-
-
-
-109. ## Vue 中的 computed 是如何实现的
-
-答案：
-
-
-
-110. ## vue 如何优化首页的加载速度？vue 首页白屏是什么问题引起的？如何解决呢？
-
-答案：
-
-### vue 如何优化首页的加载速度？
+## vue 如何优化首页的加载速度？
 
 * 路由懒加载
 * ui框架按需加载
 * gzip压缩
 
-### vue 首页白屏是什么问题引起的？
+## vue 首页白屏是什么问题引起的？如何解决
 
 * 第一种，打包后文件引用路径不对，导致找不到文件报错白屏
 
@@ -2850,67 +3568,19 @@ devDependencies：开发环境依赖包的名称和版本号，即这些 依赖�
 
 
 
-## 111.Vue 的父组件和子组件生命周期钩子执行顺序是什么
-
-答案：
-
-* 加载渲染过程
-  * 父beforeCreate->父created->父beforeMount->子beforeCreate->子created->子beforeMount->子mounted->父mounted
-
-* 子组件更新过程
-
-  * 父beforeUpdate->子beforeUpdate->子updated->父updated
-
-* 父组件更新过程
-  * 父beforeUpdate->父updated
-
-* 销毁过程
-  * 父beforeDestroy->子beforeDestroy->子destroyed->父destroyed
+## 85. MVC、MVP 与 MVVM 模式
 
 
 
-112.在 Vue 中，子组件为何不可以修改父组件传递的 Prop，如果修改了，Vue 是如何监控到属性的修改并给出警告的。
-
-答案：
+## 86.常见的实现 MVVM 几种方式
 
 
 
-113.实现通信方式
-
-答案：
-
-```
-方式1: props
-1)	通过一般属性实现父向子通信
-2)	通过函数属性实现子向父通信
-3)	缺点: 隔代组件和兄弟组件间通信比较麻烦
-
-方式2: vue自定义事件
-1)	vue内置实现, 可以代替函数类型的props
-  a.	绑定监听: <MyComp @eventName="callback"
-  b.	触发(分发)事件: this.$emit("eventName", data)
-2)	缺点: 只适合于子向父通信
-
-方式3: 消息订阅与发布
-1)	需要引入消息订阅与发布的实现库, 如: pubsub-js
-  a.	订阅消息: PubSub.subscribe('msg', (msg, data)=>{})
-  b.	发布消息: PubSub.publish(‘msg’, data)
-2)	优点: 此方式可用于任意关系组件间通信
-
-方式4: vuex
-1)	是什么: vuex是vue官方提供的集中式管理vue多组件共享状态数据的vue插件
-2)	优点: 对组件间关系没有限制, 且相比于pubsub库管理更集中, 更方便
-
-方式5: slot
-1)	是什么: 专门用来实现父向子传递带数据的标签
-  a.	子组件
-  b.	父组件
-2)	注意: 通信的标签模板是在父组件中解析好后再传递给子组件的
-```
+## 88.实现一个自己的 MVVM（原理剖析）
 
 
 
-114.说说Vue的MVVM实现原理
+## 114.说说Vue的MVVM实现原理
 
 答案：
 
@@ -2943,8 +3613,6 @@ a.	通过数据劫持实现
 
 
 
-
-
 ## vue 弹窗后如何禁止滚动条滚动？
 
 
@@ -2953,15 +3621,7 @@ a.	通过数据劫持实现
 
 
 
-答案：利用 vue-router 的 beforeEach 事件，可以在跳转页面前判断用户的权限（利用 cookie 或 token），是否能够进入此页面，如果不能则提示错误或重定向到其他页面，在后台管理系统中这种场景经常能遇到。
-
 ## vue 中如何实现 tab 切换功能？
-
-
-
-
-
-## vue 中如何利用 keep-alive 标签实现某个组件缓存功能？
 
 
 
