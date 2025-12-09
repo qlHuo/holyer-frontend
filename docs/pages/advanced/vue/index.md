@@ -960,3 +960,110 @@ if (checkSupport().pushState) {
 ### 总结
 
 单页面应用通过动态更新页面内容，提供了流畅的用户体验，是现代Web开发的重要模式。Vue.js作为构建SPA的框架之一，以其轻量、灵活和易上手的特点，受到广泛欢迎。然而，SPA也存在一些挑战，如首屏加载和SEO，需要通过技术手段优化。在选择是否使用SPA时，需要根据项目需求和目标用户进行权衡。
+
+
+
+## 6. Vue2全局运行机制解析
+
+Vue.js的运行机制可以总结为：**响应式系统 + 虚拟DOM + 组件化开发/编译**。
+
+### Vue2 全局运行机制
+
+Vue2 的核心是通过一个全局的 `Vue` 构造函数来创建应用。当我们创建一个Vue实例时，Vue会进行一系列的初始化过程。
+
+#### 1. 初始化阶段
+
+- **初始化生命周期、事件、渲染函数等**：Vue实例在初始化时会设置一些内部属性，如`_events`, `_watcher`等。
+- **初始化状态（State Initialization）**：包括`props`、`data`、`computed`、`methods`、`watch`等。其中，`data`对象会被递归地转换成响应式对象（通过`Object.defineProperty`设置getter/setter）。
+
+#### 2. 模板编译（如果使用运行时+编译器版本）
+
+- 将模板字符串编译成渲染函数（render函数）。这个过程包括：
+  - 解析（Parse）：将模板字符串转换成抽象语法树（AST）。
+  - 优化（Optimize）：标记静态节点，以便在重新渲染时跳过它们。
+  - 生成（Generate）：将AST转换成渲染函数代码。
+
+#### 3. 响应式系统（Reactivity System）
+
+- Vue2的响应式系统基于`Object.defineProperty`，对每个对象的属性进行递归劫持。每个组件实例都有一个对应的`Watcher`实例，它会在组件渲染过程中将属性记录为依赖。当属性变化时，会通知`Watcher`重新计算（即重新渲染）。
+
+#### 4. 虚拟DOM与渲染
+
+- 渲染函数（render function）执行后生成虚拟DOM树（VNode tree）。
+- 当数据变化时，Vue会重新运行渲染函数生成新的VNode树，然后与旧的VNode树进行对比（diff算法），并找出最小的变化，然后应用到真实DOM上。
+
+#### 5. 组件机制
+
+- 组件是可复用的Vue实例。每个组件在创建时都会进行初始化，包括响应式数据、计算属性等。
+- 组件之间通过`props`向下传递数据，通过`events`向上传递消息。
+- 组件树形成父子关系，在更新时，会从父组件到子组件进行更新（异步更新队列）。
+
+#### 6. 全局API
+
+- Vue2提供了一些全局API，如`Vue.component`用于注册全局组件，`Vue.directive`用于注册全局指令，`Vue.mixin`用于全局混入等。
+
+### Vue3 全局运行机制的变化
+
+Vue3在整体设计上有了较大的变化，主要目标是提高性能和增加可维护性，同时提供更好的TypeScript支持。
+
+#### 1. 初始化应用
+
+- Vue3不再使用`new Vue()`，而是通过`createApp`函数创建一个应用实例。
+
+```JavaScript
+import { createApp } from 'vue';
+const app = createApp({});
+```
+
+- 应用实例提供了一系列方法，如`component`, `directive`, `mount`等，这些方法的作用域仅限于该应用实例，避免了Vue2中全局API的污染问题。
+
+#### 2. 响应式系统重构
+
+- Vue3使用`Proxy`代替`Object.defineProperty`来实现响应式。
+  - `Proxy`可以直接代理整个对象，不需要递归劫持每个属性（在访问深层属性时才递归，惰性代理）。
+  - 可以监听数组的变化，而不需要重写数组方法。
+  - 支持动态添加属性，而不需要`Vue.set`方法。
+- 引入了`ref`和`reactive`两个API来创建响应式数据。
+- 响应式系统被独立成一个单独的包（`@vue/reactivity`），可以与其他库配合使用。
+
+#### 3. 组合式API（Composition API）
+
+- Vue3引入了组合式API，作为选项式API（Options API）的补充。组合式API允许将逻辑组织在一起，而不是分散在`data`, `methods`, `computed`等选项中。
+- 组合式API基于函数式编程思想，提供了更好的代码组织和复用能力。
+
+#### 4. 虚拟DOM重写
+
+- Vue3对虚拟DOM进行了重构，包括：
+  - 标记静态节点，提升静态节点（在渲染函数外创建静态VNode，避免重复创建）。
+  - 更新时使用patch flag（在VNode创建时记录动态绑定的类型），在diff过程中只比较动态部分。
+  - 事件侦听器缓存（cacheHandlers），避免重复追踪事件变化。
+
+#### 5. 生命周期变化
+
+- Vue3的生命周期钩子名称发生了变化（如`beforeDestroy`改为`beforeUnmount`，`destroyed`改为`unmounted`），并且可以通过组合式API中的钩子函数（如`onMounted`）来使用。
+
+#### 6. 支持多个根节点（Fragment）
+
+- Vue3支持组件有多个根节点，而Vue2中组件只能有一个根节点。
+
+#### 7. Teleport（传送门）组件
+
+- Vue3提供了`<teleport>`组件，可以将组件内容渲染到DOM树的任何位置。
+
+#### 8. Suspense组件
+
+- Vue3的`<suspense>`组件允许在等待异步组件时显示回退内容。
+
+### 总结对比
+
+| 特性                 | Vue2                                                        | Vue3                                            |
+| -------------------- | ----------------------------------------------------------- | ----------------------------------------------- |
+| **初始化方式**       | `new Vue()`                                                 | `createApp()`                                   |
+| **响应式系统**       | `Object.defineProperty`（仅支持对象属性，数组需要特殊处理） | `Proxy`（全面代理，支持数组和动态属性）         |
+| **API风格**          | 选项式API（Options API）                                    | 组合式API（Composition API）为主，兼容选项式API |
+| **虚拟DOM性能**      | 全量对比                                                    | 标记动态节点，只对比动态部分（patch flag）      |
+| **全局API**          | 全局API（如`Vue.component`）影响所有应用                    | 应用实例API，作用域隔离                         |
+| **Fragment组件**     | 不支持，单根节点                                            | 支持多根节点                                    |
+| **Teleport组件**     | 无                                                          | 提供`<teleport>`                                |
+| **Suspense组件**     | 无                                                          | 提供`<suspense>`                                |
+| **Tree-shaking支持** | 有限                                                        | 更好（模块按需引入）                            |

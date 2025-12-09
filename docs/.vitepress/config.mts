@@ -90,7 +90,7 @@ export default defineConfig({
 
     outline: {
       label: '目录',
-      level: [1, 6],
+      level: [1, 2],
     },
 
     lastUpdated: {

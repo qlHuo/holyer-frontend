@@ -3009,493 +3009,1322 @@ Vue.use(MyPlugin);
 
 
 
+## 18. 如何配置 vue 打包生成文件的路径？
+
+在 Vue.js 项目中配置打包生成文件的路径，主要通过修改 `vue.config.js` 文件（Vue CLI 项目）或 `vite.config.js`（Vite 项目）实现。以下是详细配置方法：
+
+### **Vue CLI 项目（基于 Webpack）**
+
+**创建/修改 `vue.config.js` 文件**（在项目根目录）：
+
+```JavaScript
+// vue.config.js
+const { defineConfig } = require('@vue/cli-service');
+
+module.exports = defineConfig({
+ // 关键配置项
+ outputDir: 'dist',        // 打包输出目录（默认'dist'）
+ assetsDir: 'assets',      // 静态资源目录（js/css/img/fonts等）
+ indexPath: 'index.html',  // 生成的 HTML 文件名
+ publicPath: '/',          // 资源公共路径（CDN/子路径部署时需要）
+
+ // 完整示例：自定义输出路径
+ outputDir: 'build',
+ assetsDir: 'static',
+ indexPath: 'main.html',
+ publicPath: process.env.NODE_ENV === 'production' 
+   ? 'https://cdn.example.com/' // 生产环境用CDN
+   : '/',                        // 开发环境用根路径
+});
+```
+
+**配置说明：**
+
+- **`outputDir`**: 打包后的文件输出目录（默认 `dist`）。
+- **`assetsDir`**: 静态资源（JS/CSS/图片等）的存放子目录（默认空，直接放在 `outputDir` 下）。
+- **`indexPath`**: 生成的入口 HTML 文件名（默认 `index.html`）。
+- **`publicPath`**:
+  - 开发环境建议为 `/`（使用 devServer）。
+  - 生产环境按需设置：
+    - 根路径部署：`'/'`
+    - 子路径部署（如 `/my-app/`）：`'/my-app/'`
+    - CDN 托管：`'https://cdn.example.com/'`
+
+### **Vite 项目**
+
+**修改 `vite.config.js`**：
+
+```JavaScript
+// vite.config.js
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+ build: {
+   outDir: 'build',               // 输出目录（默认 'dist'）
+   assetsDir: 'assets',            // 静态资源目录
+   rollupOptions: {
+     input: 'src/main.js',        // 入口文件
+     output: {
+       entryFileNames: 'js/[name].[hash].js',    // JS 文件名格式
+       chunkFileNames: 'js/[name].[hash].js',    // 分块文件名格式
+       assetFileNames: 'assets/[name].[hash][extname]', // 其他资源格式
+     }
+   }
+ },
+ base: process.env.NODE_ENV === 'production' 
+   ? 'https://cdn.example.com/' 
+   : '/',  // 等同于 publicPath
+});
+```
+
+**关键配置项**：
+
+- **`build.outDir`**: 打包输出目录。
+- **`build.assetsDir`**: 静态资源子目录。
+- **`build.rollupOptions.output`**: 细粒度控制文件名。
+- **`base`**: 资源公共路径（同 `publicPath`）。
+
+### **环境变量动态配置**
+
+在 `vue.config.js` 或 `vite.config.js` 中，可通过 `process.env` 区分环境：
+
+```JavaScript
+publicPath: process.env.NODE_ENV === 'production' 
+  ? 'https://cdn.example.com/' 
+  : '/',
+```
+
+### **部署到子路径示例**
+
+若项目部署在 `https://example.com/my-app/`：
+
+```JavaScript
+// vue.config.js
+module.exports = {
+  publicPath: '/my-app/', // 结尾必须有斜杠
+};
+
+// vite.config.js
+export default defineConfig({
+  base: '/my-app/',
+});
+```
+
+### **验证配置**
+
+运行打包命令后，检查输出目录结构：
+
+```Bash
+npm run build       # Vue CLI
+npm run build       # Vite (通常配置在 package.json)
+```
+
+输出目录结构示例：
+
+```
+ build/              # outputDir
+├── static/         # assetsDir
+│   ├── js/
+│   ├── css/
+│   └── img/
+└── main.html       # indexPath
+```
+
+### **注意事项**
+
+1. **路径斜杠**：`publicPath` 或 `base` 的值必须以 `/` 开头，子路径结尾必须加 `/`（如 `'/sub/'`）。
+2. **路由兼容**：若使用 Vue Router 的 history 模式，需确保服务器配置支持（如 Nginx 的 `try_files`）。
+3. **环境变量**：可通过 `.env` 文件管理环境变量（如 `.env.production`）。
+
+通过以上配置，即可灵活控制 Vue 项目的打包输出路径和资源部署位置。
 
 
-​	
+
+## 19. Vue2 虚拟DOM
+
+Virtual DOM（虚拟 DOM）是一种用于提升 Web 应用性能的编程概念，尤其在现代前端框架（如 Vue, React）中扮演着核心角色。它本质上是一个轻量级的 JavaScript 对象树，是对真实 DOM 结构的内存中表示。
+
+**核心思想：** 当应用状态（数据）发生变化时，不直接操作昂贵的真实 DOM，而是先在内存中创建一个新的虚拟 DOM 树，然后将其与上一次渲染时创建的旧虚拟 DOM 树进行比较（Diffing），找出**最小、最必要**的变更集。最后，只将这些变更应用到真实 DOM 上。这个过程称为 **Reconciliation（协调）** 或 **Patching（打补丁）**。
+
+### **为什么需要 Virtual DOM？**
+
+1. **真实 DOM 操作非常昂贵：** 浏览器渲染引擎操作真实 DOM 涉及复杂的计算（重排 Reflow、重绘 Repaint），频繁或大范围的 DOM 更新会导致显著的性能瓶颈，用户体验卡顿。
+2. **简化开发者操作：** 开发者只需关注数据和视图的声明式关系（在 Vue 中是模板或渲染函数），框架自动处理状态变化到视图更新的复杂过程，无需手动进行繁琐的 DOM 操作。
+3. **跨平台潜力：** Virtual DOM 是纯 JS 对象，不直接依赖浏览器环境。这使得基于 Virtual DOM 的框架理论上可以渲染到不同的目标平台（如 Web、移动端原生应用、Canvas、SSR 等），只需提供对应的渲染器（Renderer）。
+4. **高效的变更检测：** 通过对比新旧 Virtual DOM 树，可以精确计算出需要更新的最小部分，避免不必要的真实 DOM 操作。
+
+### **详解 Vue 2 中的 Virtual DOM**
+
+Vue 2 的核心响应式系统和渲染机制都紧密围绕着 Virtual DOM 构建。
+
+#### 1. 渲染流程与 VNode 的生成：
+
+- **模板编译：** Vue 的模板 (`<template>`) 会被 `vue-template-compiler` 编译成**渲染函数**。
+
+- **执行渲染函数：** 当组件需要渲染（首次渲染或响应式数据变化触发更新）时，Vue 会执行这个渲染函数（或用户手写的 `render` 函数）。
+
+  ```js
+  // Vue2中典型的render函数
+  render(h) {
+    return h('div', { class: 'container' }, [
+      h('p', 'Hello, VNode!')
+    ])
+  }
+  ```
+
+- **创建 VNode：** 渲染函数执行的结果是返回一个 **VNode（虚拟节点）树**。每个 VNode 节点都是一个纯 JavaScript 对象，描述了一个 DOM 节点（或组件）应该是什么样子。它包含了节点类型（如 `div`, `span`, 组件名）、属性（如 `id`, `class`, `style`, 事件监听器）、子节点等信息。例如：
+
+  ```js
+  // 一个简单的 VNode 对象示例 (简化版)
+  {
+    tag: 'div',
+    data: {
+      attrs: { id: 'app' },
+      on: { click: handleClick }
+    },
+    children: [
+      { tag: 'p', data: {}, children: ['Hello, ' + name] }, // name 是响应式数据
+      { tag: MyComponent } // 组件 VNode
+    ]
+  }
+  ```
+
+#### 2. **初始化渲染：**
+
+- 首次执行渲染函数，生成**初始 VNode 树**。
+- Vue 调用 **`__patch__` 函数**（内部核心方法），将这个初始 VNode 树**转换（mount）** 为真实的 DOM 节点，并挂载到指定的容器元素（如 `#app`）上。此时，真实 DOM 被创建。
+
+#### 3. **响应式更新流程：**
+
+- **依赖追踪：** Vue 的响应式系统会追踪在渲染函数执行过程中访问过的响应式数据属性。这些属性成为该渲染函数的“依赖”。
+- **数据变更触发：** 当这些依赖的响应式数据发生改变时，Vue 会通知**与该数据关联的所有组件**（通过 Watcher）。
+- **重新渲染（异步）**：被通知的组件会计划一个异步更新（通常放入微任务队列）。当事件循环到达该微任务时：
+  - 组件的渲染函数会**重新执行**。
+  - 生成一个**新的 VNode 树**，反映数据变化后的最新状态。
+- **Diff & Patch**：
+  - Vue 调用 **`__patch__` 函数**，将**新生成的 VNode 树**与**上一次渲染缓存的旧 VNode 树**进行**比较（Diffing）**。
+  - Diff 算法会高效地找出两棵树之间的差异（最小变更集）。
+  - `__patch__` 函数将这些差异**应用（Patch）** 到真实的 DOM 上。只有真正变化的部分会被更新。
+
+#### 4. **Vue 2 的 Diff 算法（核心 - 同级比较）：**
+
+ Vue2 的 Diff 算法主要在同层级（相同父节点下）的 VNode 子节点数组之间进行，不会跨层级比较（复杂度 O(n)）。它遵循以下策略：
+
+- **新旧节点类型不同：** 直接销毁旧节点及其子节点，创建并挂载新节点。
+- 新旧节点类型相同：
+  - **静态节点：** 跳过比较。
+  - **文本节点：** 直接更新文本内容。
+  - 元素节点：
+    - 更新该节点的属性（`data` 中的 `attrs`, `props`, `class`, `style`, `on` 等）。
+    - 进入子节点 Diff：
+      1. **头头比较：** 比较新旧子节点数组的开头节点。
+      2. **尾尾比较：** 比较新旧子节点数组的结尾节点。
+      3. **旧头新尾 / 旧尾新头比较：** 尝试交叉比较（处理元素移动的情况）。
+      4. Key 的重要性：当以上快速比较都不匹配时，会尝试根据子节点的唯一标识符`key`来查找旧节点中是否存在可复用的节点。
+         - 如果找到相同 `key` 的节点，则复用该节点（可能移动位置），并递归进行 Diff。
+         - 如果找不到 `key` 匹配的节点，则创建新节点插入。
+      5. 处理剩余节点：
+         - 如果新子节点数组有剩余，创建并插入新节点。
+         - 如果旧子节点数组有剩余，移除这些不再需要的旧节点。
+
+#### 5. **`key` 属性的关键作用：**
+
+- 在列表渲染 (`v-for`) 和需要稳定标识的节点上，提供唯一的 `key` **至关重要**。
+- `key`是 Diff 算法高效复用节点、识别节点身份的主要依据。没有`key` 或使用不稳定的`key`（如`index`）会导致：
+  - 错误的节点复用（状态错乱）。
+  - 不必要的 DOM 创建/销毁（性能下降）。
+  - 在列表中间插入/删除时性能低下（无法有效识别移动）。
+
+#### 6. **组件级别的处理：**
+
+- 组件在 Virtual DOM 中也表示为 VNode（`tag` 是组件选项对象或组件名）。
+- 当父组件更新导致子组件 VNode 需要更新时：
+  - 如果新旧子组件 VNode 被认为是“相同”的（基于 `key` 和组件名/类型），Vue 会**复用**子组件实例。
+  - 然后触发子组件的**重新渲染流程**（可能跳过其自身依赖未改变的子组件），最终进行子组件内部的 VNode Diff 和 Patch。
+- 这种组件级别的复用和局部更新进一步提升了效率。
+
+### **Vue 2 Virtual DOM 的优势**
+
+- **性能优化：** 通过最小化真实 DOM 操作，有效减少重排重绘，提升应用流畅度，尤其对于复杂视图和频繁更新的场景。
+- **声明式编程：** 开发者只需描述“视图应该是什么样子”（模板/render 函数），无需关心底层 DOM 操作细节。
+- **抽象层：** 为跨平台渲染（Weex, NativeScript, Canvas, SSR）提供了统一的基础。
+- **高效的组件更新：** 组件化与 Virtual DOM 结合，实现了高效的局部更新。
+
+### **Vue 2 Virtual DOM 的局限与注意事项**
+
+- **运行时开销：** Diff 算法本身需要计算资源，在极端简单或更新极其频繁的场景下，可能不如极致优化的手动 DOM 操作快（但绝大多数应用受益远大于此开销）。
+- **内存占用：** 需要维护新旧两棵 VNode 树。
+- **需要合理使用 `key`：** 错误使用 `key` 会抵消 Virtual DOM 的优势甚至导致错误。
+- **无法完全避免重排/重绘：** Diff 确定的最小变更仍可能触发浏览器的重排/重绘，框架只能尽力减少其范围和频率。
+
+### **总结**
+
+Virtual DOM 是 Vue 2 高性能渲染的核心机制。它通过在 JavaScript 内存中构建轻量的 VNode 树来表示视图状态，当数据变化时生成新 VNode 树，并通过高效的 Diff 算法（基于同级比较和 `key` 优化）计算出最小变更集，最后精准地应用到真实 DOM 上。这一过程将昂贵的直接 DOM 操作最小化，使开发者能够以声明式的方式构建高效、响应式的用户界面，同时为跨平台渲染奠定了基础。理解 Virtual DOM 和 `key` 的作用对于编写高性能的 Vue 应用至关重要。
 
 
 
+## 20. Vue 2 虚拟 DOM 深度解析：Diff 算法与 Patch 过程详解
 
+在 Vue 2 中，**虚拟 DOM（Virtual DOM）** 是其高效渲染的核心机制。让我们深入探讨虚拟 DOM 如何转化为真实 DOM，特别是其中的 Diff 算法和 Patch 过程。
 
+### 一、虚拟 DOM 核心
 
+虚拟 DOM 是：
 
-## 如何配置 vue 打包生成文件的路径？
+- 一个轻量级的 JavaScript 对象树
+- 真实 DOM 结构的内存表示
+- 包含节点类型、属性、子节点等信息
 
+```JavaScript
+// 虚拟 DOM 对象示例
+{
+  tag: 'div',
+  data: { attrs: { id: 'app' } },
+  children: [
+    { tag: 'h1', children: 'Hello Vue' },
+    { tag: 'p', children: 'Virtual DOM in Action' }
+  ]
+}
+```
 
+### 二、整体渲染流程
 
-## vue 的服务器端渲染
+1. **数据变化触发**：响应式数据变更触发组件重新渲染
+2. **生成新 VNode**：执行渲染函数，创建新的虚拟 DOM 树
+3. **Patch 过程**：比较新旧 VNode 树
+4. **应用变更**：将差异更新到真实 DOM
 
+### 三、Patch 过程详解
 
+`__patch__` 函数是 Vue 2 虚拟 DOM 更新的核心实现，其伪代码如下：
 
-## vue 开发命令 npm run dev 输入后的执行过程
+```JavaScript
+function patch(oldVnode, vnode) {
+  // 1. 首次渲染
+  if (isRealElement(oldVnode)) {
+    const parent = oldVnode.parentNode;
+    const nextSibling = oldVnode.nextSibling;
+    createElm(vnode); // 创建真实DOM
+    parent.insertBefore(vnode.elm, nextSibling);
+    parent.removeChild(oldVnode);
+    return vnode.elm;
+  }
+  
+  // 2. 相同节点比较
+  if (sameVnode(oldVnode, vnode)) {
+    patchVnode(oldVnode, vnode);
+  } 
+  // 3. 不同节点替换
+  else {
+    const parent = oldVnode.parentNode;
+    const elm = createElm(vnode);
+    parent.insertBefore(elm, oldVnode);
+    removeVnodes(parent, [oldVnode], 0, 0);
+  }
+  
+  return vnode.elm;
+}
+```
 
+### 四、Diff 算法核心：updateChildren
 
+当新旧 VNode 的子节点都需要更新时，Vue 2 使用**双端比较算法**进行高效比对：
 
-
-
-## 什么是 Virtual DOM？
-
-答案：可以看作是一个使用 javascript 模拟了 DOM 结构的树形结构
-
-解析：[参考](https://www.cnblogs.com/gaosong-shuhong/p/9253959.html)
-
-
-
-
-
-## 响应式系统的基本原理
-
-答案：
-
-vue响应式的原理，首先对象传入vue实例作为data对象时，首先被vue遍历所有属性，调用Object.defineProperty设置为getter和setter，每个组件都有一个watcher对象，在组件渲染的过程中，把相关的数据都注册成依赖，当数据发生setter变化时，会通知watcehr，从而更新相关联的组件
-
-
-
-
-
-## Vue.js 全局运行机制
-
-
-
-## 十个常用的自定义过滤器
-
-
-
-## 如何编译 template 模板？
-
-
-
-## diff 算法
-
-
-
-## Vue 中如何实现 proxy 代理？
-
-webpack 自带的 devServer 中集成了 http-proxy-middleware。配置 devServer 的 proxy 选项即可
-
-```js
-proxyTable: {
-   '/api': {
-    target: 'http://192.168.149.90:8080/', // 设置你调用的接口域名和端口号
-    changeOrigin: true,   // 跨域
-    pathRewrite: {
-     '^/api': '/'
+```JavaScript
+function updateChildren(parentElm, oldCh, newCh) {
+  let oldStartIdx = 0, newStartIdx = 0;
+  let oldEndIdx = oldCh.length - 1, newEndIdx = newCh.length - 1;
+  let oldStartVnode = oldCh[0], oldEndVnode = oldCh[oldEndIdx];
+  let newStartVnode = newCh[0], newEndVnode = newCh[newEndIdx];
+  
+  while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+    if (!oldStartVnode) { /* 跳过已处理节点 */ }
+    else if (sameVnode(oldStartVnode, newStartVnode)) {
+      // 1. 头头相同
+      patchVnode(oldStartVnode, newStartVnode);
+      oldStartVnode = oldCh[++oldStartIdx];
+      newStartVnode = newCh[++newStartIdx];
+    }
+    else if (sameVnode(oldEndVnode, newEndVnode)) {
+      // 2. 尾尾相同
+      patchVnode(oldEndVnode, newEndVnode);
+      oldEndVnode = oldCh[--oldEndIdx];
+      newEndVnode = newCh[--newEndIdx];
+    }
+    else if (sameVnode(oldStartVnode, newEndVnode)) {
+      // 3. 旧头新尾相同 - 移动节点
+      patchVnode(oldStartVnode, newEndVnode);
+      parentElm.insertBefore(oldStartVnode.elm, oldEndVnode.elm.nextSibling);
+      oldStartVnode = oldCh[++oldStartIdx];
+      newEndVnode = newCh[--newEndIdx];
+    }
+    else if (sameVnode(oldEndVnode, newStartVnode)) {
+      // 4. 旧尾新头相同 - 移动节点
+      patchVnode(oldEndVnode, newStartVnode);
+      parentElm.insertBefore(oldEndVnode.elm, oldStartVnode.elm);
+      oldEndVnode = oldCh[--oldEndIdx];
+      newStartVnode = newCh[++newStartIdx];
+    }
+    else {
+      // 5. 使用key查找可复用节点
+      const idxInOld = findIdxInOld(newStartVnode, oldCh, oldStartIdx, oldEndIdx);
+      if (idxInOld) {
+        // 找到可复用节点
+        const vnodeToMove = oldCh[idxInOld];
+        patchVnode(vnodeToMove, newStartVnode);
+        parentElm.insertBefore(vnodeToMove.elm, oldStartVnode.elm);
+        oldCh[idxInOld] = undefined; // 标记已处理
+      } else {
+        // 创建新节点
+        createElm(newStartVnode, parentElm, oldStartVnode.elm);
+      }
+      newStartVnode = newCh[++newStartIdx];
     }
   }
+  
+  // 处理剩余节点
+  if (oldStartIdx > oldEndIdx) {
+    // 添加新节点
+    addVnodes(parentElm, newCh, newStartIdx, newEndIdx);
+  } else if (newStartIdx > newEndIdx) {
+    // 移除旧节点
+    removeVnodes(parentElm, oldCh, oldStartIdx, oldEndIdx);
   }
+}
 ```
 
+#### Diff 算法步骤详解：
+
+1. **初始化指针**：在新旧子节点数组两端各设置两个指针
+2. **四步快速比较**：
+   - 头头比较（相同则指针后移）
+   - 尾尾比较（相同则指针前移）
+   - 旧头新尾比较（相同则移动节点）
+   - 旧尾新头比较（相同则移动节点）
+3. **Key 查找**：当快速比较失败时，使用 key 在旧节点中查找可复用节点
+4. **创建/删除**：处理剩余的新增或删除节点
+5. **递归处理**：对相同节点递归执行 patchVnode
+
+### 五、Key 的关键作用
+
+在 Diff 算法中，key 起着至关重要的作用：
+
+```HTML
+<!-- 使用 key -->
+<ul>
+  <li v-for="item in items" :key="item.id">{{ item.text }}</li>
+</ul>
+```
+
+- **节点识别**：key 是识别节点身份的唯一标识
+- **高效复用**：允许算法在顺序变化时复用已有节点
+- **避免错误更新**：防止节点状态错乱
+- **性能优化**：减少不必要的 DOM 操作
+
+### 六、PatchVnode 核心逻辑
+
+当新旧节点相同时，执行 patchVnode：
+
+```JavaScript
+function patchVnode(oldVnode, vnode) {
+  if (oldVnode === vnode) return;
+  
+  const elm = vnode.elm = oldVnode.elm;
+  
+  // 处理静态节点
+  if (isStatic(oldVnode) && isStatic(vnode)) {
+    return;
+  }
+  
+  // 更新属性
+  const oldData = oldVnode.data || {};
+  const data = vnode.data || {};
+  updateAttrs(elm, oldData.attrs, data.attrs);
+  updateClass(elm, oldData.class, data.class);
+  updateDOMListeners(elm, oldData.on, data.on);
+  
+  // 处理子节点
+  const oldCh = oldVnode.children;
+  const ch = vnode.children;
+  
+  // 文本节点
+  if (!vnode.text) {
+    if (oldCh && ch) {
+      // 子节点都存在 - 执行updateChildren
+      updateChildren(elm, oldCh, ch);
+    } else if (ch) {
+      // 新节点有子节点，旧节点没有
+      addVnodes(elm, ch, 0, ch.length - 1);
+    } else if (oldCh) {
+      // 旧节点有子节点，新节点没有
+      removeVnodes(elm, oldCh, 0, oldCh.length - 1);
+    }
+  } 
+  // 文本内容不同则更新
+  else if (oldVnode.text !== vnode.text) {
+    elm.textContent = vnode.text;
+  }
+}
+```
+
+### 七、性能优化策略
+
+1. **同级比较**：仅在同级比较，时间复杂度 O(n)
+2. **静态节点跳过**：标记静态节点，跳过比较过程
+3. **异步批量更新**：使用微任务队列批量处理 DOM 更新
+4. **组件级别复用**：组件复用减少不必要的子组件更新
+
+### 对比：Vue 2 与 React 的 Diff 算法差异
+
+| 特性         | Vue 2                    | React            |
+| ------------ | ------------------------ | ---------------- |
+| Diff 算法    | 双端比较                 | 单向链表遍历     |
+| 节点移动处理 | 更高效                   | 相对低效         |
+| Key 作用     | 核心识别机制             | 核心识别机制     |
+| 组件更新策略 | 父组件更新导致子组件更新 | 默认全部组件更新 |
+| 静态节点优化 | 支持                     | 支持             |
+
+Vue 2 的 Diff 算法在常见 DOM 操作场景（如列表中间插入）中通常表现更优。
+
+### 总结
+
+Vue 2 的虚拟 DOM 实现通过：
+
+1. **高效的 Diff 算法**：双端比较策略最小化 DOM 操作
+2. **精准的 Patch 过程**：仅更新必要的 DOM 部分
+3. **Key 的合理使用**：确保节点正确复用
+4. **组件级优化**：减少不必要的子组件更新
 
 
-## vue 的渲染机制
 
+## 21. Vue 2 响应式系统深度解析
 
+Vue 2 的响应式系统是其核心特性之一，它实现了**数据驱动视图**的魔法——当数据变化时，视图会自动更新。下面我将详细解析其工作原理和实现机制。
 
-## vue 在什么情况下在数据发生改变的时候不会触发视图更新
-
-答案：
-
-v-for 遍历的数组，当数组内容使用的是 arr[0].xx =xx 更改数据，vue 无法监测到
-vm.arr.length = newLength 也是无法检测的到的
-
-
-
-## 62.vue 如何实现按需加载配合 webpack 设置
+### 核心原理图
 
 ```
-webpack 中提供了 require.ensure()来实现按需加载。以前引入路由是通过 import 这样的方式引入，改为 const 定义的方式进行引入。
-不进行页面按需加载引入方式：import home from '../../common/home.vue'
-进行页面按需加载的引入方式：const home = r => require.ensure( [], () => r (require('../../common/home.vue')))
+   +---------------------+       +---------------------+       +---------------------+
+  |     数据对象         |       |    Observer         |       |      Watcher         |
+  |  (Data Object)      |<----->|  (观察者)           |<----->|  (观察者)            |
+  +----------+----------+       +----------+----------+       +----------+----------+
+             |                             |                             |
+             |                             |                             |
+  +----------v----------+       +----------v----------+       +----------v----------+
+  |   Getter (依赖收集)  |       |      Dep            |       |  更新回调 (如render) |
+  +---------------------+       |  (依赖管理器)        |       +---------------------+
+  |   Setter (触发更新)  |       +---------------------+       
+  +---------------------+               |       
+                                        |       
+  +---------------------+       +------v------+
+  |   虚拟DOM & 更新     |<------| 通知所有Watcher |
+  +---------------------+       +-------------+
 ```
 
-在音乐 app 中使用的路由懒加载方式为：
+### 一、核心三要素
 
+#### 1. Observer（观察者）
+
+- 职责：将普通JS对象转换为响应式对象
+- 实现方式：使用 `Object.defineProperty` 重写对象属性的 getter/setter
+- 特点：
+  - 递归遍历对象所有属性
+  - 为每个属性创建对应的 Dep 实例
+
+```JavaScript
+class Observer {
+  constructor(value) {
+    this.value = value
+    this.dep = new Dep()
+    
+    if (Array.isArray(value)) {
+      // 数组的特殊处理
+      this.observeArray(value)
+    } else {
+      this.walk(value)
+    }
+  }
+  
+  walk(obj) {
+    Object.keys(obj).forEach(key => {
+      defineReactive(obj, key, obj[key])
+    })
+  }
+}
 ```
-const Recommend = (resolve) => {
-  import('components/recommend/recommend').then((module) => {
-    resolve(module)
+
+#### 2. Dep（依赖管理器）
+
+- 职责：管理某个数据属性的所有依赖（Watcher）
+- 核心方法：
+  - `depend()`: 收集当前正在计算的Watcher
+  - `notify()`: 数据变化时通知所有Watcher更新
+
+```JavaScript
+class Dep {
+  constructor() {
+    this.subs = [] // 存储Watcher实例
+  }
+  
+  depend() {
+    if (Dep.target) {
+      Dep.target.addDep(this)
+    }
+  }
+  
+  addSub(sub) {
+    this.subs.push(sub)
+  }
+  
+  notify() {
+    const subs = this.subs.slice()
+    for (let i = 0; i < subs.length; i++) {
+      subs[i].update()
+    }
+  }
+}
+
+// 全局唯一标识当前正在计算的Watcher
+Dep.target = null
+```
+
+#### 3. Watcher（观察者）
+
+- 职责：
+  - 执行回调函数（如渲染函数）
+  - 在getter中收集依赖
+  - 接收变更通知并执行更新
+- 类型：
+  - 渲染Watcher（每个组件一个）
+  - 计算属性Watcher
+  - 用户自定义Watcher（`watch`选项）
+
+```JavaScript
+class Watcher {
+  constructor(vm, expOrFn, cb) {
+    this.vm = vm
+    this.getter = expOrFn
+    this.cb = cb
+    this.deps = []
+    this.value = this.get()
+  }
+  
+  get() {
+    Dep.target = this // 设置全局标记
+    const value = this.getter.call(this.vm) // 触发getter，收集依赖
+    Dep.target = null // 重置
+    return value
+  }
+  
+  addDep(dep) {
+    if (!this.deps.includes(dep)) {
+      this.deps.push(dep)
+      dep.addSub(this)
+    }
+  }
+  
+  update() {
+    queueWatcher(this) // 加入异步更新队列
+  }
+  
+  run() {
+    const value = this.get()
+    if (value !== this.value) {
+      this.cb.call(this.vm, value, this.value)
+      this.value = value
+    }
+  }
+}
+```
+
+### 二、响应式化过程
+
+#### 1. 对象响应式化
+
+```JavaScript
+function defineReactive(obj, key, val) {
+  const dep = new Dep()
+  
+  // 递归处理嵌套对象
+  let childOb = observe(val)
+  
+  Object.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get: function reactiveGetter() {
+      const value = val
+      if (Dep.target) {
+        dep.depend() // 收集依赖
+        if (childOb) {
+          childOb.dep.depend() // 嵌套对象依赖收集
+          if (Array.isArray(value)) {
+            dependArray(value) // 数组特殊处理
+          }
+        }
+      }
+      return value
+    },
+    set: function reactiveSetter(newVal) {
+      if (newVal === val) return
+      
+      val = newVal
+      childOb = observe(newVal) // 新值可能是对象，需要观察
+      dep.notify() // 通知所有依赖更新
+    }
   })
 }
+```
 
-const Singer = (resolve) => {
-  import('components/singer/singer').then((module) => {
-    resolve(module)
+#### 2. 数组响应式处理
+
+Vue 2 通过重写数组方法实现响应式：
+
+```JavaScript
+const arrayProto = Array.prototype
+const arrayMethods = Object.create(arrayProto)
+
+// 需要拦截的数组方法
+const methodsToPatch = [
+  'push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'
+]
+
+methodsToPatch.forEach(function(method) {
+  const original = arrayProto[method]
+  Object.defineProperty(arrayMethods, method, {
+    value: function mutator(...args) {
+      const result = original.apply(this, args)
+      const ob = this.__ob__
+      let inserted
+      
+      switch (method) {
+        case 'push':
+        case 'unshift':
+          inserted = args
+          break
+        case 'splice':
+          inserted = args.slice(2)
+          break
+      }
+      
+      if (inserted) ob.observeArray(inserted)
+      
+      ob.dep.notify() // 通知变更
+      return result
+    }
   })
+})
+```
+
+### 三、依赖收集流程
+
+**1. 初始化阶段**：
+
+![image-20251209232626789](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251209232627021.png)
+
+**2. 更新阶段**：
+
+![image-20251209232703227](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251209232703440.png)
+
+### 四、异步更新队列
+
+Vue 使用异步更新策略优化性能：
+
+```JavaScript
+const queue = []
+let waiting = false
+
+function queueWatcher(watcher) {
+  // 避免重复添加
+  if (!queue.includes(watcher)) {
+    queue.push(watcher)
+  }
+  
+  if (!waiting) {
+    waiting = true
+    nextTick(flushSchedulerQueue)
+  }
+}
+
+function flushSchedulerQueue() {
+  queue.sort((a, b) => a.id - b.id) // 保证父组件先于子组件更新
+  
+  for (let i = 0; i < queue.length; i++) {
+    const watcher = queue[i]
+    watcher.run()
+  }
+  
+  // 重置状态
+  queue.length = 0
+  waiting = false
 }
 ```
 
-
-
-## 63.如何让 CSS 只在当前组件中起作用
-
-答案：将当前组件的`<style>`修改为`<style scoped>`
-
-
-
-## 64.指令 v-el 的作用是什么?
-
-答案：提供一个在页面上已存在的 DOM 元素作为 Vue 实例的挂载目标.可以是 CSS 选择器，也可以是一个 HTMLElement 实例
-
-
-
-## 65.vue-loader 是什么？使用它的用途有哪些？
-
-vue-loader 是解析 .vue 文件的一个加载器，将 template/js/style 转换成 js 模块。
-
-用途：js 可以写 es6、style 样式可以 scss 或 less；template 可以加 jade 等。
-
-
-
-## 67.你们vue项目是打包了一个js文件，一个css文件，还是有多个文件？
-
-
-
-## 68.vue遇到的坑，如何解决的？
-
-
-
-## 69.vuex 工作原理详解 
-
-答案：
-
-vuex 整体思想诞生于 flux,可其的实现方式完完全全的使用了 vue 自身的响应式设计，依赖监听、依赖收集都属于 vue 对对象 Property set get 方法的代理劫持。最后一句话结束 vuex 工作原理，vuex 中的 store 本质就是没有 template 的隐藏着的 vue 组件；
-
-解析：vuex的原理其实非常简单，它为什么能实现所有的组件共享同一份数据？
-因为vuex生成了一个store实例，并且把这个实例挂在了所有的组件上，所有的组件引用的都是同一个store实例。
-store实例上有数据，有方法，方法改变的都是store实例上的数据。由于其他组件引用的是同样的实例，所以一个组件改变了store上的数据， 导致另一个组件上的数据也会改变，就像是一个对象的引用。
-
-
-
-## 72.不用 Vuex 会带来什么问题？
-
-答案：
-
-可维护性会下降，想修改数据要维护三个地方；
-
-可读性会下降，因为一个组件里的数据，根本就看不出来是从哪来的；
-
-增加耦合，大量的上传派发，会让耦合性大大增加，本来 Vue 用 Component 就是为了减少耦合，现在这么用，和组件化的初衷相背。
-
-
-
-## 38.$route和$router的区别
-
-
-
-## 73.vue-router 如何响应 路由参数 的变化？
-
-
-
-## 74.完整的 vue-router 导航解析流程
-
-
-
-## 75.vue-router 有哪几种导航钩子（ 导航守卫 ）？
-
-答案：三种
-
-第一种是全局导航钩子：router.beforeEach(to,from,next)，作用：跳转前进行判断拦截。
-第二种：组件内的钩子；
-第三种：单独路由独享组件
-
-
-
-## 76.vue-router 的几种实例方法以及参数传递
-
-
-
-## 77.怎么定义 vue-router 的动态路由？怎么获取传过来的动态参数？ 
-
-答案：在 router 目录下的 index.js 文件中，对 path 属性加上/:id。 使用 router 对象的 params.id
-
-## 78.vue-router 如何定义嵌套路由？
-
-
-
-## 79.`<router-link></router-link>`组件及其属性
-
-
-
-## 80.vue-router 实现路由懒加载（ 动态加载路由 ）
-
-
-
-## 81.vue-router 路由的两种模式
-
-答案：hash history
-
-
-
-## 82.history 路由模式与后台的配合
-
-
-
-## 83.vue路由实现原理?或 vue-router原理?
-
-答案：
-
-说简单点，vue-router的原理就是通过对URL地址变化的监听，继而对不同的组件进行渲染。
-每当URL地址改变时，就对相应的组件进行渲染。原理是很简单，实现方式可能有点复杂，主要有hash模式和history模式。
-如果想了解得详细点，建议百度或者阅读源码。
-
-
-
-
-
-
-
-## 87.解释下 Object.defineProperty()方法
-
-答案：这是 js 中一个非常重要的方法，ES6 中某些方法的实现依赖于它，VUE 通过它实现双向绑定，此方法会直接在一个对象上定义一个新属性，或者修改一个已经存在的属性， 并返回这个对象
-
-解析：
-
-### 语法
-
-Object.defineProperty(object, attribute, descriptor)
-
-- 这三个参数都是必输项
-- 第一个参数为 目标对象
-- 第二个参数为 需要定义的属性或者方法
-- 第三个参数为 目标属性所拥有的特性
-
-### descriptor
-
-前两个参数都很明确，重点是第三个参数 descriptor， 它有以下取值
-
-- value: 属性的值
-- writable: 属性的值是否可被重写（默认为 false）
-- configurable: 总开关，是否可配置，若为 false, 则其他都为 false（默认为 false）
-- enumerable: 属性是否可被枚举（默认为 false）
-- get: 获取该属性的值时调用
-- set: 重写该属性的值时调用
-
-一个例子
-
-```js
-var a = {};
-Object.defineProperty(a, "b", {
-  value: 123
-});
-console.log(a.b); //123
-a.b = 456;
-console.log(a.b); //123
-a.c = 110;
-for (item in a) {
-  console.log(item, a[item]); //c 110
+### 五、响应式系统的限制
+
+**1. 对象属性添加/删除**：
+
+```JavaScript
+// 无法检测
+this.obj.newProperty = 'value'
+// 解决方案
+Vue.set(this.obj, 'newProperty', 'value')
+```
+
+**2. 数组索引修改**：
+
+```JavaScript
+// 无法检测
+this.arr[index] = newValue
+// 解决方案
+Vue.set(this.arr, index, newValue)
+// 或
+this.arr.splice(index, 1, newValue)
+```
+
+**3. 数组长度修改**：
+
+```JavaScript
+// 无法检测
+this.arr.length = newLength
+// 解决方案
+this.arr.splice(newLength)
+```
+
+### 六、响应式系统工作全流程
+
+1. **初始化阶段**：
+   - 创建Observer遍历数据属性
+   - 创建组件渲染Watcher
+   - 执行render函数触发getter收集依赖
+2. **数据变更阶段**：
+   - 修改数据触发setter
+   - 调用dep.notify()
+   - 将Watcher加入队列
+3. **更新阶段**：
+   - 异步队列执行
+   - Watcher执行run方法
+   - 重新渲染组件（触发虚拟DOM diff）
+
+### 七、与Vue 3的对比
+
+| 特性       | Vue 2                 | Vue 3    |
+| ---------- | --------------------- | -------- |
+| 实现方式   | Object.defineProperty | Proxy    |
+| 数组响应式 | 方法重写              | 原生支持 |
+| 新增属性   | 需要Vue.set           | 直接支持 |
+| 性能       | 递归遍历初始化        | 按需响应 |
+| 嵌套对象   | 递归初始化            | 惰性代理 |
+
+### 总结
+
+Vue 2的响应式系统核心：
+
+1. 通过 **Object.defineProperty** 实现数据劫持
+2. 使用 观察者模式 管理依赖：
+   - Observer：转换数据为响应式
+   - Dep：管理依赖关系
+   - Watcher：执行更新操作
+3. 采用 **异步批量更新** 策略优化性能
+4. 通过 **虚拟DOM** 最小化DOM操作
+
+
+
+## Vue 2 模板编译机制深度解析
+
+Vue 2 的模板编译是将开发者编写的 HTML-like 模板转换为可执行的渲染函数的过程。这个转换过程是 Vue 响应式系统与虚拟 DOM 之间的关键桥梁，下面我将详细解析整个编译机制。
+
+### 一、整体编译流程
+
+![image-20251209233654346](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251209233654554.png)
+
+### 二、编译过程详解
+
+#### 1. 模板解析阶段（Parser）
+
+将模板字符串解析为抽象语法树（AST）
+
+```JavaScript
+// 示例模板
+<div id="app">
+  <h1 v-if="showTitle">{{ title }}</h1>
+  <ul>
+    <li v-for="item in items" :key="item.id">{{ item.name }}</li>
+  </ul>
+</div>
+
+// 解析后的AST结构
+{
+  type: 1, // 元素节点
+  tag: 'div',
+  attrsList: [{name: 'id', value: 'app'}],
+  attrsMap: {id: 'app'},
+  parent: undefined,
+  children: [
+    {
+      type: 1,
+      tag: 'h1',
+      if: 'showTitle',
+      ifConditions: [/*...*/],
+      children: [{
+        type: 2, // 文本节点
+        expression: '_s(title)',
+        text: '{{ title }}'
+      }]
+    },
+    {
+      type: 1,
+      tag: 'ul',
+      children: [{
+        type: 1,
+        tag: 'li',
+        for: 'item in items',
+        alias: 'item',
+        key: 'item.id',
+        children: [/*...*/]
+      }]
+    }
+  ]
 }
 ```
 
-因为 writable 和 enumerable 默认值为 false, 所以对 a.b 赋值无效，也无法遍历它
+**解析器工作原理**：
 
-### configurable
+- 使用正则表达式分割模板字符串
+- 通过状态机跟踪标签状态（起始标签、结束标签、文本等）
+- 处理各种指令（v-if, v-for, v-bind等）
+- 构建嵌套的节点树结构
 
-总开关，是否可配置，设置为 false 后，就不能再设置了，否则报错， 例子
+#### 2. 优化阶段（Optimizer）
 
-```js
-var a = {};
-Object.defineProperty(a, "b", {
-  configurable: false
-});
-Object.defineProperty(a, "b", {
-  configurable: true
-});
-//error: Uncaught TypeError: Cannot redefine property: b
-```
+标记静态节点以提高渲染性能
 
-### writable
-
-是否可重写
-
-```js
-var a = {};
-Object.defineProperty(a, "b", {
-  value: 123,
-  writable: false
-});
-console.log(a.b); // 打印 123
-a.b = 25; // 没有错误抛出（在严格模式下会抛出，即使之前已经有相同的值）
-console.log(a.b); // 打印 123， 赋值不起作用。
-```
-
-### enumerable
-
-属性特性 enumerable 定义了对象的属性是否可以在 for...in 循环和 Object.keys() 中被枚举
-
-```js
-var a = {};
-Object.defineProperty(a, "b", {
-  value: 3445,
-  enumerable: true
-});
-console.log(Object.keys(a)); // 打印["b"]
-```
-
-enumerable 改为 false
-
-```js
-var a = {};
-Object.defineProperty(a, "b", {
-  value: 3445,
-  enumerable: false //注意咯这里改了
-});
-console.log(Object.keys(a)); // 打印[]
-```
-
-### set 和 get
-
-如果设置了 set 或 get, 就不能设置 writable 和 value 中的任何一个，否则报错
-
-```js
-var a = {};
-Object.defineProperty(a, "abc", {
-  value: 123,
-  get: function() {
-    return value;
+```JavaScript
+function markStatic(node) {
+  node.static = isStatic(node);
+  if (node.type === 1) { // 元素节点
+    for (let i = 0; i < node.children.length; i++) {
+      const child = node.children[i];
+      markStatic(child);
+      if (!child.static) {
+        node.static = false;
+      }
+    }
   }
-});
-//Uncaught TypeError: Invalid property descriptor. Cannot both specify accessors and a value or writable attribute, #<Object> at Function.defineProperty
+}
+
+function isStatic(node) {
+  // 检测节点是否是静态的
+  return !node.if && !node.for // 没有v-if/v-for指令
+    && !node.events // 没有事件监听器
+    && !node.dynamicAttrs // 没有动态属性
+    && (node.type === 3 || node.type === 2 && !node.expression); // 纯文本或静态文本
+}
 ```
 
-对目标对象的目标属性 赋值和取值 时， 分别触发 set 和 get 方法
+优化效果：
 
-```js
-var a = {};
-var b = 1;
-Object.defineProperty(a, "b", {
-  set: function(newValue) {
-    b = 99;
-    console.log("你要赋值给我,我的新值是" + newValue);
-  },
-  get: function() {
-    console.log("你取我的值");
-    return 2; //注意这里，我硬编码返回2
+- 静态节点在后续更新中会被跳过
+- 静态子树会被提升到渲染函数外部，避免重复创建
+
+#### 3. 代码生成阶段（Codegen）
+
+将AST转换为可执行的渲染函数
+
+```JavaScript
+function generate(ast) {
+  const code = ast ? genElement(ast) : '_c("div")';
+  return `with(this){return ${code}}`;
+}
+
+function genElement(el) {
+  // 处理组件
+  if (el.component) {
+    return genComponent(el);
   }
-});
-a.b = 1; //打印 你要赋值给我,我的新值是1
-console.log(b); //打印 99
-console.log(a.b); //打印 你取我的值
-//打印 2    注意这里，和我的硬编码相同的
+  
+  // 处理指令
+  if (el.for && !el.forProcessed) {
+    return genFor(el);
+  }
+  if (el.if && !el.ifProcessed) {
+    return genIf(el);
+  }
+  
+  // 生成元素代码
+  const data = genData(el);
+  const children = genChildren(el);
+  
+  return `_c('${el.tag}'${
+    data ? `,${data}` : ''
+  }${
+    children ? `,${children}` : ''
+  })`;
+}
+
+function genChildren(el) {
+  const children = el.children;
+  if (children.length) {
+    return `[${children.map(genNode).join(',')}]`;
+  }
+}
+
+function genNode(node) {
+  if (node.type === 1) {
+    return genElement(node);
+  } else {
+    return genText(node);
+  }
+}
 ```
 
-上面的代码中，给 a.b 赋值，b 的值也跟着改变了。原因是给 a.b 赋值，自动调用了 set 方法，在 set 方法中改变了 b 的值。vue 双向绑定的原理就是这个。
+#### 4. 生成的渲染函数示例
 
-扩展：[参考](https://www.cnblogs.com/zhaowj/p/9576450.html)
-
-
-
-
-
-## 89.递归组件的使用
-
-答案：组件是可以在自己的模板中调用自身的，不过他们只能通过name选项来做这件事
-
-解析：
-
-
-
-## 90.Obj.keys()与 Obj.defineProperty
-
-答案：
-
-
-
-
-
-## 91.发布-订阅模式
-
-答案：
-
-
-
-
-
-## 构建的 vue-cli 工程都到了哪些技术，它们的作用分别是什么？
-
-答案：
-
-1、vue.js：vue-cli 工程的核心，主要特点是 双向数据绑定 和 组件系统。
-
-2、vue-router：vue 官方推荐使用的路由框架。
-
-3、vuex：专为 Vue.js 应用项目开发的状态管理器，主要用于维护 vue 组件间共用的一些 变量 和 方法。
-
-4、axios（ 或者 fetch 、ajax ）：用于发起 GET 、或 POST 等 http 请求，基于 Promise 设计。
-
-5、vux 等：一个专为 vue 设计的移动端 UI 组件库。
-
-6、创建一个 emit.js 文件，用于 vue 事件机制的管理。
-
-7、webpack：模块加载和 vue-cli 工程打包器。
-
-
-
-## 请说出 vue-cli 工程中每个文件夹和文件的用处
-
-答案：
-
-```
-vue-cli目录解析：
-
-build 文件夹：用于存放 webpack 相关配置和脚本。开发中仅 偶尔使用 到此文件夹下 webpack.base.conf.js 用于配置 less、sass等css预编译库，或者配置一下 UI 库。
-config 文件夹：主要存放配置文件，用于区分开发环境、线上环境的不同。 常用到此文件夹下 config.js 配置开发环境的 端口号、是否开启热加载 或者 设置生产环境的静态资源相对路径、是否开启gzip压缩、npm run build 命令打包生成静态资源的名称和路径等。
-dist 文件夹：默认 npm run build 命令打包生成的静态资源文件，用于生产部署。
-node_modules：存放npm命令下载的开发环境和生产环境的依赖包。
-src: 存放项目源码及需要引用的资源文件。
-src下assets：存放项目中需要用到的资源文件，css、js、images等。
-src下componets：存放vue开发中一些公共组件：header.vue、footer.vue等。
-src下emit：自己配置的vue集中式事件管理机制。
-src下router：vue-router vue路由的配置文件。
-src下service：自己配置的vue请求后台接口方法。
-src下page：存在vue页面组件的文件夹。
-src下util：存放vue开发过程中一些公共的.js方法。
-src下vuex：存放 vuex 为vue专门开发的状态管理器。
-src下app.vue：使用标签<route-view></router-view>渲染整个工程的.vue组件。
-src下main.js：vue-cli工程的入口文件。
-index.html：设置项目的一些meta头信息和提供<div id="app"></div>用于挂载 vue 节点。
-package.json：用于 node_modules资源部 和 启动、打包项目的 npm 命令管理。
+```JavaScript
+// 生成的渲染函数
+function render() {
+  with(this) {
+    return _c('div', { attrs: { "id": "app" } }, [
+      (showTitle) ? _c('h1', [_v(_s(title))]) : _e(),
+      _c('ul', _l((items), function(item) {
+        return _c('li', { key: item.id }, [_v(_s(item.name))])
+      }))
+    ])
+  }
+}
 ```
 
+### 三、核心渲染辅助函数
 
+Vue 在运行时提供的核心渲染方法：
 
+1. `_c()`: createElement - 创建 VNode
 
-
-## config 文件夹 下 index.js 的对于工程 开发环境 和 生产环境 的配置
-
-答案：
-
-```
-build 对象下 对于 生产环境 的配置：
-
-index：配置打包后入口.html文件的名称以及文件夹名称
-assetsRoot：配置打包后生成的文件名称和路径
-assetsPublicPath：配置 打包后 .html 引用静态资源的路径，一般要设置成 "./"
-productionGzip：是否开发 gzip 压缩，以提升加载速度
-
-dev 对象下 对于 开发环境 的配置：
-
-port：设置端口号
-autoOpenBrowser：启动工程时，自动打开浏览器
-proxyTable：vue设置的代理，用以解决 跨域 问题
+```JavaScript
+_c('div', { class: 'container' }, [children])
 ```
 
+2. `_v()`: createTextVNode - 创建文本节点
 
-
-
-
-## 请你详细介绍一些 package.json 里面的配置
-
-答案：
-
-```
-scripts：npm run xxx 命令调用node执行的 .js 文件
-dependencies：生产环境依赖包的名称和版本号，即这些 依赖包 都会打包进 生产环境的JS文件里面
-devDependencies：开发环境依赖包的名称和版本号，即这些 依赖包 只用于 代码开发 的时候，不会打包进 生产环境js文件 里面。
+```JavaScript
+_v("Hello " + _s(name))
 ```
 
+3. `_s()`: toString - 值转换为字符串
+
+```JavaScript
+_s(user.name) // 相当于 String(user.name)
+```
+
+4. `_l()`: renderList - 渲染列表
+
+```JavaScript
+_l(items, item => _c('li', [item.text]))
+```
+
+5. `_e()`: createEmptyVNode - 创建空节点
+
+```JavaScript
+_e() // 用于 v-if 的 else 情况
+```
+
+### 四、指令处理机制
+
+#### 1. v-if 的编译
+
+```JavaScript
+// 模板
+<div v-if="condition">Content</div>
+
+// 编译结果
+(condition) ? _c('div', [_v("Content")]) : _e()
+```
+
+#### 2. v-for 的编译
+
+```JavaScript
+// 模板
+<li v-for="item in items" :key="item.id">{{ item.name }}</li>
+
+// 编译结果
+_l((items), function(item) {
+  return _c('li', { key: item.id }, [_v(_s(item.name))])
+})
+```
+
+#### 3. v-model 的双向绑定
+
+```JavaScript
+// 模板
+<input v-model="message">
+
+// 编译结果
+_c('input', {
+  directives: [{
+    name: "model",
+    value: message,
+    expression: "message"
+  }],
+  domProps: { "value": message },
+  on: {
+    "input": function ($event) {
+      if ($event.target.composing) return;
+      message = $event.target.value
+    }
+  }
+})
+```
+
+#### 4. 事件处理
+
+```JavaScript
+// 模板
+<button @click="handleClick">Click</button>
+
+// 编译结果
+_c('button', {
+  on: {
+    "click": handleClick
+  }
+}, [_v("Click")])
+```
+
+### 五、编译过程触发时机
+
+#### 1. 运行时编译（Runtime + Compiler）
+
+```HTML
+<!-- 浏览器环境 -->
+<script src="vue.js"></script>
+<script>
+  new Vue({
+    template: '<div>{{ message }}</div>' // 在浏览器中编译
+  })
+</script>
+```
+
+编译过程：
+
+1. 浏览器下载完整版 Vue（包含编译器）
+2. 在客户端执行模板编译
+3. 生成渲染函数
+
+#### 2. 预编译（Runtime-only）
+
+```JavaScript
+// 使用构建工具（如webpack）
+import Vue from 'vue'
+import App from './App.vue'
+
+new Vue({
+  render: h => h(App) // 直接使用预编译的渲染函数
+})
+```
+
+编译过程：
+
+1. 在构建阶段使用 vue-loader 编译 .vue 文件
+2. 生成渲染函数并打包
+3. 浏览器下载运行时版本 Vue（不包含编译器）
+
+### 六、Vue Loader 的工作流程
+
+.vue 文件的处理过程：
+
+![image-20251209234104806](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251209234105070.png)
+
+Vue Loader 的核心作用：
+
+1. 分割单文件组件的三部分（template, script, style）
+2. 使用 vue-template-compiler 编译模板
+3. 处理作用域 CSS
+4. 支持热重载
+
+### 七、编译过程优化策略
+
+1. **静态节点提升**：
+
+```JavaScript
+// 静态节点会被提升到渲染函数外部
+const hoisted = _c('div', { staticClass: 'header' })
+
+function render() {
+ return _c('div', [hoisted, _c('div', dynamicContent)])
+}
+```
+
+2. **静态属性提升**：
+
+```JavaScript
+const staticAttrs = { staticClass: 'container' }
+
+function render() {
+ return _c('div', Object.assign({}, staticAttrs, { class: dynamicClass }))
+}
+```
+
+3. **预字符串化**：
+
+```JavaScript
+// 连续的静态内容会被合并
+const staticContent = _v("Hello\\nWorld")
+```
+
+4. **缓存事件处理程序**：
+
+```JavaScript
+function render() {
+ return _c('button', {
+   on: {
+     click: cache[0] || (cache[0] = $event => handleClick($event))
+   }
+ })
+}
+```
+
+### 八、编译限制与解决方案
+
+#### 1. 模板限制
+
+- 只能包含一个根元素
+- 某些元素限制（如 `<table>` 内只能包含特定元素）
+
+解决方案：
+
+```HTML
+<table>
+  <tr is="my-component"></tr>
+</table>
+```
+
+#### 2. 动态组件
+
+```HTML
+<component :is="currentComponent"></component>
+```
+
+#### 3. 模板错误处理
+
+编译器会捕获：
+
+- 无效的指令语法
+- 未关闭的标签
+- 无效的模板表达式
+
+### 九、编译过程与响应式系统的整合
+
+![image-20251209234150853](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251209234151110.png)
+
+关键整合点：
+
+1. 渲染函数执行时访问响应式数据
+2. 触发 getter 收集依赖
+3. 数据变化时重新执行渲染函数
+4. 生成新的 VNode 树
+5. 通过 diff 算法更新 DOM
+
+### 总结：Vue 2 模板编译的核心价值
+
+1. **声明式到命令式的转换**：将声明式模板转换为高效的 JavaScript 渲染函数
+2. **性能优化**：通过静态分析实现高效的更新策略
+3. **跨平台支持**：为不同平台（Web、Weex等）提供统一的编译基础
+4. **开发体验**：支持丰富的模板语法，简化开发
+5. **安全隔离**：模板作用域与 JavaScript 作用域隔离
+
+理解 Vue 2 的模板编译机制有助于：
+
+- 编写更高效的模板代码
+- 理解 Vue 的响应式更新原理
+- 优化应用性能
+- 深入理解虚拟 DOM 的工作机制
+- 掌握高级组件开发技巧
 
 
-## Vue CLI 项目使用全局常量指南
+
+## vue 如何实现按需加载配合 webpack 设置
+
+
+
+## 如何让 CSS 只在当前组件中起作用
+
+
+
+## vue-loader 是什么？使用它的用途有哪些？
+
+
+
+## 你们vue项目是打包了一个js文件，一个css文件，还是有多个文件？
+
+
+
+## vue遇到的坑，如何解决的？
+
+
+
+## vuex 工作原理详解 
+
+
+
+## 不用 Vuex 会带来什么问题？
+
+
+
+## $route和$router的区别
+
+
+
+## vue-router 如何响应 路由参数 的变化？
+
+
+
+## 完整的 vue-router 导航解析流程
+
+
+
+## vue-router 有哪几种导航钩子（ 导航守卫 ）？
+
+
+
+## vue-router 的几种实例方法以及参数传递
+
+
+
+## 怎么定义 vue-router 的动态路由？怎么获取传过来的动态参数？ 
+
+
+
+## vue-router 如何定义嵌套路由？
+
+
+
+## `<router-link></router-link>`组件及其属性
+
+
+
+## vue-router 实现路由懒加载（ 动态加载路由 ）
+
+
+
+## vue-router 路由的两种模式
+
+
+
+## history 路由模式与后台的配合
+
+
+
+## vue路由实现原理?或 vue-router原理?
+
+
+
+## 解释下 Object.defineProperty()方法
+
+
+
+## 递归组件的使用
+
+
+
+## 发布-订阅模式
 
 
 
@@ -3503,7 +4332,35 @@ devDependencies：开发环境依赖包的名称和版本号，即这些 依赖�
 
 
 
-## vue 如何优化首屏加载速度？
+## vue 在什么情况下在数据发生改变的时候不会触发视图更新
+
+
+
+## 构建的 vue-cli 工程都到了哪些技术，它们的作用分别是什么？
+
+
+
+## Vue 中如何实现 proxy 代理？
+
+
+
+## vue.config.js配置详情说明
+
+
+
+## webpack打包配置说明
+
+
+
+## package.json 配置作用
+
+
+
+## 开发命令 npm run dev 输入后的执行过程
+
+
+
+## Vue CLI 项目使用全局常量指南
 
 
 
@@ -3513,93 +4370,29 @@ devDependencies：开发环境依赖包的名称和版本号，即这些 依赖�
 
 ## vue 如何优化首页的加载速度？
 
-* 路由懒加载
-* ui框架按需加载
-* gzip压缩
+
 
 ## vue 首页白屏是什么问题引起的？如何解决
 
-* 第一种，打包后文件引用路径不对，导致找不到文件报错白屏
 
-解决办法：修改一下config下面的index.js中bulid模块导出的路径。因为index.html里边的内容都是通过script标签引入的，而你的路径不对，打开肯定是空白的。先看一下默认的路径。
 
-* 第二种，由于把路由模式mode设置影响
-
-解决方法：路由里边router/index.js路由配置里边默认模式是hash，如果你改成了history模式的话，打开也会是一片空白。所以改为hash或者直接把模式配置删除，让它默认的就行 。如果非要使用history模式的话，需要你在服务端加一个覆盖所有的情况的候选资源：如果URL匹配不到任何静态资源，则应该返回一个index.html，这个页面就是你app依赖页面。
-
-所以只要删除mode或者把mode改成hash就OK了。
-
-* 第三种，项目中使用了es6的语法，一些浏览器不支持es6，造成编译错误不能解析而造成白屏
-
-解决方法：
-
-安装 npm install --save-dev babel-preset-es2015
-
-安装 npm install --save-dev babel-preset-stage-3
-
-在项目根目录创建一个.babelrc文件 里面内容 最基本配置是：
-
-```js
-{
-    // 此项指明，转码的规则
-    "presets": [
-        // env项是借助插件babel-preset-env，下面这个配置说的是babel对es6,es7,es8进行转码，并且设置amd,commonjs这样的模块化文件，不进行转码
-        ["env", {
-            "modules": false
-        }],
-        // 下面这个是不同阶段出现的es语法，包含不同的转码插件
-        "stage-2"
-    ],
-    // 下面这个选项是引用插件来处理代码的转换，transform-runtime用来处理全局函数和优化babel编译
-    "plugins": ["transform-runtime"],
-    // 下面指的是在生成的文件中，不产生注释
-    "comments": false,
-    // 下面这段是在特定的环境中所执行的转码规则，当环境变量是下面的test就会覆盖上面的设置
-    "env": {
-        // test 是提前设置的环境变量，如果没有设置BABEL_ENV则使用NODE_ENV，如果都没有设置默认就是development
-        "test": {
-            "presets": ["env", "stage-2"],
-            // instanbul是一个用来测试转码后代码的工具
-            "plugins": ["istanbul"]
-        }
-    }
-}
-```
+## vue 的服务器端渲染
 
 
 
-## 85. MVC、MVP 与 MVVM 模式
+## MVC、MVP 与 MVVM 模式
 
 
 
-## 86.常见的实现 MVVM 几种方式
+## 常见的实现 MVVM 几种方式
+
+### 实现一个自己的 MVVM（原理剖析）
 
 
 
-## 88.实现一个自己的 MVVM（原理剖析）
+### 说说Vue的MVVM实现原理
 
-
-
-## 114.说说Vue的MVVM实现原理
-
-答案：
-
-#### 理解
-
-```
-1)	Vue作为MVVM模式的实现库的2种技术
-a.	模板解析
-b.	数据绑定
-
-2)	模板解析: 实现初始化显示
-a.	解析大括号表达式
-b.	解析指令
-
-3)	数据绑定: 实现更新显示
-a.	通过数据劫持实现
-```
-
-#### 原理结构图
+原理结构图
 
 ![vue_006](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251123182959601.png)
 
