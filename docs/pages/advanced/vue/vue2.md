@@ -7218,65 +7218,666 @@ config.plugin('thread-loader').use(require('thread-loader'))
 
 
 
-## vue 打包后会生成哪些文件？
+## 35. vue 打包后会生成哪些文件？
+
+在 Vue 2 项目中，使用 `npm run build` 或 `vue-cli-service build` 命令打包后，默认会在项目根目录下生成 `dist` 文件夹，包含以下核心文件：
+
+### 1. **入口 HTML 文件**
+
+- **`index.html`** 应用的入口 HTML 文件，已自动注入构建后的 CSS 和 JS 文件路径（带哈希值）。
+
+### 2. **静态资源目录**
+
+- **`/static` 或 `/public` 目录下的文件** 原样复制到 `dist` 中（如图片、字体等非代码资源）。
+
+### 3. **编译后的 JavaScript 文件**
+
+- **`js/app.[hash].js`** 主应用逻辑（包括 Vue 组件、路由、状态管理等）。
+- **`js/chunk-vendors.[hash].js`** 第三方依赖（如 `vue`、`vuex`、`vue-router` 等）。
+- **`js/[name].[hash].js`** 动态导入的异步代码块（通过 `import()` 分割的代码）。
+
+### 4. **提取的 CSS 文件**
+
+- **`css/app.[hash].css`** 全局样式和组件样式（通过 `mini-css-extract-plugin` 提取）。
+- **`css/chunk-vendors.[hash].css`** 第三方库的 CSS（如 `element-ui` 等）。
+
+### 5. **其他文件**
+
+- **`favicon.ico`**（如果存在） 网站图标。
+- **`manifest.json` 和 `service-worker.js`**（如果启用 PWA） PWA 相关文件。
+- **`robots.txt`**（如果配置） 搜索引擎爬虫规则。
+
+### 目录结构示例
+
+```
+Bashdist/
+├── index.html
+├── favicon.ico
+├── css/
+│   ├── app.1a2b3c4d.css
+│   └── chunk-vendors.5e6f7g8h.css
+├── js/
+│   ├── app.1a2b3c4d.js
+│   ├── chunk-vendors.5e6f7g8h.js
+│   └── about.9i0j1k2l.js  # 异步路由生成的 chunk
+└── img/
+    └── logo.abcd1234.png    # 带哈希的静态资源
+```
+
+### 关键配置说明（`vue.config.js`）
+
+- **`publicPath`**：部署路径（如 CDN 地址）。
+- **`outputDir`**：修改输出目录（默认 `dist`）。
+- **`filenameHashing`**：是否启用文件名哈希（默认 `true`）。
+- **`assetsDir`**：静态资源子目录（默认 `''`）。
+- **`css.extract`**：是否提取 CSS 为独立文件（默认 `true`）。
+
+### 注意事项
+
+1. **文件名中的 `[hash]`**：确保文件更新后浏览器缓存失效。
+2. **资源路径问题**：若部署到非根路径，需设置 `publicPath: '/your-subpath/'`。
+3. **代码分割**：异步路由/组件会生成额外的 `.js` 文件。
+
+通过分析 `dist` 目录，可优化加载性能（如配置 CDN、压缩资源等）。
 
 
 
 ## vue 如何优化首页的加载速度？
 
+优化 Vue2 首页加载速度需要从资源体积、加载策略和渲染效率三方面入手。以下是具体优化方案及代码示例：
+
+### 一、减少资源体积（关键）
+
+1. **代码压缩与 Tree Shaking**
+
+```bash
+# 使用 Webpack 生产模式自动压缩
+npm run build -- --mode production
+```
+
+```JavaScript
+// vue.config.js
+module.exports = {
+ configureWebpack: {
+   optimization: {
+     usedExports: true, // Tree Shaking
+     minimize: true
+   },
+   performance: {
+     hints: false // 关闭体积警告
+   }
+ }
+};
+```
+
+2. 图片优化
+
+- 使用 `image-webpack-loader` 自动压缩：
+
+```JavaScript
+ // vue.config.js
+ chainWebpack: (config) => {
+   config.module
+     .rule('images')
+     .use('image-webpack-loader')
+     .loader('image-webpack-loader')
+     .options({ bypassOnDebug: true });
+ }
+```
+
+3. 按需加载第三方库
+
+- 例如 Element UI 按需引入：
+
+```JavaScript
+ import { Button, Select } from 'element-ui';
+ Vue.use(Button);
+```
+
+### 二、优化加载策略
+
+1. **路由懒加载**
+
+```JavaScript
+// router.js
+const Home = () => import(/* webpackChunkName: "home" */ './views/Home.vue');
+const routes = [{ path: '/', component: Home }];
+```
+
+2. **异步组件（非路由组件）**
+
+```JavaScript
+components: {
+ 'my-component': () => import('./MyComponent.vue')
+}
+```
+
+3. **CDN 加速第三方库**
+
+```HTML
+<!-- public/index.html -->
+<script src="https://cdn.js.com/vue/2.6.14/vue.min.js"></script>
+<script src="https://cdn.js.com/vuex/3.6.2/vuex.min.js"></script>
+<script>
+   // vue.config.js
+   module.exports = {
+     configureWebpack: {
+       externals: {
+         'vue': 'Vue',
+         'vuex': 'Vuex'
+       }
+     }
+   };
+</script>
+```
+
+4. HTTP 缓存
+
+- Nginx 配置示例：
+
+```Nginx
+ location /static {
+   expires 365d;
+   add_header Cache-Control "public";
+ }
+```
+
+### 三、提升渲染效率
+
+1. **服务端渲染 (SSR)**
+
+   - 使用 Nuxt.js 或 Vue SSR 官方方案（成本较高，适用于SEO/首屏要求极高的场景）
+
+2. **骨架屏 (Skeleton)**
+
+   安装插件：
+
+```Bash
+npm install vue-skeleton-loader --save-dev
+```
+
+​	`App.vue` 中使用：
+
+```HTML
+ <template>
+   <div id="app">
+     <skeleton-loader v-if="loading" />
+     <router-view v-else />
+   </div>
+ </template>
+```
+
+3. **关键 CSS 内联**
+
+- 使用 `critters-webpack-plugin`：
+
+```JavaScript
+ // vue.config.js
+ const Critters = require('critters-webpack-plugin');
+ module.exports = {
+   chainWebpack: (config) => {
+     config.plugin('critters').use(Critters);
+   }
+ };
+```
+
+### 四、构建与部署优化
+
+1. **预加载关键资源**
+
+```JavaScript
+// 在入口文件手动添加
+const link = document.createElement('link');
+link.rel = 'preload';
+link.href = '/path/to/key-resource.js';
+document.head.appendChild(link);
+```
+
+2. **开启 Gzip 压缩**
+
+```Bash
+# 安装 compression-webpack-plugin
+npm install compression-webpack-plugin@6 --save-dev
+```
+
+```JavaScript
+// vue.config.js
+const CompressionPlugin = require('compression-webpack-plugin');
+module.exports = {
+ configureWebpack: {
+   plugins: [new CompressionPlugin()],
+ }
+};
+```
+
+3. **HTTP/2 推送**
+
+- Nginx 配置：
+
+```Nginx
+ location = / {
+   http2_push /static/js/app.js;
+ }
+```
+
+### 五、监控与分析
+
+1. **性能检测工具**
+
+```Bash
+npm install webpack-bundle-analyzer --save-dev
+```
+
+```js
+// vue.config.js
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+module.exports = {
+ plugins: [new BundleAnalyzerPlugin()]
+};
+```
+
+2. Lighthouse 评分
+
+- 使用 Chrome DevTools 的 Lighthouse 面板进行性能评分
+
+### 优化效果对比
+
+| 措施       | 体积减少    | 加载时间缩短    |
+| ---------- | ----------- | --------------- |
+| 路由懒加载 | -30% JS     | 首屏快40%       |
+| CDN + 压缩 | -60% 库体积 | 减少1-2s        |
+| Gzip       | -70% 总资源 | 减少50%传输时间 |
+
+> 实际效果因项目而异，建议使用 `Lighthouse` 量化改进。优先解决其提示的 "Opportunities" 项。
+
+通过组合使用上述策略，通常可使首屏加载时间降低50%以上。核心思路：**减少关键资源体积 → 并行加载非关键资源 → 加速渲染过程**。
 
 
-## vue 首页白屏是什么问题引起的？如何解决
+
+## 35. Vue 首页白屏问题分析与解决方案
+
+### 一、问题现象分析
+
+Vue应用首页白屏通常表现为：
+
+- 页面加载后长时间空白
+- 只有背景色或加载图标，没有实际内容
+- 控制台可能伴随错误信息
+
+### 二、主要原因排查
+
+#### 1. **资源加载失败**
+
+- 检查网络请求状态
+- 打开Chrome DevTools -> Network标签页
+- 查看js、css文件是否成功加载（状态码200）
+
+#### 2. **JavaScript执行错误**
+
+检查控制台(console)错误
+常见错误类型：
+
+- SyntaxError: 语法错误
+- TypeError: 类型错误
+- ReferenceError: 引用错误
+- ChunkLoadError: 异步组件加载失败
+
+#### 3. **路由配置问题**
+
+```javascript
+// 检查路由配置是否正确
+const router = new VueRouter({
+  mode: 'history', // 可能导致history模式配置不当
+  routes: [...]
+})
+```
+
+#### 4. **首屏加载性能问题**
+
+- 组件过大或依赖过多
+- 图片资源未压缩
+- 未使用代码分割
+
+### 三、解决方案
+
+#### 1. **基础配置优化**
+
+**A. 确保正确的入口文件**
+
+```javascript
+// main.js
+new Vue({
+  router,
+  store,
+  render: h => h(App)
+}).$mount('#app') // 确保与index.html的div id一致
+```
+
+**B. 检查public/index.html**
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Your App</title>
+  </head>
+  <body>
+    <noscript>
+      <strong>请启用JavaScript以正常运行本应用</strong>
+    </noscript>
+    <div id="app"></div> <!-- 确保存在 -->
+  </body>
+</html>
+```
+
+#### 2. **路由配置优化**
+
+**A. 处理404页面**
+
+```javascript
+// router/index.js
+const routes = [
+  // ... 其他路由
+  {
+    path: '*',
+    redirect: '/', // 或指向404组件
+    component: () => import('@/views/404.vue')
+  }
+]
+```
+
+**B. 路由懒加载优化**
+
+```javascript
+// 优化前
+import Home from '@/views/Home.vue'
+
+// 优化后 - 使用动态import
+const Home = () => import(/* webpackChunkName: "home" */ '@/views/Home.vue')
+
+// 添加加载状态处理
+const Home = () => ({
+  component: import('@/views/Home.vue'),
+  loading: LoadingComponent, // 加载中的组件
+  error: ErrorComponent, // 加载错误的组件
+  timeout: 10000 // 超时时间
+})
+```
+
+#### 3. **性能优化方案**
+
+**A. 代码分割与懒加载**
+
+```javascript
+// vue.config.js
+module.exports = {
+  configureWebpack: {
+    optimization: {
+      splitChunks: {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all'
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**B. 骨架屏方案**
+
+```vue
+<!-- App.vue -->
+<template>
+  <div id="app">
+    <!-- 骨架屏 -->
+    <div v-if="loading" class="skeleton">
+      <div class="skeleton-header"></div>
+      <div class="skeleton-content"></div>
+    </div>
+    
+    <!-- 实际内容 -->
+    <div v-else>
+      <router-view/>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      loading: true
+    }
+  },
+  mounted() {
+    // 模拟加载完成
+    setTimeout(() => {
+      this.loading = false
+    }, 1000)
+  }
+}
+</script>
+
+<style>
+.skeleton {
+  /* 骨架屏样式 */
+}
+</style>
+```
+
+**C. 预加载关键资源**
+
+```javascript
+// 使用webpack的魔法注释
+const Home = () => import(
+  /* webpackPrefetch: true */
+  /* webpackChunkName: "home" */
+  '@/views/Home.vue'
+)
+```
+
+#### 4. **错误处理**
+
+**A. 全局错误捕获**
+
+```javascript
+// main.js
+Vue.config.errorHandler = function (err, vm, info) {
+  console.error('Vue error:', err)
+  console.error('Component:', vm)
+  console.error('Where:', info)
+  
+  // 可以发送错误到监控平台
+  // sendErrorToServer(err)
+}
+```
+
+**B. 异步组件错误处理**
+
+```javascript
+// 封装安全的异步组件
+const safeAsyncComponent = (asyncFunction) => {
+  return () => ({
+    component: asyncFunction().catch(() => import('@/components/ErrorComponent.vue')),
+    loading: LoadingComponent,
+    delay: 200,
+    timeout: 3000
+  })
+}
+```
+
+#### 5. **构建配置优化**
+
+```javascript
+// vue.config.js
+module.exports = {
+  // 生产环境配置
+  productionSourceMap: false, // 关闭source map
+  
+  // 压缩配置
+  chainWebpack: config => {
+    config.optimization.minimize(true)
+    
+    // 图片压缩
+    config.module
+      .rule('images')
+      .use('image-webpack-loader')
+      .loader('image-webpack-loader')
+      .options({
+        bypassOnDebug: true
+      })
+  },
+  
+  // CDN配置
+  configureWebpack: {
+    externals: {
+      'vue': 'Vue',
+      'vue-router': 'VueRouter',
+      'vuex': 'Vuex',
+      'axios': 'axios'
+    }
+  }
+}
+```
+
+#### 6. **服务器端优化**
+
+**A. Nginx配置示例**
+
+```nginx
+# 处理history模式路由
+location / {
+  try_files $uri $uri/ /index.html;
+  expires 30d;
+  
+  # 开启gzip压缩
+  gzip on;
+  gzip_types text/plain text/css application/json application/javascript text/xml;
+}
+
+# 静态资源缓存
+location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+  expires 1y;
+  add_header Cache-Control "public, immutable";
+}
+```
+
+**B. 开启Gzip压缩**
+
+```javascript
+// 使用compression-webpack-plugin
+const CompressionPlugin = require('compression-webpack-plugin')
+
+module.exports = {
+  configureWebpack: {
+    plugins: [
+      new CompressionPlugin({
+        test: /\.(js|css)$/,
+        threshold: 10240,
+        minRatio: 0.8
+      })
+    ]
+  }
+}
+```
+
+#### 7. **监控与调试**
+
+**A. 添加性能监控**
+
+```javascript
+// 在main.js中添加
+window.addEventListener('load', () => {
+  const timing = performance.getEntriesByType('navigation')[0]
+  console.log('页面加载耗时:', timing.loadEventEnd - timing.startTime)
+  
+  // 上报性能数据
+  // reportPerformance(timing)
+})
+```
+
+**B. 用户行为监控**
+
+```javascript
+// 记录白屏时间
+let startTime = Date.now()
+let hasContent = false
+
+const observer = new MutationObserver(() => {
+  if (!hasContent && document.querySelector('#app div')) {
+    hasContent = true
+    const whiteScreenTime = Date.now() - startTime
+    console.log('白屏时间:', whiteScreenTime)
+    // 上报数据
+  }
+})
+
+observer.observe(document.querySelector('#app'), {
+  childList: true,
+  subtree: true
+})
+```
+
+### 四、快速诊断流程
+
+1. **第一步：检查控制台错误**
+   - 打开开发者工具 → Console
+   - 查看是否有红色错误信息
+2. **第二步：检查网络请求**
+   - Network标签页 → 刷新页面
+   - 检查js、css文件状态码
+3. **第三步：检查DOM结构**
+   - Elements标签页
+   - 查看#app元素下是否有内容
+4. **第四步：检查Vue实例**
+   - Vue DevTools是否正常加载
+   - 查看组件树结构
+5. **第五步：性能分析**
+   - Performance标签页录制
+   - Lighthouse生成报告
+
+### 五、常见问题及修复
+
+| 问题         | 表现                   | 解决方案                            |
+| :----------- | :--------------------- | :---------------------------------- |
+| 路由404      | 页面空白，控制台无错误 | 检查服务器配置，确保history模式支持 |
+| 组件加载失败 | ChunkLoadError         | 检查webpack配置，确保chunk路径正确  |
+| 内存泄漏     | 页面卡顿后变白         | 检查事件监听、定时器是否清理        |
+| 第三方库冲突 | 特定功能失效           | 按需引入，版本兼容性检查            |
+| 浏览器兼容   | 部分浏览器空白         | 添加polyfill，检查ES6语法           |
+
+### 六、预防措施
+
+1. **开发阶段**
+   - 使用ESLint严格检查代码
+   - 单元测试覆盖核心功能
+   - 代码审查确保质量
+2. **构建阶段**
+   - 自动化测试流程
+   - 构建产物大小监控
+   - 依赖版本锁定
+3. **部署阶段**
+   - 预发布环境测试
+   - 渐进式发布策略
+   - 完善的回滚机制
+4. **监控阶段**
+   - 前端错误监控(Sentry等)
+   - 性能监控(APM)
+   - 用户行为分析
 
 
 
-## vue 的服务器端渲染
 
 
-
-## MVC、MVP 与 MVVM 模式
-
-
-
-## 常见的实现 MVVM 几种方式
-
-### 实现一个自己的 MVVM（原理剖析）
-
-
-
-### 说说Vue的MVVM实现原理
-
-原理结构图
-
-![vue_006](https://raw.githubusercontent.com/qlHuo/images/main/imgs/20251123182959601.png)
-
-
-
-
-
-
-
-## v-for 产生的列表，实现 active 的切换
-
-
-
-## vue 弹窗后如何禁止滚动条滚动？
-
-
-
-## vue怎么实现页面的权限控制
-
-
-
-## vue 中如何实现 tab 切换功能？
-
-
-
-## vue 中实现切换页面时为左滑出效果
-
-
-
-## Vue 2 开发中的常见问题及解决方案
+## 36. Vue 2 开发中的常见问题及解决方案
 
 Vue 2 作为一款成熟的前端框架，在开发过程中仍会遇到一些典型问题。下面我将总结 Vue 2 开发中的常见"坑点"及其解决方案：
 
@@ -7744,3 +8345,23 @@ Vue 2 开发中的问题大多源于：
 3. 使用 Vue Devtools 进行调试
 4. 定期进行性能分析
 5. 保持依赖库更新
+
+
+
+## v-for 产生的列表，实现 active 的切换
+
+
+
+## vue 弹窗后如何禁止滚动条滚动？
+
+
+
+## vue怎么实现页面的权限控制
+
+
+
+## vue 中如何实现 tab 切换功能？
+
+
+
+## vue 中实现切换页面时为左滑出效果
